@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight } from 'lucide-react';
 
 // Assessment Framework
 const ASSESSMENT_FRAMEWORK = `
@@ -173,17 +173,28 @@ const ENGAGEMENT_TYPES = [
   { value: 'integrated', label: 'Integrated', description: 'Multi-service: brand + PR + web combined' },
 ];
 
-// Antenna Group Logo Component
+// Antenna Group Logo Component - Updated branding
 function AntennaLogo({ className = "h-8" }) {
   return (
-    <svg viewBox="0 0 140 40" className={className} fill="currentColor">
-      <text x="0" y="26" fontFamily="system-ui, -apple-system, sans-serif" fontSize="26" fontWeight="600" letterSpacing="-1">
-        .antenna
+    <svg viewBox="0 0 180 40" className={className} fill="currentColor">
+      {/* Main wordmark */}
+      <text x="0" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="28" fontWeight="500" letterSpacing="-0.5">
+        Antenna
       </text>
-      <text x="95" y="38" fontFamily="system-ui, -apple-system, sans-serif" fontSize="11" fontWeight="400" letterSpacing="1">
-        group
+      {/* Group text */}
+      <text x="108" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="28" fontWeight="300" letterSpacing="-0.5">
+        Group
       </text>
     </svg>
+  );
+}
+
+// Fully Conscious tagline component
+function FullyConsciousTag({ className = "" }) {
+  return (
+    <span className={`text-xs font-medium tracking-widest uppercase ${className}`}>
+      Fully Conscious
+    </span>
   );
 }
 
@@ -236,20 +247,113 @@ function CollapsibleSection({ title, children, defaultOpen = false, icon: Icon, 
   );
 }
 
-function IssueCard({ issue, type }) {
-  const styles = {
-    critical: { bg: 'bg-[#FEF2F2] border-[#FECACA]', icon: 'text-[#DC2626]', Icon: AlertCircle },
-    recommended: { bg: 'bg-[#FFFBEB] border-[#FDE68A]', icon: 'text-[#D97706]', Icon: AlertTriangle },
-    info: { bg: 'bg-[#F5F5F0] border-[#D4D4CF]', icon: 'text-[#1A1A1A]', Icon: CheckCircle }
+// Copy button component
+function CopyButton({ text, className = "" }) {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
   
-  const { bg, icon, Icon } = styles[type] || styles.info;
+  return (
+    <button
+      onClick={handleCopy}
+      className={`p-1.5 rounded-md transition-all ${copied ? 'bg-[#16A34A] text-white' : 'bg-white/60 text-[#6B7280] hover:bg-white hover:text-[#1A1A1A]'} ${className}`}
+      title={copied ? 'Copied!' : 'Copy to clipboard'}
+    >
+      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  );
+}
+
+function IssueCard({ issue, type }) {
+  const styles = {
+    critical: { bg: 'bg-[#FEF2F2] border-[#FECACA]', icon: 'text-[#DC2626]', Icon: AlertCircle, accent: 'bg-[#DC2626]' },
+    recommended: { bg: 'bg-[#FFFBEB] border-[#FDE68A]', icon: 'text-[#D97706]', Icon: AlertTriangle, accent: 'bg-[#D97706]' },
+    info: { bg: 'bg-[#F5F5F0] border-[#D4D4CF]', icon: 'text-[#1A1A1A]', Icon: CheckCircle, accent: 'bg-[#1A1A1A]' }
+  };
+  
+  const { bg, icon, Icon, accent } = styles[type] || styles.info;
+
+  // Parse the issue to extract structured parts
+  const parseIssue = (text) => {
+    const result = {
+      section: null,
+      title: null,
+      currentLanguage: null,
+      recommendation: null,
+      explanation: null,
+      fullText: text
+    };
+
+    // Try to extract section reference
+    const sectionMatch = text.match(/(?:Section|§)\s*([\d.]+)/i);
+    if (sectionMatch) result.section = sectionMatch[1];
+
+    // Try to extract "Current language:" or similar
+    const currentMatch = text.match(/(?:Current(?:\s+language)?|Found|Issue):\s*[""]?([^""]+)[""]?/i);
+    if (currentMatch) result.currentLanguage = currentMatch[1].trim();
+
+    // Try to extract "Recommended:" or "Replace with:" or similar
+    const recommendedMatch = text.match(/(?:Recommended(?:\s+(?:language|replacement))?|Replace\s+with|Suggested|Should\s+be|Change\s+to):\s*[""]?([^""]+)[""]?/i);
+    if (recommendedMatch) result.recommendation = recommendedMatch[1].trim();
+
+    // Try to extract arrows for before → after format
+    const arrowMatch = text.match(/[""]([^""]+)[""]\s*[→→>-]+\s*[""]([^""]+)[""]/);
+    if (arrowMatch) {
+      result.currentLanguage = arrowMatch[1].trim();
+      result.recommendation = arrowMatch[2].trim();
+    }
+
+    return result;
+  };
+
+  const parsed = parseIssue(issue);
+  const hasStructuredRecommendation = parsed.currentLanguage && parsed.recommendation;
 
   return (
     <div className={`p-4 rounded-lg border ${bg} mb-3`}>
       <div className="flex items-start gap-3">
         <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${icon}`} />
-        <div className="flex-1 text-sm whitespace-pre-wrap text-[#1A1A1A] leading-relaxed">{issue}</div>
+        <div className="flex-1">
+          {parsed.section && (
+            <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-[#6B7280]">
+              Section {parsed.section}
+            </span>
+          )}
+          
+          {hasStructuredRecommendation ? (
+            <div className="space-y-3">
+              {/* Issue explanation */}
+              <p className="text-sm text-[#1A1A1A] leading-relaxed">
+                {issue.split(/(?:Current|Recommended|Replace|→)/i)[0].trim()}
+              </p>
+              
+              {/* Current → Recommended comparison */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="bg-white/50 rounded-lg p-3 border border-[#FECACA]">
+                  <p className="text-xs font-semibold text-[#DC2626] uppercase tracking-wide mb-1">Current</p>
+                  <p className="text-sm text-[#1A1A1A] font-mono leading-relaxed">"{parsed.currentLanguage}"</p>
+                </div>
+                <div className="bg-white/50 rounded-lg p-3 border border-[#86EFAC] relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-semibold text-[#16A34A] uppercase tracking-wide">Recommended</p>
+                    <CopyButton text={parsed.recommendation} />
+                  </div>
+                  <p className="text-sm text-[#1A1A1A] font-mono leading-relaxed">"{parsed.recommendation}"</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm whitespace-pre-wrap text-[#1A1A1A] leading-relaxed">{issue}</div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -286,6 +390,76 @@ function ApiKeyInput({ apiKey, setApiKey }) {
         Your API key is only used in your browser and never stored.
         Get one at <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-[#1A1A1A] underline hover:no-underline">console.anthropic.com</a>
       </p>
+    </div>
+  );
+}
+
+// Red Flag Card - specialized for showing before → after replacements
+function RedFlagCard({ flag }) {
+  // Parse "phrase" in Section X.X → "replacement" format
+  const parseRedFlag = (text) => {
+    // Try various arrow formats
+    const arrowMatch = text.match(/[""]([^""]+)[""]\s*(?:in\s+)?(?:Section\s+)?([\d.]*)\s*[→→>-]+\s*[""]([^""]+)[""]/i);
+    if (arrowMatch) {
+      return {
+        found: arrowMatch[1].trim(),
+        section: arrowMatch[2] || null,
+        replacement: arrowMatch[3].trim()
+      };
+    }
+    
+    // Try "phrase" → "replacement" without section
+    const simpleArrow = text.match(/[""]([^""]+)[""]\s*[→→>-]+\s*[""]([^""]+)[""]/);
+    if (simpleArrow) {
+      const sectionMatch = text.match(/Section\s+([\d.]+)/i);
+      return {
+        found: simpleArrow[1].trim(),
+        section: sectionMatch ? sectionMatch[1] : null,
+        replacement: simpleArrow[2].trim()
+      };
+    }
+    
+    return null;
+  };
+
+  const parsed = parseRedFlag(flag);
+
+  if (parsed) {
+    return (
+      <div className="bg-[#F5F5F0] border border-[#D4D4CF] rounded-lg p-4 mb-3">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#D97706]" />
+          <div className="flex-1">
+            {parsed.section && (
+              <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-[#6B7280]">
+                Section {parsed.section}
+              </span>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 bg-[#FEF2F2] border border-[#FECACA] px-3 py-1.5 rounded-lg">
+                <span className="text-xs text-[#DC2626] font-medium">Found:</span>
+                <span className="text-sm font-mono text-[#1A1A1A]">"{parsed.found}"</span>
+              </span>
+              <ArrowRight className="w-4 h-4 text-[#6B7280]" />
+              <span className="inline-flex items-center gap-1 bg-white border border-[#86EFAC] px-3 py-1.5 rounded-lg">
+                <span className="text-xs text-[#16A34A] font-medium">Replace:</span>
+                <span className="text-sm font-mono text-[#1A1A1A]">"{parsed.replacement}"</span>
+                <CopyButton text={parsed.replacement} className="ml-1" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to regular display if parsing fails
+  return (
+    <div className="bg-[#F5F5F0] border border-[#D4D4CF] rounded-lg p-4 mb-3">
+      <div className="flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#D97706]" />
+        <div className="text-sm whitespace-pre-wrap text-[#1A1A1A] leading-relaxed">{flag}</div>
+      </div>
     </div>
   );
 }
@@ -353,21 +527,44 @@ export default function App() {
       
       const promptText = `Please review this Statement of Work (SOW) document. This is a ${engagementLabel} engagement.
 
-Using the assessment framework provided in your system prompt, analyze this SOW and provide:
+Using the assessment framework provided in your system prompt, analyze this SOW and provide SPECIFIC, ACTIONABLE recommendations.
 
-1. CRITICAL ISSUES - Things that MUST be fixed before issuing (missing required elements, uncontrolled language, missing client responsibilities, etc.)
+For EVERY issue you identify, you MUST provide:
+1. The exact section reference (e.g., "Section 5.2.1")
+2. The CURRENT language quoted directly from the document
+3. The RECOMMENDED replacement language that fixes the issue
+4. A brief explanation of WHY this change is needed
 
-2. RECOMMENDED IMPROVEMENTS - Things that SHOULD be fixed (weak language, missing best practices, etc.)
+FORMAT EACH ISSUE LIKE THIS:
+**Section X.X** - [Brief issue title]
+Current: "[exact quote from document]"
+Recommended: "[specific replacement text]"
+[One sentence explaining why this change matters]
 
-3. RED FLAGS FOUND - List every instance of problematic phrases (ad hoc, ongoing, as needed, etc.) with their location and suggested replacement
+Structure your response as:
 
-4. SERVICE-LINE COMPLIANCE - Check each required element for ${engagementLabel} engagements and note what's present vs missing
+1. CRITICAL ISSUES - Things that MUST be fixed before issuing
+(For each: section, current language, recommended replacement, explanation)
+
+2. RECOMMENDED IMPROVEMENTS - Things that SHOULD be fixed  
+(For each: section, current language, recommended replacement, explanation)
+
+3. RED FLAGS FOUND - Every instance of problematic phrases
+Format as: "[phrase found]" in Section X.X → "[recommended replacement]"
+
+4. SERVICE-LINE COMPLIANCE - Check each required element for ${engagementLabel} engagements
+✓ Present: [element] - [where found]
+✗ Missing: [element] - [what to add]
 
 5. BUDGET VERIFICATION - Check fee table arithmetic, billing schedule alignment, deliverable-to-fee mapping
 
-6. OVERALL ASSESSMENT - Compliance score (1-10), top 3 priorities, what's working well
+6. OVERALL ASSESSMENT
+- Compliance score (1-10) with brief justification
+- Top 3 priorities to address (be specific)
+- What's working well
 
-Be specific with section references and quote the actual language from the document when identifying issues. Provide recommended replacement language for each issue.`;
+Be extremely specific. Quote the actual document. Provide ready-to-use replacement language.`;
+
 
       let messages = [];
       
@@ -485,7 +682,11 @@ When reviewing SOWs:
       <header className="bg-[#F5F4F0] border-b border-[#E5E5E0] sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <AntennaLogo className="h-10 text-[#1A1A1A]" />
+            <div className="flex items-center gap-4">
+              <AntennaLogo className="h-10 text-[#1A1A1A]" />
+              <div className="hidden sm:block h-6 w-px bg-[#D4D4CF]" />
+              <FullyConsciousTag className="hidden sm:block text-[#6B7280]" />
+            </div>
             <p className="text-xs text-[#6B7280] uppercase tracking-wider font-medium">SOW Review Tool</p>
           </div>
         </div>
@@ -652,9 +853,9 @@ When reviewing SOWs:
               )}
 
               {analysis.redFlags?.length > 0 && (
-                <CollapsibleSection title="Red Flags Found" count={analysis.redFlags.length}>
-                  <p className="text-sm text-[#6B7280] mb-4">Problematic language to replace.</p>
-                  {analysis.redFlags.map((flag, idx) => <IssueCard key={idx} issue={flag} type="info" />)}
+                <CollapsibleSection title="Red Flags Found" count={analysis.redFlags.length} icon={AlertTriangle}>
+                  <p className="text-sm text-[#6B7280] mb-4">Problematic language to replace. Click the copy button to grab the replacement text.</p>
+                  {analysis.redFlags.map((flag, idx) => <RedFlagCard key={idx} flag={flag} />)}
                 </CollapsibleSection>
               )}
 
@@ -687,7 +888,10 @@ When reviewing SOWs:
       {/* Footer */}
       <footer className="max-w-5xl mx-auto px-6 py-8 border-t border-[#E5E5E0]">
         <div className="flex items-center justify-between">
-          <AntennaLogo className="h-8 text-[#9CA3AF]" />
+          <div className="flex items-center gap-3">
+            <AntennaLogo className="h-7 text-[#9CA3AF]" />
+            <span className="text-xs text-[#9CA3AF]">For conscious brands with the courage to lead</span>
+          </div>
           <p className="text-sm text-[#9CA3AF]">SOW Quality Standards v1.0</p>
         </div>
       </footer>
