@@ -173,28 +173,25 @@ const ENGAGEMENT_TYPES = [
   { value: 'integrated', label: 'Integrated', description: 'Multi-service: brand + PR + web combined' },
 ];
 
-// Antenna Group Logo Component - Updated branding
-function AntennaLogo({ className = "h-8" }) {
+// Antenna Group Logo - matches Conscious Compass branding
+function AntennaLogo({ className = "h-8", color = "currentColor" }) {
   return (
-    <svg viewBox="0 0 180 40" className={className} fill="currentColor">
-      {/* Main wordmark */}
-      <text x="0" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="28" fontWeight="500" letterSpacing="-0.5">
-        Antenna
-      </text>
-      {/* Group text */}
-      <text x="108" y="28" fontFamily="system-ui, -apple-system, sans-serif" fontSize="28" fontWeight="300" letterSpacing="-0.5">
-        Group
-      </text>
-    </svg>
+    <img 
+      src="https://ktuyiikwhspwmzvyczit.supabase.co/storage/v1/object/public/assets/brand/antenna-new-logo.svg" 
+      alt="Antenna Group" 
+      className={className}
+    />
   );
 }
 
-// Fully Conscious tagline component
-function FullyConsciousTag({ className = "" }) {
+// Fallback SVG logo if image doesn't load
+function AntennaLogoFallback({ className = "h-8" }) {
   return (
-    <span className={`text-xs font-medium tracking-widest uppercase ${className}`}>
-      Fully Conscious
-    </span>
+    <svg viewBox="0 0 140 32" className={className} fill="currentColor">
+      <text x="0" y="24" fontFamily="system-ui, -apple-system, sans-serif" fontSize="22" fontWeight="500" letterSpacing="-0.5">
+        Antenna Group
+      </text>
+    </svg>
   );
 }
 
@@ -203,34 +200,34 @@ function CollapsibleSection({ title, children, defaultOpen = false, icon: Icon, 
   
   const variants = {
     critical: {
-      header: 'bg-[#FEF2F2] hover:bg-[#FEE2E2]',
-      badge: 'bg-[#DC2626] text-white',
-      icon: 'text-[#DC2626]'
+      header: 'bg-red-50 hover:bg-red-100',
+      badge: 'bg-red-600 text-white',
+      icon: 'text-red-600'
     },
     recommended: {
-      header: 'bg-[#FFFBEB] hover:bg-[#FEF3C7]',
-      badge: 'bg-[#D97706] text-white',
-      icon: 'text-[#D97706]'
+      header: 'bg-amber-50 hover:bg-amber-100',
+      badge: 'bg-amber-600 text-white',
+      icon: 'text-amber-600'
     },
     default: {
-      header: 'bg-[#EEEEE9] hover:bg-[#E5E5E0]',
-      badge: 'bg-[#1A1A1A] text-white',
-      icon: 'text-[#1A1A1A]'
+      header: 'bg-gray-50 hover:bg-gray-100',
+      badge: 'bg-gray-900 text-white',
+      icon: 'text-gray-900'
     }
   };
   
   const style = variants[variant] || variants.default;
   
   return (
-    <div className="border border-[#D4D4CF] rounded-lg mb-3 overflow-hidden">
+    <div className="border border-gray-200 rounded-xl mb-3 overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full px-5 py-4 ${style.header} flex items-center justify-between transition-colors`}
       >
         <div className="flex items-center gap-3">
-          {isOpen ? <ChevronDown className="w-4 h-4 text-[#1A1A1A]" /> : <ChevronRight className="w-4 h-4 text-[#1A1A1A]" />}
+          {isOpen ? <ChevronDown className="w-4 h-4 text-gray-900" /> : <ChevronRight className="w-4 h-4 text-gray-900" />}
           {Icon && <Icon className={`w-5 h-5 ${style.icon}`} />}
-          <span className="font-semibold text-[#1A1A1A]">{title}</span>
+          <span className="font-semibold text-gray-900">{title}</span>
           {count !== undefined && (
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${style.badge}`}>
               {count}
@@ -239,7 +236,7 @@ function CollapsibleSection({ title, children, defaultOpen = false, icon: Icon, 
         </div>
       </button>
       {isOpen && (
-        <div className="p-5 bg-white border-t border-[#E5E5E0]">
+        <div className="p-5 bg-white border-t border-gray-100">
           {children}
         </div>
       )}
@@ -274,9 +271,9 @@ function CopyButton({ text, className = "" }) {
 
 function IssueCard({ issue, type }) {
   const styles = {
-    critical: { bg: 'bg-[#FEF2F2] border-[#FECACA]', icon: 'text-[#DC2626]', Icon: AlertCircle, accent: 'bg-[#DC2626]' },
-    recommended: { bg: 'bg-[#FFFBEB] border-[#FDE68A]', icon: 'text-[#D97706]', Icon: AlertTriangle, accent: 'bg-[#D97706]' },
-    info: { bg: 'bg-[#F5F5F0] border-[#D4D4CF]', icon: 'text-[#1A1A1A]', Icon: CheckCircle, accent: 'bg-[#1A1A1A]' }
+    critical: { bg: 'bg-red-50 border-red-200', icon: 'text-red-600', Icon: AlertCircle, accent: 'bg-red-600' },
+    recommended: { bg: 'bg-amber-50 border-amber-200', icon: 'text-amber-600', Icon: AlertTriangle, accent: 'bg-amber-600' },
+    info: { bg: 'bg-gray-50 border-gray-200', icon: 'text-gray-900', Icon: CheckCircle, accent: 'bg-gray-900' }
   };
   
   const { bg, icon, Icon, accent } = styles[type] || styles.info;
@@ -318,12 +315,12 @@ function IssueCard({ issue, type }) {
   const hasStructuredRecommendation = parsed.currentLanguage && parsed.recommendation;
 
   return (
-    <div className={`p-4 rounded-lg border ${bg} mb-3`}>
+    <div className={`p-4 rounded-xl border ${bg} mb-3`}>
       <div className="flex items-start gap-3">
         <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${icon}`} />
         <div className="flex-1">
           {parsed.section && (
-            <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-[#6B7280]">
+            <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-gray-500">
               Section {parsed.section}
             </span>
           )}
@@ -331,27 +328,27 @@ function IssueCard({ issue, type }) {
           {hasStructuredRecommendation ? (
             <div className="space-y-3">
               {/* Issue explanation */}
-              <p className="text-sm text-[#1A1A1A] leading-relaxed">
+              <p className="text-sm text-gray-900 leading-relaxed">
                 {issue.split(/(?:Current|Recommended|Replace|→)/i)[0].trim()}
               </p>
               
               {/* Current → Recommended comparison */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div className="bg-white/50 rounded-lg p-3 border border-[#FECACA]">
-                  <p className="text-xs font-semibold text-[#DC2626] uppercase tracking-wide mb-1">Current</p>
-                  <p className="text-sm text-[#1A1A1A] font-mono leading-relaxed">"{parsed.currentLanguage}"</p>
+                <div className="bg-white/50 rounded-lg p-3 border border-red-200">
+                  <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-1">Current</p>
+                  <p className="text-sm text-gray-900 font-mono leading-relaxed">"{parsed.currentLanguage}"</p>
                 </div>
-                <div className="bg-white/50 rounded-lg p-3 border border-[#86EFAC] relative">
+                <div className="bg-white/50 rounded-lg p-3 border border-green-200 relative">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold text-[#16A34A] uppercase tracking-wide">Recommended</p>
+                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Recommended</p>
                     <CopyButton text={parsed.recommendation} />
                   </div>
-                  <p className="text-sm text-[#1A1A1A] font-mono leading-relaxed">"{parsed.recommendation}"</p>
+                  <p className="text-sm text-gray-900 font-mono leading-relaxed">"{parsed.recommendation}"</p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="text-sm whitespace-pre-wrap text-[#1A1A1A] leading-relaxed">{issue}</div>
+            <div className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">{issue}</div>
           )}
         </div>
       </div>
@@ -364,7 +361,7 @@ function ApiKeyInput({ apiKey, setApiKey }) {
   
   return (
     <div className="mb-8">
-      <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+      <label className="block text-sm font-semibold text-gray-900 mb-2">
         <div className="flex items-center gap-2">
           <Key className="w-4 h-4" />
           Anthropic API Key
@@ -376,19 +373,19 @@ function ApiKeyInput({ apiKey, setApiKey }) {
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
           placeholder="sk-ant-api03-..."
-          className="w-full px-4 py-3 pr-12 bg-white border border-[#D4D4CF] rounded-lg focus:ring-2 focus:ring-[#1A1A1A] focus:border-[#1A1A1A] outline-none transition-all text-[#1A1A1A] placeholder:text-[#9CA3AF]"
+          className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all text-gray-900 placeholder:text-gray-400"
         />
         <button
           type="button"
           onClick={() => setShowKey(!showKey)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#1A1A1A] transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors"
         >
           {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
         </button>
       </div>
-      <p className="mt-2 text-sm text-[#6B7280]">
+      <p className="mt-2 text-sm text-gray-500">
         Your API key is only used in your browser and never stored.
-        Get one at <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-[#1A1A1A] underline hover:no-underline">console.anthropic.com</a>
+        Get one at <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline hover:no-underline">console.anthropic.com</a>
       </p>
     </div>
   );
@@ -426,24 +423,24 @@ function RedFlagCard({ flag }) {
 
   if (parsed) {
     return (
-      <div className="bg-[#F5F5F0] border border-[#D4D4CF] rounded-lg p-4 mb-3">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
         <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#D97706]" />
+          <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
           <div className="flex-1">
             {parsed.section && (
-              <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-[#6B7280]">
+              <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-gray-500">
                 Section {parsed.section}
               </span>
             )}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 bg-[#FEF2F2] border border-[#FECACA] px-3 py-1.5 rounded-lg">
-                <span className="text-xs text-[#DC2626] font-medium">Found:</span>
-                <span className="text-sm font-mono text-[#1A1A1A]">"{parsed.found}"</span>
+              <span className="inline-flex items-center gap-1 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
+                <span className="text-xs text-red-600 font-medium">Found:</span>
+                <span className="text-sm font-mono text-gray-900">"{parsed.found}"</span>
               </span>
-              <ArrowRight className="w-4 h-4 text-[#6B7280]" />
-              <span className="inline-flex items-center gap-1 bg-white border border-[#86EFAC] px-3 py-1.5 rounded-lg">
-                <span className="text-xs text-[#16A34A] font-medium">Replace:</span>
-                <span className="text-sm font-mono text-[#1A1A1A]">"{parsed.replacement}"</span>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+              <span className="inline-flex items-center gap-1 bg-white border border-green-200 px-3 py-1.5 rounded-lg">
+                <span className="text-xs text-green-600 font-medium">Replace:</span>
+                <span className="text-sm font-mono text-gray-900">"{parsed.replacement}"</span>
                 <CopyButton text={parsed.replacement} className="ml-1" />
               </span>
             </div>
@@ -455,10 +452,10 @@ function RedFlagCard({ flag }) {
 
   // Fallback to regular display if parsing fails
   return (
-    <div className="bg-[#F5F5F0] border border-[#D4D4CF] rounded-lg p-4 mb-3">
+    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-[#D97706]" />
-        <div className="text-sm whitespace-pre-wrap text-[#1A1A1A] leading-relaxed">{flag}</div>
+        <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
+        <div className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">{flag}</div>
       </div>
     </div>
   );
@@ -801,66 +798,69 @@ Your writing style:
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F4F0]">
-      {/* Header */}
-      <header className="bg-[#F5F4F0] border-b border-[#E5E5E0] sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-5">
+    <div className="min-h-screen bg-white">
+      {/* Header - matches Conscious Compass */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <AntennaLogo className="h-10 text-[#1A1A1A]" />
-              <div className="hidden sm:block h-6 w-px bg-[#D4D4CF]" />
-              <FullyConsciousTag className="hidden sm:block text-[#6B7280]" />
-            </div>
-            <p className="text-xs text-[#6B7280] uppercase tracking-wider font-medium">SOW Review Tool</p>
+            <AntennaLogo className="h-8" />
+            <a 
+              href="https://www.antennagroup.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              Back to Antenna
+            </a>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-6 py-16">
         {!analysis ? (
           <>
-            {/* Hero */}
-            <div className="mb-12">
-              <h1 className="text-5xl md:text-6xl font-bold text-[#1A1A1A] leading-[1.1] mb-6">
-                Quality starts with clarity.
+            {/* Hero - matches Conscious Compass style */}
+            <div className="text-center mb-16">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                SOW Review Tool
               </h1>
-              <p className="text-xl text-[#6B7280] max-w-2xl leading-relaxed">
+              <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
                 Upload a Statement of Work for automated quality assessment against Antenna Group standards.
               </p>
             </div>
 
             {/* Form Card */}
-            <div className="bg-white rounded-2xl border border-[#E5E5E0] p-8 shadow-sm">
+            <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
               <ApiKeyInput apiKey={apiKey} setApiKey={setApiKey} />
 
               {/* File Upload */}
               <div className="mb-8">
-                <label className="block text-sm font-semibold text-[#1A1A1A] mb-2">
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
                   Upload SOW Document
                 </label>
                 <div 
                   className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
-                    file ? 'border-[#1A1A1A] bg-[#F5F4F0]' : 'border-[#D4D4CF] hover:border-[#1A1A1A] hover:bg-[#FAFAF8]'
+                    file ? 'border-gray-900 bg-gray-50' : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                   }`}
                 >
                   <input type="file" accept=".pdf,.docx,.txt,.md" onChange={handleFileUpload} className="hidden" id="file-upload" />
                   <label htmlFor="file-upload" className="cursor-pointer">
                     {file ? (
                       <div className="flex items-center justify-center gap-4">
-                        <div className="w-14 h-14 bg-[#1A1A1A] rounded-xl flex items-center justify-center">
+                        <div className="w-14 h-14 bg-gray-900 rounded-xl flex items-center justify-center">
                           <FileText className="w-7 h-7 text-white" />
                         </div>
                         <div className="text-left">
-                          <p className="font-semibold text-[#1A1A1A]">{file.name}</p>
-                          <p className="text-sm text-[#6B7280]">{(file.size / 1024).toFixed(1)} KB • Click to change</p>
+                          <p className="font-semibold text-gray-900">{file.name}</p>
+                          <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(1)} KB • Click to change</p>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <Upload className="w-12 h-12 text-[#9CA3AF] mx-auto mb-4" />
-                        <p className="text-[#1A1A1A] font-medium mb-1">Click to upload or drag and drop</p>
-                        <p className="text-sm text-[#6B7280]">PDF, DOCX, or TXT files supported</p>
+                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-900 font-medium mb-1">Click to upload or drag and drop</p>
+                        <p className="text-sm text-gray-500">PDF, DOCX, or TXT files supported</p>
                       </>
                     )}
                   </label>
@@ -869,27 +869,27 @@ Your writing style:
 
               {/* Engagement Type */}
               <div className="mb-8">
-                <label className="block text-sm font-semibold text-[#1A1A1A] mb-3">Engagement Type</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <label className="block text-sm font-semibold text-gray-900 mb-3">Engagement Type</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {ENGAGEMENT_TYPES.map((type) => (
                     <button
                       key={type.value}
                       onClick={() => setEngagementType(type.value)}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${
                         engagementType === type.value
-                          ? 'border-[#1A1A1A] bg-[#F5F4F0]'
-                          : 'border-[#E5E5E0] hover:border-[#D4D4CF] hover:bg-[#FAFAF8]'
+                          ? 'border-gray-900 bg-gray-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all ${
-                          engagementType === type.value ? 'border-[#DC2626]' : 'border-[#D4D4CF]'
+                          engagementType === type.value ? 'border-gray-900' : 'border-gray-300'
                         }`}>
-                          {engagementType === type.value && <div className="w-2.5 h-2.5 rounded-full bg-[#DC2626]" />}
+                          {engagementType === type.value && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
                         </div>
                         <div>
-                          <p className="font-semibold text-[#1A1A1A]">{type.label}</p>
-                          <p className="text-xs text-[#6B7280] mt-0.5">{type.description}</p>
+                          <p className="font-semibold text-gray-900">{type.label}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{type.description}</p>
                         </div>
                       </div>
                     </button>
@@ -899,8 +899,8 @@ Your writing style:
 
               {/* Error */}
               {error && (
-                <div className="mb-6 p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-xl">
-                  <div className="flex items-start gap-3 text-[#DC2626]">
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-start gap-3 text-red-600">
                     <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-semibold">Error</p>
@@ -916,33 +916,36 @@ Your writing style:
                 disabled={!apiKey || !file || !engagementType || isAnalyzing}
                 className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
                   !apiKey || !file || !engagementType || isAnalyzing
-                    ? 'bg-[#E5E5E0] text-[#9CA3AF] cursor-not-allowed'
-                    : 'bg-[#CCFF00] text-[#1A1A1A] hover:bg-[#B8E600]'
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
               >
                 {isAnalyzing ? (
                   <><Loader2 className="w-5 h-5 animate-spin" />Analyzing SOW...</>
                 ) : (
-                  <>ANALYZE SOW<ArrowUpRight className="w-5 h-5" /></>
+                  <>Analyze SOW<ArrowUpRight className="w-5 h-5" /></>
                 )}
               </button>
             </div>
 
-            {/* What we check */}
-            <div className="mt-12">
-              <h2 className="text-xl font-bold text-[#1A1A1A] mb-6">What this tool assesses</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* What we check - styled like Conscious Compass steps */}
+            <div className="mt-20 text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">What this tool assesses</h2>
+              <p className="text-gray-500 mb-10 max-w-xl mx-auto">Our SOW reviewer checks your documents against Antenna Group quality standards in 6 key areas.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {[
-                  { title: 'Universal Requirements', desc: 'Numbering, completion criteria, controlled language, deliverable structure' },
-                  { title: 'Client Responsibilities', desc: 'Consolidated feedback, approval windows, change control, stakeholder protection' },
-                  { title: 'Master Assumptions', desc: 'Scope boundaries, revision limits, response times, pause/termination ladder' },
-                  { title: 'Service-Line Specifics', desc: 'Requirements unique to branding, website, PR, creative, or integrated engagements' },
-                  { title: 'Budget Alignment', desc: 'Fee table arithmetic, billing schedule, deliverable-to-fee mapping' },
-                  { title: 'Red Flag Detection', desc: 'Identifies unbounded phrases like "ad hoc", "ongoing", "as needed"' },
+                  { num: '01', title: 'Universal Requirements', desc: 'Numbering, completion criteria, controlled language' },
+                  { num: '02', title: 'Client Responsibilities', desc: 'Feedback consolidation, approval windows, change control' },
+                  { num: '03', title: 'Master Assumptions', desc: 'Scope boundaries, revision limits, response times' },
+                  { num: '04', title: 'Service-Line Specifics', desc: 'Requirements for branding, website, PR, creative' },
+                  { num: '05', title: 'Budget Alignment', desc: 'Fee arithmetic, billing schedules, deliverable mapping' },
+                  { num: '06', title: 'Red Flag Detection', desc: 'Identifies "ad hoc", "ongoing", "as needed" phrases' },
                 ].map((item, idx) => (
-                  <div key={idx} className="p-4 bg-white rounded-xl border border-[#E5E5E0]">
-                    <p className="font-semibold text-[#1A1A1A] mb-1">{item.title}</p>
-                    <p className="text-sm text-[#6B7280]">{item.desc}</p>
+                  <div key={idx} className="text-left p-6 bg-gray-50 rounded-2xl">
+                    <span className="text-4xl font-bold text-gray-200">{item.num}</span>
+                    <h3 className="font-semibold text-gray-900 mt-2 mb-1">{item.title}</h3>
+                    <p className="text-sm text-gray-500">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -953,74 +956,74 @@ Your writing style:
             {/* Results */}
             <div className="flex items-start justify-between mb-8">
               <div>
-                <h1 className="text-4xl font-bold text-[#1A1A1A] mb-2">Analysis Complete</h1>
-                <p className="text-[#6B7280]">{file?.name} • {ENGAGEMENT_TYPES.find(t => t.value === engagementType)?.label} Engagement</p>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">Analysis Complete</h1>
+                <p className="text-gray-500">{file?.name} • {ENGAGEMENT_TYPES.find(t => t.value === engagementType)?.label} Engagement</p>
               </div>
-              <button onClick={resetReview} className="px-5 py-2.5 text-sm font-semibold text-[#1A1A1A] border-2 border-[#1A1A1A] rounded-xl hover:bg-[#1A1A1A] hover:text-white transition-colors">
+              <button onClick={resetReview} className="px-5 py-2.5 text-sm font-semibold text-gray-900 border-2 border-gray-900 rounded-xl hover:bg-gray-900 hover:text-white transition-colors">
                 Review Another
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#E5E5E0] p-6 shadow-sm">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               {analysis.critical?.length > 0 && (
                 <CollapsibleSection title="Critical Issues" icon={AlertCircle} count={analysis.critical.length} defaultOpen variant="critical">
-                  <p className="text-sm text-[#DC2626] mb-4">Must be addressed before issuing to client.</p>
+                  <p className="text-sm text-red-600 mb-4">Must be addressed before issuing to client.</p>
                   {analysis.critical.map((issue, idx) => <IssueCard key={idx} issue={issue} type="critical" />)}
                 </CollapsibleSection>
               )}
 
               {analysis.recommended?.length > 0 && (
                 <CollapsibleSection title="Recommended Improvements" icon={AlertTriangle} count={analysis.recommended.length} defaultOpen variant="recommended">
-                  <p className="text-sm text-[#D97706] mb-4">Would strengthen the SOW but not blocking.</p>
+                  <p className="text-sm text-amber-600 mb-4">Would strengthen the SOW but not blocking.</p>
                   {analysis.recommended.map((issue, idx) => <IssueCard key={idx} issue={issue} type="recommended" />)}
                 </CollapsibleSection>
               )}
 
               {analysis.redFlags?.length > 0 && (
                 <CollapsibleSection title="Red Flags Found" count={analysis.redFlags.length} icon={AlertTriangle}>
-                  <p className="text-sm text-[#6B7280] mb-4">Problematic language to replace. Click the copy button to grab the replacement text.</p>
+                  <p className="text-sm text-gray-500 mb-4">Problematic language to replace. Click the copy button to grab the replacement text.</p>
                   {analysis.redFlags.map((flag, idx) => <RedFlagCard key={idx} flag={flag} />)}
                 </CollapsibleSection>
               )}
 
               {analysis.compliance && (
                 <CollapsibleSection title="Service-Line Compliance" icon={CheckCircle}>
-                  <pre className="whitespace-pre-wrap text-sm bg-[#F5F4F0] p-4 rounded-lg overflow-auto font-mono text-[#1A1A1A]">{analysis.compliance}</pre>
+                  <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto font-mono text-gray-900">{analysis.compliance}</pre>
                 </CollapsibleSection>
               )}
 
               {analysis.budget && (
                 <CollapsibleSection title="Budget Verification">
-                  <pre className="whitespace-pre-wrap text-sm bg-[#F5F4F0] p-4 rounded-lg overflow-auto font-mono text-[#1A1A1A]">{analysis.budget}</pre>
+                  <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto font-mono text-gray-900">{analysis.budget}</pre>
                 </CollapsibleSection>
               )}
 
               {analysis.overall && (
                 <CollapsibleSection title="Overall Assessment" defaultOpen>
-                  <pre className="whitespace-pre-wrap text-sm bg-[#F5F4F0] p-4 rounded-lg overflow-auto text-[#1A1A1A]">{analysis.overall}</pre>
+                  <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto text-gray-900">{analysis.overall}</pre>
                 </CollapsibleSection>
               )}
 
               <CollapsibleSection title="Full Analysis (Raw)">
-                <pre className="whitespace-pre-wrap text-xs bg-[#1A1A1A] text-[#E5E5E0] p-4 rounded-lg overflow-auto max-h-96 font-mono">{rawResponse}</pre>
+                <pre className="whitespace-pre-wrap text-xs bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto max-h-96 font-mono">{rawResponse}</pre>
               </CollapsibleSection>
             </div>
 
             {/* Draft Updated SOW Section */}
-            <div className="mt-8 bg-gradient-to-br from-[#1A1A1A] to-[#2D2D2D] rounded-2xl p-8 shadow-lg">
+            <div className="mt-8 bg-gray-900 rounded-2xl p-8 shadow-lg">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-[#CCFF00] rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-6 h-6 text-[#1A1A1A]" />
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-gray-900" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-white mb-2">Generate Revised SOW</h2>
-                  <p className="text-[#9CA3AF] mb-6">
+                  <p className="text-gray-400 mb-6">
                     Create an updated draft that incorporates all critical fixes, recommended improvements, and red flag replacements from the analysis above.
                   </p>
 
                   {draftError && (
-                    <div className="mb-4 p-4 bg-[#DC2626]/20 border border-[#DC2626]/40 rounded-xl">
-                      <p className="text-[#FCA5A5] text-sm">{draftError}</p>
+                    <div className="mb-4 p-4 bg-red-900/30 border border-red-500/40 rounded-xl">
+                      <p className="text-red-300 text-sm">{draftError}</p>
                     </div>
                   )}
 
@@ -1030,8 +1033,8 @@ Your writing style:
                       disabled={isDrafting}
                       className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-3 ${
                         isDrafting
-                          ? 'bg-[#4B4B4B] text-[#9CA3AF] cursor-not-allowed'
-                          : 'bg-[#CCFF00] text-[#1A1A1A] hover:bg-[#B8E600]'
+                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-900 hover:bg-gray-100'
                       }`}
                     >
                       {isDrafting ? (
@@ -1042,14 +1045,14 @@ Your writing style:
                     </button>
                   ) : (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#16A34A]/20 border border-[#16A34A]/40 rounded-full text-[#86EFAC] text-sm font-medium">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-900/30 border border-green-500/40 rounded-full text-green-300 text-sm font-medium">
                           <CheckCircle className="w-4 h-4" />
                           Draft Generated
                         </span>
                         <button
                           onClick={downloadDraft}
-                          className="px-4 py-2 bg-[#CCFF00] text-[#1A1A1A] rounded-lg font-semibold text-sm hover:bg-[#B8E600] transition-colors flex items-center gap-2"
+                          className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
                         >
                           <Download className="w-4 h-4" />
                           Download Draft
@@ -1057,7 +1060,7 @@ Your writing style:
                         <button
                           onClick={generateDraft}
                           disabled={isDrafting}
-                          className="px-4 py-2 bg-[#3D3D3D] text-white rounded-lg font-medium text-sm hover:bg-[#4B4B4B] transition-colors"
+                          className="px-4 py-2 bg-gray-700 text-white rounded-lg font-medium text-sm hover:bg-gray-600 transition-colors"
                         >
                           Regenerate
                         </button>
@@ -1070,17 +1073,17 @@ Your writing style:
               {/* Draft Preview */}
               {draftedSOW && (
                 <div className="mt-6">
-                  <div className="bg-[#0D0D0D] rounded-xl border border-[#3D3D3D] overflow-hidden">
-                    <div className="px-4 py-3 bg-[#1A1A1A] border-b border-[#3D3D3D] flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#9CA3AF]">Revised SOW Preview</span>
-                      <CopyButton text={draftedSOW} className="!bg-[#3D3D3D] !text-[#9CA3AF] hover:!bg-[#4B4B4B] hover:!text-white" />
+                  <div className="bg-gray-950 rounded-xl border border-gray-700 overflow-hidden">
+                    <div className="px-4 py-3 bg-gray-800 border-b border-gray-700 flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-400">Revised SOW Preview</span>
+                      <CopyButton text={draftedSOW} className="!bg-gray-700 !text-gray-400 hover:!bg-gray-600 hover:!text-white" />
                     </div>
                     <div className="p-4 max-h-[500px] overflow-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-[#E5E5E0] font-mono leading-relaxed">{draftedSOW}</pre>
+                      <pre className="whitespace-pre-wrap text-sm text-gray-100 font-mono leading-relaxed">{draftedSOW}</pre>
                     </div>
                   </div>
-                  <p className="mt-3 text-xs text-[#6B7280]">
-                    <span className="text-[#CCFF00]">[REVISED]</span> marks modified sections • <span className="text-[#CCFF00]">[NEW]</span> marks added sections • Review carefully before use
+                  <p className="mt-3 text-xs text-gray-500">
+                    <span className="text-white">[REVISED]</span> marks modified sections • <span className="text-white">[NEW]</span> marks added sections • Review carefully before use
                   </p>
                 </div>
               )}
@@ -1089,14 +1092,53 @@ Your writing style:
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="max-w-5xl mx-auto px-6 py-8 border-t border-[#E5E5E0]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AntennaLogo className="h-7 text-[#9CA3AF]" />
-            <span className="text-xs text-[#9CA3AF]">For conscious brands with the courage to lead</span>
+      {/* Footer - matches Conscious Compass */}
+      <footer className="bg-gray-900 text-white mt-20">
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <h3 className="text-2xl font-semibold mb-8">For conscious brands with the courage to lead</h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div>
+              <h4 className="font-semibold mb-4 text-gray-400">Our Offices</h4>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li>San Francisco, CA</li>
+                <li>New York, NY</li>
+                <li>Hackensack, NJ</li>
+                <li>Washington, D.C.</li>
+                <li>London, UK</li>
+                <li>Prague, CZ</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-gray-400">Social</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="https://www.linkedin.com/company/antenna-group" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">LinkedIn</a></li>
+                <li><a href="https://www.instagram.com/antennagroup/" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Instagram</a></li>
+                <li><a href="https://www.facebook.com/AntennaGroup" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Facebook</a></li>
+                <li><a href="https://x.com/antenna_group" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">X</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-gray-400">Learn</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="https://www.antennagroup.com/lets-chat" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Let's Chat</a></li>
+                <li><a href="https://www.antennagroup.com/work" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Work</a></li>
+                <li><a href="https://www.antennagroup.com/age-of-adoption-podcast" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Podcast</a></li>
+                <li><a href="https://fullyconscious.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Conscious Compass</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 text-gray-400">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="https://www.antennagroup.com/terms" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Terms of Use</a></li>
+                <li><a href="https://www.antennagroup.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</a></li>
+              </ul>
+            </div>
           </div>
-          <p className="text-sm text-[#9CA3AF]">SOW Quality Standards v1.0</p>
+          
+          <div className="pt-8 border-t border-gray-800 text-sm text-gray-400">
+            © 2026 Antenna Group — All Rights Reserved
+          </div>
         </div>
       </footer>
     </div>
