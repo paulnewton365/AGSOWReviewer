@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles } from 'lucide-react';
 
 // Assessment Framework
 const ASSESSMENT_FRAMEWORK = `
@@ -473,6 +473,11 @@ export default function App() {
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
   const [rawResponse, setRawResponse] = useState('');
+  
+  // Draft SOW state
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [draftedSOW, setDraftedSOW] = useState(null);
+  const [draftError, setDraftError] = useState(null);
 
   const handleFileUpload = useCallback(async (event) => {
     const uploadedFile = event.target.files[0];
@@ -674,6 +679,125 @@ When reviewing SOWs:
     setAnalysis(null);
     setError(null);
     setRawResponse('');
+    setDraftedSOW(null);
+    setDraftError(null);
+  };
+
+  // Generate updated SOW draft
+  const generateDraft = async () => {
+    if (!apiKey || !fileContent || !rawResponse) return;
+
+    setIsDrafting(true);
+    setDraftError(null);
+
+    try {
+      const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === engagementType)?.label || engagementType;
+
+      const draftPrompt = `You are revising a Statement of Work (SOW) document based on a quality assessment.
+
+ORIGINAL ASSESSMENT FINDINGS:
+${rawResponse}
+
+Your task is to produce a COMPLETE, REVISED version of the SOW that incorporates ALL the recommended fixes from the assessment above.
+
+INSTRUCTIONS:
+1. Apply ALL critical issues fixes
+2. Apply ALL recommended improvements  
+3. Replace ALL red flag phrases with their recommended alternatives
+4. Add any missing required sections (client responsibilities, assumptions, exclusions, etc.)
+5. Maintain the original document structure and numbering system
+6. Preserve all content that was not flagged as problematic
+7. Use professional, precise language throughout
+
+OUTPUT FORMAT:
+- Produce the complete revised SOW as a well-formatted document
+- Use proper section numbering (1.0, 1.1, 1.1.1, etc.)
+- Include all standard SOW sections
+- Mark any sections you've significantly modified with [REVISED] at the end of the section title
+- Mark any new sections you've added with [NEW] at the end of the section title
+
+Begin the revised SOW now:`;
+
+      let messages = [];
+      
+      if (fileContent.type === 'pdf') {
+        messages = [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: fileContent.data }},
+            { type: 'text', text: draftPrompt }
+          ]
+        }];
+      } else if (fileContent.type === 'text') {
+        messages = [{
+          role: 'user',
+          content: `${draftPrompt}\n\n=== ORIGINAL SOW CONTENT ===\n${fileContent.data}\n=== END ORIGINAL SOW ===`
+        }];
+      } else {
+        messages = [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', data: fileContent.data }},
+            { type: 'text', text: draftPrompt }
+          ]
+        }];
+      }
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 16000,
+          system: `You are an expert SOW writer for Antenna Group, an integrated marketing agency. You produce clear, precise, and comprehensive Statements of Work that protect both the agency and client interests.
+
+Your writing style:
+- Professional and precise
+- Uses active voice ("Agency will..." not "It will be...")
+- Quantifies everything possible (hours, rounds, days, quantities)
+- Includes explicit completion criteria for every deliverable
+- Protects against scope creep with clear boundaries
+- Maintains consistent decimal numbering throughout`,
+          messages: messages
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const draftText = data.content.filter(block => block.type === 'text').map(block => block.text).join('\n');
+      setDraftedSOW(draftText);
+
+    } catch (err) {
+      console.error('Draft generation error:', err);
+      setDraftError(err.message || 'An error occurred while generating the draft');
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  // Download draft as text file
+  const downloadDraft = () => {
+    if (!draftedSOW) return;
+    
+    const blob = new Blob([draftedSOW], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const originalName = file?.name?.replace(/\.[^/.]+$/, '') || 'SOW';
+    a.download = `${originalName}_REVISED.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -880,6 +1004,86 @@ When reviewing SOWs:
               <CollapsibleSection title="Full Analysis (Raw)">
                 <pre className="whitespace-pre-wrap text-xs bg-[#1A1A1A] text-[#E5E5E0] p-4 rounded-lg overflow-auto max-h-96 font-mono">{rawResponse}</pre>
               </CollapsibleSection>
+            </div>
+
+            {/* Draft Updated SOW Section */}
+            <div className="mt-8 bg-gradient-to-br from-[#1A1A1A] to-[#2D2D2D] rounded-2xl p-8 shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-[#CCFF00] rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-6 h-6 text-[#1A1A1A]" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-2">Generate Revised SOW</h2>
+                  <p className="text-[#9CA3AF] mb-6">
+                    Create an updated draft that incorporates all critical fixes, recommended improvements, and red flag replacements from the analysis above.
+                  </p>
+
+                  {draftError && (
+                    <div className="mb-4 p-4 bg-[#DC2626]/20 border border-[#DC2626]/40 rounded-xl">
+                      <p className="text-[#FCA5A5] text-sm">{draftError}</p>
+                    </div>
+                  )}
+
+                  {!draftedSOW ? (
+                    <button
+                      onClick={generateDraft}
+                      disabled={isDrafting}
+                      className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-3 ${
+                        isDrafting
+                          ? 'bg-[#4B4B4B] text-[#9CA3AF] cursor-not-allowed'
+                          : 'bg-[#CCFF00] text-[#1A1A1A] hover:bg-[#B8E600]'
+                      }`}
+                    >
+                      {isDrafting ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" />Generating Draft...</>
+                      ) : (
+                        <><Sparkles className="w-5 h-5" />Draft Updated SOW</>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#16A34A]/20 border border-[#16A34A]/40 rounded-full text-[#86EFAC] text-sm font-medium">
+                          <CheckCircle className="w-4 h-4" />
+                          Draft Generated
+                        </span>
+                        <button
+                          onClick={downloadDraft}
+                          className="px-4 py-2 bg-[#CCFF00] text-[#1A1A1A] rounded-lg font-semibold text-sm hover:bg-[#B8E600] transition-colors flex items-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download Draft
+                        </button>
+                        <button
+                          onClick={generateDraft}
+                          disabled={isDrafting}
+                          className="px-4 py-2 bg-[#3D3D3D] text-white rounded-lg font-medium text-sm hover:bg-[#4B4B4B] transition-colors"
+                        >
+                          Regenerate
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Draft Preview */}
+              {draftedSOW && (
+                <div className="mt-6">
+                  <div className="bg-[#0D0D0D] rounded-xl border border-[#3D3D3D] overflow-hidden">
+                    <div className="px-4 py-3 bg-[#1A1A1A] border-b border-[#3D3D3D] flex items-center justify-between">
+                      <span className="text-sm font-medium text-[#9CA3AF]">Revised SOW Preview</span>
+                      <CopyButton text={draftedSOW} className="!bg-[#3D3D3D] !text-[#9CA3AF] hover:!bg-[#4B4B4B] hover:!text-white" />
+                    </div>
+                    <div className="p-4 max-h-[500px] overflow-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-[#E5E5E0] font-mono leading-relaxed">{draftedSOW}</pre>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-[#6B7280]">
+                    <span className="text-[#CCFF00]">[REVISED]</span> marks modified sections • <span className="text-[#CCFF00]">[NEW]</span> marks added sections • Review carefully before use
+                  </p>
+                </div>
+              )}
             </div>
           </>
         )}
