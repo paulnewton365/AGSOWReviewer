@@ -24,19 +24,20 @@ const ASSESSMENT_FRAMEWORK = `
 - Must have stage gates requiring approval before subsequent phases
 
 ### 1.3 Controlled Language - RED FLAGS TO IDENTIFY
-Search for and flag these phrases:
-- "ad hoc" → replace with quantified support parameters
-- "ongoing" → add term limits or define cadence
-- "as and when" → specify triggers or quantities
-- "as needed" → define scope boundaries
-- "various" → enumerate specific items
-- "regular" → specify frequency
-- "continuous" → define iterations or rounds
-- "flexible" → add parameters
-- "unlimited" → NEVER use, always cap
-- "best efforts" → define success criteria
-- "reasonable" → quantify where possible
-- "mutually agreed" without default → specify default window
+Search for and flag these phrases. When replacing, prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quantification. This provides flexibility while still setting boundaries.
+
+- "ad hoc" → replace with bounded support (e.g., "up to 4 hours per month of support")
+- "ongoing" → add term limits or define cadence (e.g., "for up to 12 months")
+- "as and when" → specify triggers or quantities with caps
+- "as needed" → define scope boundaries with maximums
+- "various" → enumerate specific items with counts
+- "regular" → specify frequency (e.g., "weekly" or "up to 2 times per week")
+- "continuous" → define iterations or rounds (e.g., "up to 2 rounds of revisions")
+- "flexible" → add parameters with upper bounds
+- "unlimited" → NEVER use, always specify cap with "up to"
+- "best efforts" → define measurable success criteria
+- "reasonable" → quantify with "up to" bounds where possible
+- "mutually agreed" without default → specify default window (e.g., "up to 5 business days")
 
 ### 1.4 Deliverable Structure
 Each deliverable MUST include:
@@ -553,6 +554,7 @@ Structure your response as:
 
 3. RED FLAGS FOUND - Every instance of problematic phrases
 Format as: "[phrase found]" in Section X.X → "[recommended replacement]"
+IMPORTANT: Prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quantification. This provides flexibility while still setting clear boundaries.
 
 4. SERVICE-LINE COMPLIANCE - Check each required element for ${engagementLabel} engagements
 ✓ Present: [element] - [where found]
