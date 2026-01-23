@@ -1,5 +1,379 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles, PenTool, Search, MessageSquare, Lightbulb, Target, Users, ChevronLeft } from 'lucide-react';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType, PageNumber, PageBreak, LevelFormat, ImageRun } from 'docx';
+import { saveAs } from 'file-saver';
+
+// ============================================================================
+// DOCX GENERATION UTILITIES
+// ============================================================================
+
+// Antenna Group logo as base64 (simple text fallback for header)
+const createAntennaHeader = () => {
+  return new Header({
+    children: [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: ".antenna",
+            font: "Arial",
+            size: 36,
+            bold: true,
+          }),
+          new TextRun({
+            text: "group",
+            font: "Arial",
+            size: 24,
+            color: "666666",
+          }),
+        ],
+      }),
+    ],
+  });
+};
+
+const createFooter = () => {
+  return new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: "Page ",
+            font: "Arial",
+            size: 20,
+            color: "666666",
+          }),
+          new TextRun({
+            children: [PageNumber.CURRENT],
+            font: "Arial",
+            size: 20,
+            color: "666666",
+          }),
+        ],
+      }),
+    ],
+  });
+};
+
+// Parse SOW text into structured sections
+const parseSOWContent = (sowText) => {
+  const lines = sowText.split('\n');
+  const sections = [];
+  let currentSection = null;
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    
+    // Check for main headings (# or ##)
+    if (trimmed.startsWith('# ')) {
+      if (currentSection) sections.push(currentSection);
+      currentSection = { type: 'h1', text: trimmed.replace(/^#+\s*/, ''), children: [] };
+    } else if (trimmed.startsWith('## ')) {
+      if (currentSection) sections.push(currentSection);
+      currentSection = { type: 'h2', text: trimmed.replace(/^#+\s*/, ''), children: [] };
+    } else if (trimmed.startsWith('### ')) {
+      if (currentSection) sections.push(currentSection);
+      currentSection = { type: 'h3', text: trimmed.replace(/^#+\s*/, ''), children: [] };
+    } else if (/^\d+\.\s/.test(trimmed)) {
+      // Numbered section (e.g., "1. Services Description")
+      if (currentSection) sections.push(currentSection);
+      currentSection = { type: 'numbered', text: trimmed, children: [] };
+    } else if (/^\d+\.\d+/.test(trimmed)) {
+      // Sub-numbered (e.g., "1.1. Something")
+      if (currentSection) {
+        currentSection.children.push({ type: 'sub', text: trimmed });
+      } else {
+        sections.push({ type: 'para', text: trimmed, children: [] });
+      }
+    } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      // Bullet point
+      if (currentSection) {
+        currentSection.children.push({ type: 'bullet', text: trimmed.replace(/^[-•]\s*/, '') });
+      } else {
+        sections.push({ type: 'bullet', text: trimmed.replace(/^[-•]\s*/, ''), children: [] });
+      }
+    } else {
+      // Regular paragraph
+      if (currentSection) {
+        currentSection.children.push({ type: 'para', text: trimmed });
+      } else {
+        sections.push({ type: 'para', text: trimmed, children: [] });
+      }
+    }
+  }
+  
+  if (currentSection) sections.push(currentSection);
+  return sections;
+};
+
+// Generate Word document from SOW content
+const generateSOWDocument = async (sowText, projectInfo = {}) => {
+  const sections = parseSOWContent(sowText);
+  const children = [];
+  
+  // Title
+  const title = projectInfo.title || 'Statement of Work (SOW)';
+  children.push(
+    new Paragraph({
+      heading: HeadingLevel.TITLE,
+      children: [
+        new TextRun({
+          text: title,
+          bold: true,
+          size: 56,
+          font: "Arial",
+        }),
+      ],
+      spacing: { after: 400 },
+    })
+  );
+  
+  // Version and date info
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: "VERSION: ", bold: true, size: 22, font: "Arial" }),
+        new TextRun({ text: "1.0", size: 22, font: "Arial" }),
+      ],
+      spacing: { after: 100 },
+    })
+  );
+  
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: "DATE: ", bold: true, size: 22, font: "Arial" }),
+        new TextRun({ text: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), size: 22, font: "Arial" }),
+      ],
+      spacing: { after: 100 },
+    })
+  );
+  
+  if (projectInfo.client) {
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({ text: "PREPARED FOR: ", bold: true, size: 22, font: "Arial" }),
+          new TextRun({ text: projectInfo.client, size: 22, font: "Arial" }),
+        ],
+        spacing: { after: 100 },
+      })
+    );
+  }
+  
+  children.push(
+    new Paragraph({
+      children: [
+        new TextRun({ text: "CREATED BY: ", bold: true, size: 22, font: "Arial" }),
+        new TextRun({ text: "Antenna Group", size: 22, font: "Arial" }),
+      ],
+      spacing: { after: 400 },
+    })
+  );
+  
+  // Add horizontal line
+  children.push(
+    new Paragraph({
+      border: {
+        bottom: { style: BorderStyle.SINGLE, size: 6, color: "CCCCCC" },
+      },
+      spacing: { after: 400 },
+    })
+  );
+  
+  // Process each section
+  for (const section of sections) {
+    if (section.type === 'h1' || section.type === 'numbered') {
+      children.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_1,
+          children: [
+            new TextRun({
+              text: section.text,
+              bold: true,
+              size: 32,
+              font: "Arial",
+            }),
+          ],
+          spacing: { before: 400, after: 200 },
+        })
+      );
+    } else if (section.type === 'h2') {
+      children.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          children: [
+            new TextRun({
+              text: section.text,
+              bold: true,
+              size: 28,
+              font: "Arial",
+            }),
+          ],
+          spacing: { before: 300, after: 150 },
+        })
+      );
+    } else if (section.type === 'h3') {
+      children.push(
+        new Paragraph({
+          heading: HeadingLevel.HEADING_3,
+          children: [
+            new TextRun({
+              text: section.text,
+              bold: true,
+              size: 24,
+              font: "Arial",
+            }),
+          ],
+          spacing: { before: 200, after: 100 },
+        })
+      );
+    } else if (section.type === 'para') {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: section.text,
+              size: 22,
+              font: "Arial",
+            }),
+          ],
+          spacing: { after: 150 },
+        })
+      );
+    }
+    
+    // Process children
+    for (const child of section.children || []) {
+      if (child.type === 'sub') {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: child.text,
+                size: 22,
+                font: "Arial",
+              }),
+            ],
+            indent: { left: 360 },
+            spacing: { after: 100 },
+          })
+        );
+      } else if (child.type === 'bullet') {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "• " + child.text,
+                size: 22,
+                font: "Arial",
+              }),
+            ],
+            indent: { left: 720 },
+            spacing: { after: 80 },
+          })
+        );
+      } else if (child.type === 'para') {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: child.text,
+                size: 22,
+                font: "Arial",
+              }),
+            ],
+            indent: { left: 360 },
+            spacing: { after: 100 },
+          })
+        );
+      }
+    }
+  }
+  
+  // Create document
+  const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: {
+            font: "Arial",
+            size: 22,
+          },
+        },
+      },
+      paragraphStyles: [
+        {
+          id: "Heading1",
+          name: "Heading 1",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { size: 32, bold: true, font: "Arial" },
+          paragraph: { spacing: { before: 400, after: 200 } },
+        },
+        {
+          id: "Heading2",
+          name: "Heading 2",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { size: 28, bold: true, font: "Arial" },
+          paragraph: { spacing: { before: 300, after: 150 } },
+        },
+        {
+          id: "Heading3",
+          name: "Heading 3",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { size: 24, bold: true, font: "Arial" },
+          paragraph: { spacing: { before: 200, after: 100 } },
+        },
+      ],
+    },
+    sections: [{
+      properties: {
+        page: {
+          size: {
+            width: 12240,
+            height: 15840,
+          },
+          margin: {
+            top: 1440,
+            right: 1440,
+            bottom: 1440,
+            left: 1440,
+          },
+        },
+      },
+      headers: {
+        default: createAntennaHeader(),
+      },
+      footers: {
+        default: createFooter(),
+      },
+      children: children,
+    }],
+  });
+  
+  return doc;
+};
+
+// Download as Word document
+const downloadAsDocx = async (sowText, filename, projectInfo = {}) => {
+  try {
+    const doc = await generateSOWDocument(sowText, projectInfo);
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, filename);
+  } catch (error) {
+    console.error('Error generating DOCX:', error);
+    // Fallback to text download
+    const textBlob = new Blob([sowText], { type: 'text/plain' });
+    saveAs(textBlob, filename.replace('.docx', '.txt'));
+  }
+};
 
 // ============================================================================
 // SERVICE TRIGGER MAPPINGS
@@ -861,17 +1235,13 @@ Format the SOW professionally with clear sections.`
     }
   };
   
-  const downloadGeneratedSOW = () => {
+  const downloadGeneratedSOW = async () => {
     if (!generatedSOW) return;
-    const blob = new Blob([generatedSOW], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SOW_Draft_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = `SOW_Draft_${new Date().toISOString().split('T')[0]}.docx`;
+    await downloadAsDocx(generatedSOW, filename, {
+      title: 'Statement of Work (SOW)',
+      client: '', // Could extract from transcript analysis
+    });
   };
   
   const resetDraft = () => {
@@ -1133,18 +1503,13 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
     }
   };
 
-  const downloadRevisedDraft = () => {
+  const downloadRevisedDraft = async () => {
     if (!draftedSOW) return;
-    const blob = new Blob([draftedSOW], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
     const originalName = file?.name?.replace(/\.[^/.]+$/, '') || 'SOW';
-    a.download = `${originalName}_REVISED.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = `${originalName}_REVISED.docx`;
+    await downloadAsDocx(draftedSOW, filename, {
+      title: `${originalName} - Revised`,
+    });
   };
 
   const resetReview = () => {
@@ -1536,7 +1901,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   className="px-5 py-2.5 text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  Download
+                  Download Word Doc
                 </button>
                 <button
                   onClick={resetDraft}
@@ -1780,7 +2145,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                           className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
                         >
                           <Download className="w-4 h-4" />
-                          Download Draft
+                          Download Word Doc
                         </button>
                         <button
                           onClick={generateRevisedDraft}
