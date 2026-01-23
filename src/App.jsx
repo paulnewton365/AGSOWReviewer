@@ -624,6 +624,7 @@ export default function App() {
   const [transcriptAnalysis, setTranscriptAnalysis] = useState(null);
   const [detectedTriggers, setDetectedTriggers] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [showOtherServices, setShowOtherServices] = useState(false);
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
   const [generatedSOW, setGeneratedSOW] = useState(null);
   const [draftError, setDraftError] = useState(null);
@@ -651,20 +652,15 @@ export default function App() {
     setDraftError(null);
     setTranscriptAnalysis(null);
     setDetectedTriggers([]);
+    setSelectedServices([]);
     
     try {
-      // First, detect triggers locally
-      const transcriptLower = transcript.toLowerCase();
-      const detected = SERVICE_TRIGGERS.filter(trigger => 
-        trigger.triggers.some(t => transcriptLower.includes(t.toLowerCase()))
-      );
-      setDetectedTriggers(detected);
+      // Build service categories description for AI
+      const serviceCategoriesPrompt = SERVICE_TRIGGERS.map(cat => 
+        `- ${cat.id}: "${cat.category}" - ${cat.description}. Indicators include themes like: ${cat.triggers.slice(0, 3).join(', ')}, or similar expressions of these needs.`
+      ).join('\n');
       
-      // Auto-select all services from detected triggers
-      const autoSelectedServices = detected.flatMap(t => t.services);
-      setSelectedServices([...new Set(autoSelectedServices)]);
-      
-      // Then use AI to extract deeper insights
+      // Use AI to analyze transcript AND detect relevant service categories semantically
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -675,27 +671,38 @@ export default function App() {
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          system: `You are an expert at analyzing client call transcripts to extract key information for Statement of Work development. Your job is to identify the core elements that will inform the SOW.`,
+          max_tokens: 5000,
+          system: `You are an expert at analyzing client call transcripts to extract key information for Statement of Work development. Your job is to identify the core elements that will inform the SOW AND recommend relevant service categories based on the client's expressed needs, challenges, and goals.
+
+When recommending service categories, think semantically - if a client expresses a need that aligns with the INTENT of a category, recommend it even if they don't use the exact phrases. For example:
+- "Our competitors are getting all the attention" suggests awareness needs
+- "We keep getting bad press" or "our online reviews are terrible" suggests reputation needs
+- "Nobody knows what we stand for" suggests brand/identity needs
+- "Our team creates content but it doesn't perform" suggests content or performance needs
+- "We want to be seen as the go-to experts" suggests influence/authority needs
+
+Be generous in recommendations - it's better to suggest a category that might be relevant than to miss one.`,
           messages: [{
             role: 'user',
-            content: `Analyze this client call transcript and extract:
+            content: `Analyze this client call transcript and provide TWO things:
 
+PART 1: TRANSCRIPT ANALYSIS
+Extract:
 1. SUCCESS DEFINITION - What does success look like for this engagement? What outcomes is the client hoping to achieve?
-
 2. PROBLEM STATEMENT - What specific problem(s) is the client trying to solve? What pain points did they express?
-
-3. MANDATORIES - What explicit requirements or must-haves did the client mention? Things they specifically asked for.
-
+3. MANDATORIES - What explicit requirements or must-haves did the client mention?
 4. TIMELINE - Any deadlines, milestones, or timing requirements mentioned.
-
 5. BUDGET SIGNALS - Any budget ranges, constraints, or expectations mentioned.
-
 6. KEY STAKEHOLDERS - Who are the decision makers and key contacts?
-
 7. CONTEXT - Important background about the client's situation, industry, or competitive landscape.
 
-Format your response as:
+PART 2: RECOMMENDED SERVICE CATEGORIES
+Based on the client's expressed needs, challenges, goals, and pain points, identify which of these service categories are relevant. Think about the INTENT behind what the client is saying, not just exact phrases.
+
+Available categories:
+${serviceCategoriesPrompt}
+
+Format your response EXACTLY as:
 
 ## SUCCESS DEFINITION
 [Clear statement of what success looks like]
@@ -706,19 +713,21 @@ Format your response as:
 ## MANDATORIES
 - [Explicit requirement 1]
 - [Explicit requirement 2]
-...
 
 ## TIMELINE
-[Any timeline information]
+[Any timeline information, or "Not specified" if none mentioned]
 
 ## BUDGET SIGNALS
-[Any budget information]
+[Any budget information, or "Not specified" if none mentioned]
 
 ## KEY STAKEHOLDERS
-[Stakeholder information]
+[Stakeholder information, or "Not specified" if none mentioned]
 
 ## CONTEXT
 [Relevant background]
+
+## RECOMMENDED_CATEGORIES
+[List ONLY the category IDs that are relevant, comma-separated, e.g.: awareness, brand, content, leads]
 
 TRANSCRIPT:
 ${transcript}`
@@ -733,7 +742,31 @@ ${transcript}`
       
       const data = await response.json();
       const analysisText = data.content[0].text;
-      setTranscriptAnalysis(analysisText);
+      
+      // Extract recommended categories from the response
+      const categoriesMatch = analysisText.match(/## RECOMMENDED_CATEGORIES\s*\n([^\n#]+)/i);
+      let detectedCategoryIds = [];
+      if (categoriesMatch) {
+        detectedCategoryIds = categoriesMatch[1]
+          .split(',')
+          .map(s => s.trim().toLowerCase())
+          .filter(s => s.length > 0);
+      }
+      
+      // Map category IDs to full trigger objects
+      const detected = SERVICE_TRIGGERS.filter(trigger => 
+        detectedCategoryIds.includes(trigger.id.toLowerCase())
+      );
+      
+      setDetectedTriggers(detected);
+      
+      // Auto-select all services from detected triggers
+      const autoSelectedServices = detected.flatMap(t => t.services);
+      setSelectedServices([...new Set(autoSelectedServices)]);
+      
+      // Remove the RECOMMENDED_CATEGORIES section from the displayed analysis
+      const cleanedAnalysis = analysisText.replace(/## RECOMMENDED_CATEGORIES[\s\S]*$/, '').trim();
+      setTranscriptAnalysis(cleanedAnalysis);
       
     } catch (err) {
       setDraftError(err.message);
@@ -848,6 +881,7 @@ Format the SOW professionally with clear sections.`
     setTranscriptAnalysis(null);
     setDetectedTriggers([]);
     setSelectedServices([]);
+    setShowOtherServices(false);
     setGeneratedSOW(null);
     setDraftError(null);
   };
@@ -1331,7 +1365,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                           </div>
                           <div>
                             <h3 className="text-lg font-bold text-gray-900">Recommended Services</h3>
-                            <p className="text-sm text-gray-500">Based on client language patterns</p>
+                            <p className="text-sm text-gray-500">Based on client needs identified in the transcript</p>
                           </div>
                         </div>
                         
@@ -1346,6 +1380,32 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             />
                           ))}
                         </div>
+                        
+                        {/* Other Services - categories not auto-detected */}
+                        {SERVICE_TRIGGERS.filter(t => !detectedTriggers.some(d => d.id === t.id)).length > 0 && (
+                          <div className="mt-6 pt-6 border-t border-gray-200">
+                            <button
+                              onClick={() => setShowOtherServices(!showOtherServices)}
+                              className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-gray-900 mb-4"
+                            >
+                              {showOtherServices ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                              Other Services ({SERVICE_TRIGGERS.filter(t => !detectedTriggers.some(d => d.id === t.id)).length} categories)
+                            </button>
+                            {showOtherServices && (
+                              <div className="space-y-4">
+                                {SERVICE_TRIGGERS.filter(t => !detectedTriggers.some(d => d.id === t.id)).map((trigger) => (
+                                  <ServiceCard
+                                    key={trigger.id}
+                                    trigger={trigger}
+                                    isSelected={trigger.services.some(s => selectedServices.includes(s))}
+                                    selectedServices={selectedServices}
+                                    onToggleService={toggleService}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                         
                         {selectedServices.length > 0 && (
                           <div className="mt-6 pt-6 border-t border-gray-200">
@@ -1391,8 +1451,8 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             <AlertTriangle className="w-5 h-5 text-amber-600" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-gray-900">No Service Triggers Detected</h3>
-                            <p className="text-sm text-gray-500">Select services manually below</p>
+                            <h3 className="text-lg font-bold text-gray-900">Select Services Manually</h3>
+                            <p className="text-sm text-gray-500">Choose the services to include in your SOW</p>
                           </div>
                         </div>
                         
@@ -1407,6 +1467,40 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             />
                           ))}
                         </div>
+                        
+                        {selectedServices.length > 0 && (
+                          <div className="mt-6 pt-6 border-t border-gray-200">
+                            <div className="flex items-center justify-between mb-4">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {selectedServices.length} services selected
+                              </p>
+                              <button
+                                onClick={() => setSelectedServices([])}
+                                className="text-sm text-gray-500 hover:text-gray-900"
+                              >
+                                Clear all
+                              </button>
+                            </div>
+                            <button
+                              onClick={generateSOW}
+                              disabled={isGeneratingDraft || !draftEngagementType}
+                              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
+                                isGeneratingDraft || !draftEngagementType
+                                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                  : 'bg-gray-900 text-white hover:bg-gray-800'
+                              }`}
+                            >
+                              {isGeneratingDraft ? (
+                                <><Loader2 className="w-5 h-5 animate-spin" />Generating SOW...</>
+                              ) : (
+                                <><Sparkles className="w-5 h-5" />Generate SOW Draft</>
+                              )}
+                            </button>
+                            {!draftEngagementType && (
+                              <p className="text-sm text-amber-600 mt-2 text-center">Please select an engagement type first</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
