@@ -718,7 +718,7 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
   const disabledStyles = disabled || loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
   
   // Lime yellow color from Antenna brand
-  const highlightColor = "#C8E842";
+  const highlightColor = "#E8FF00";
   
   return (
     <button
@@ -1651,7 +1651,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                         {/* Yellow highlight - slides down on hover */}
                         <span 
                           className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
-                          style={{ backgroundColor: '#C8E842', mixBlendMode: 'multiply' }}
+                          style={{ backgroundColor: '#E8FF00', mixBlendMode: 'multiply' }}
                         />
                       </span>
                     </span>
@@ -1680,7 +1680,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                         {/* Yellow highlight - slides down on hover */}
                         <span 
                           className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
-                          style={{ backgroundColor: '#C8E842', mixBlendMode: 'multiply' }}
+                          style={{ backgroundColor: '#E8FF00', mixBlendMode: 'multiply' }}
                         />
                       </span>
                     </span>
