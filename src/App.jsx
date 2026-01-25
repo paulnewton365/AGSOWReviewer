@@ -699,23 +699,26 @@ Include provision: "If Client delays exceed [X] business days, Agency reserves r
 // COMPONENTS
 // ============================================================================
 
-// Antenna-style Button with arrow and hover animation
+// Antenna-style Button with text marquee and yellow highlight sweep
 function AntennaButton({ children, onClick, disabled, loading, loadingText, icon: Icon, className = "", variant = "primary", size = "default" }) {
-  const baseStyles = "group relative overflow-hidden font-semibold transition-all duration-300 flex items-center justify-center gap-2";
+  const baseStyles = "group relative overflow-hidden font-semibold transition-all duration-300 flex items-center justify-center";
   
   const variants = {
-    primary: "bg-[#12161E] text-white hover:bg-[#1a1f2a]",
-    secondary: "bg-white text-[#12161E] border-2 border-[#12161E] hover:bg-[#12161E] hover:text-white",
+    primary: "bg-[#12161E] text-white",
+    secondary: "bg-white text-[#12161E] border-2 border-[#12161E]",
     ghost: "bg-transparent text-[#12161E] hover:bg-[#12161E]/5"
   };
   
   const sizes = {
-    small: "px-4 py-2 text-sm rounded-lg",
-    default: "px-6 py-3 text-base rounded-xl",
-    large: "px-8 py-4 text-lg rounded-xl"
+    small: "px-4 py-2 text-sm rounded-lg gap-2",
+    default: "px-6 py-3 text-base rounded-xl gap-3",
+    large: "px-8 py-4 text-lg rounded-xl gap-3"
   };
   
   const disabledStyles = disabled || loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
+  
+  // Lime yellow color from Antenna brand
+  const highlightColor = "#C8E842";
   
   return (
     <button
@@ -723,41 +726,59 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
       disabled={disabled || loading}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${disabledStyles} ${className}`}
     >
+      {/* Yellow highlight sweep overlay */}
+      <span 
+        className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"
+        style={{ 
+          background: `linear-gradient(90deg, transparent 0%, ${highlightColor}40 50%, transparent 100%)`,
+        }}
+      />
+      
       {loading ? (
         <>
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span>{loadingText || 'Loading...'}</span>
+          <Loader2 className="w-5 h-5 animate-spin relative z-10" />
+          <span className="relative z-10">{loadingText || 'Loading...'}</span>
         </>
       ) : (
         <>
-          {Icon && <Icon className="w-5 h-5" />}
-          <span className="relative">
-            {/* Main text */}
-            <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full group-hover:opacity-0">
-              {children}
-            </span>
-            {/* Hover text (slides up from below) */}
-            <span className="absolute left-0 top-full inline-block transition-transform duration-300 group-hover:-translate-y-full">
-              {children}
+          {Icon && <Icon className="w-5 h-5 relative z-10" />}
+          
+          {/* Text with marquee slide effect */}
+          <span className="relative z-10 overflow-hidden h-[1.2em]">
+            <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
+              <span className="flex items-center gap-1">
+                {children}
+              </span>
+              <span 
+                className="flex items-center gap-1"
+                style={{ color: highlightColor }}
+              >
+                {children}
+              </span>
             </span>
           </span>
-          {/* Arrow with upward animation on hover */}
-          <span className="relative w-5 h-5 overflow-hidden">
+          
+          {/* Arrow with diagonal animation */}
+          <span className="relative w-5 h-5 overflow-hidden z-10">
             <svg 
-              className="absolute w-5 h-5 transition-transform duration-300 group-hover:-translate-y-full group-hover:translate-x-full" 
+              className="absolute w-5 h-5 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
               <path d="M7 17L17 7M17 7H7M17 7V17" />
             </svg>
             <svg 
-              className="absolute w-5 h-5 translate-y-full -translate-x-full transition-transform duration-300 group-hover:translate-y-0 group-hover:translate-x-0" 
+              className="absolute w-5 h-5 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" 
               viewBox="0 0 24 24" 
               fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2"
+              stroke={highlightColor}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
               <path d="M7 17L17 7M17 7H7M17 7V17" />
             </svg>
@@ -1634,48 +1655,66 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
               {/* Draft SOW Card */}
               <button
                 onClick={() => setCurrentView('draft')}
-                className="group p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left"
+                className="group relative p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left overflow-hidden"
               >
-                <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
-                  <PenTool className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">Draft a New SOW</h2>
-                <p className="text-gray-500 mb-4">
-                  Create a Statement of Work from scratch using client call transcripts. AI analyzes the conversation to identify services and requirements.
-                </p>
-                <div className="flex items-center gap-2 text-[#12161E] font-semibold">
-                  <span className="relative overflow-hidden">
-                    <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full group-hover:opacity-0">Get started</span>
-                    <span className="absolute left-0 top-full inline-block transition-transform duration-300 group-hover:-translate-y-full">Get started</span>
-                  </span>
-                  <span className="relative w-4 h-4 overflow-hidden">
-                    <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 group-hover:-translate-y-full group-hover:translate-x-full" />
-                    <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 group-hover:translate-y-0 group-hover:translate-x-0" />
-                  </span>
+                {/* Yellow highlight sweep */}
+                <span 
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, #C8E84230 50%, transparent 100%)' }}
+                />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
+                    <PenTool className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-3">Draft a New SOW</h2>
+                  <p className="text-gray-500 mb-4">
+                    Create a Statement of Work from scratch using client call transcripts. AI analyzes the conversation to identify services and requirements.
+                  </p>
+                  <div className="flex items-center gap-2 text-[#12161E] font-semibold">
+                    <span className="relative overflow-hidden h-[1.2em]">
+                      <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
+                        <span>Get started</span>
+                        <span style={{ color: '#C8E842' }}>Get started</span>
+                      </span>
+                    </span>
+                    <span className="relative w-4 h-4 overflow-hidden">
+                      <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" />
+                      <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" style={{ color: '#C8E842' }} />
+                    </span>
+                  </div>
                 </div>
               </button>
               
               {/* Review SOW Card */}
               <button
                 onClick={() => setCurrentView('review')}
-                className="group p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left"
+                className="group relative p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left overflow-hidden"
               >
-                <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
-                  <Search className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">Review an Existing SOW</h2>
-                <p className="text-gray-500 mb-4">
-                  Upload an SOW for automated quality assessment against Antenna Group standards. Get specific recommendations and generate revised drafts.
-                </p>
-                <div className="flex items-center gap-2 text-[#12161E] font-semibold">
-                  <span className="relative overflow-hidden">
-                    <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full group-hover:opacity-0">Get started</span>
-                    <span className="absolute left-0 top-full inline-block transition-transform duration-300 group-hover:-translate-y-full">Get started</span>
-                  </span>
-                  <span className="relative w-4 h-4 overflow-hidden">
-                    <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 group-hover:-translate-y-full group-hover:translate-x-full" />
-                    <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 group-hover:translate-y-0 group-hover:translate-x-0" />
-                  </span>
+                {/* Yellow highlight sweep */}
+                <span 
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, #C8E84230 50%, transparent 100%)' }}
+                />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
+                    <Search className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-3">Review an Existing SOW</h2>
+                  <p className="text-gray-500 mb-4">
+                    Upload an SOW for automated quality assessment against Antenna Group standards. Get specific recommendations and generate revised drafts.
+                  </p>
+                  <div className="flex items-center gap-2 text-[#12161E] font-semibold">
+                    <span className="relative overflow-hidden h-[1.2em]">
+                      <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
+                        <span>Get started</span>
+                        <span style={{ color: '#C8E842' }}>Get started</span>
+                      </span>
+                    </span>
+                    <span className="relative w-4 h-4 overflow-hidden">
+                      <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" />
+                      <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" style={{ color: '#C8E842' }} />
+                    </span>
+                  </div>
                 </div>
               </button>
             </div>
