@@ -1527,9 +1527,9 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
   // ============================================================================
   
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#E8E6E1' }}>
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+      <header className="border-b border-gray-200 sticky top-0 z-10" style={{ backgroundColor: '#E8E6E1' }}>
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button onClick={() => setCurrentView('home')} className="hover:opacity-80 transition-opacity">
