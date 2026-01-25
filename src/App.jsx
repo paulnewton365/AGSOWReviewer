@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.4';
+const APP_VERSION = '2.1.5';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1799,7 +1799,7 @@ function CopyButton({ text, className = "" }) {
 }
 
 // Issue Card for Review
-function IssueCard({ issue, type }) {
+function IssueCard({ issue, type, isSelected, onToggle }) {
   const styles = {
     critical: { bg: 'bg-red-50 border-red-200', icon: 'text-red-600', Icon: AlertCircle },
     recommended: { bg: 'bg-amber-50 border-amber-200', icon: 'text-amber-600', Icon: AlertTriangle },
@@ -1807,6 +1807,9 @@ function IssueCard({ issue, type }) {
   };
   
   const { bg, icon, Icon } = styles[type] || styles.info;
+  
+  // Adjust background when deselected
+  const cardBg = isSelected === false ? 'bg-gray-100 border-gray-200 opacity-60' : bg;
 
   const parseIssue = (text) => {
     const result = { 
@@ -1887,8 +1890,18 @@ function IssueCard({ issue, type }) {
   };
 
   return (
-    <div className={`p-4 rounded-xl border ${bg} mb-3`}>
+    <div className={`p-4 rounded-xl border ${cardBg} mb-3 transition-all`}>
       <div className="flex items-start gap-3">
+        {onToggle && (
+          <label className="flex items-center cursor-pointer mt-0.5">
+            <input
+              type="checkbox"
+              checked={isSelected !== false}
+              onChange={onToggle}
+              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+            />
+          </label>
+        )}
         <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${icon}`} />
         <div className="flex-1">
           {parsed.section && (
@@ -1950,7 +1963,7 @@ function IssueCard({ issue, type }) {
 }
 
 // Red Flag Card
-function RedFlagCard({ flag }) {
+function RedFlagCard({ flag, isSelected, onToggle }) {
   const parseRedFlag = (text) => {
     const arrowMatch = text.match(/[""]([^""]+)[""]\s*(?:in\s+)?(?:Section\s+)?([\d.]*)\s*[→→>-]+\s*[""]([^""]+)[""]/i);
     if (arrowMatch) {
@@ -1965,11 +1978,22 @@ function RedFlagCard({ flag }) {
   };
 
   const parsed = parseRedFlag(flag);
+  const cardBg = isSelected === false ? 'bg-gray-100 border-gray-200 opacity-60' : 'bg-gray-50 border-gray-200';
 
   if (parsed) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+      <div className={`${cardBg} rounded-xl p-4 mb-3 transition-all`}>
         <div className="flex items-start gap-3">
+          {onToggle && (
+            <label className="flex items-center cursor-pointer mt-0.5">
+              <input
+                type="checkbox"
+                checked={isSelected !== false}
+                onChange={onToggle}
+                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+              />
+            </label>
+          )}
           <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
           <div className="flex-1">
             {parsed.section && (
@@ -1996,8 +2020,18 @@ function RedFlagCard({ flag }) {
   }
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
+    <div className={`${cardBg} rounded-xl p-4 mb-3 transition-all`}>
       <div className="flex items-start gap-3">
+        {onToggle && (
+          <label className="flex items-center cursor-pointer mt-0.5">
+            <input
+              type="checkbox"
+              checked={isSelected !== false}
+              onChange={onToggle}
+              className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+            />
+          </label>
+        )}
         <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
         <div className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">{flag}</div>
       </div>
@@ -2120,6 +2154,36 @@ export default function App() {
   const [isDrafting, setIsDrafting] = useState(false);
   const [draftedSOW, setDraftedSOW] = useState(null);
   const [reviewDraftError, setReviewDraftError] = useState(null);
+  const [selectedRecommendations, setSelectedRecommendations] = useState({
+    critical: [],
+    recommended: [],
+    redFlags: []
+  });
+
+  // Toggle a recommendation selection
+  const toggleRecommendation = (type, index) => {
+    setSelectedRecommendations(prev => {
+      const current = prev[type] || [];
+      if (current.includes(index)) {
+        return { ...prev, [type]: current.filter(i => i !== index) };
+      } else {
+        return { ...prev, [type]: [...current, index] };
+      }
+    });
+  };
+
+  // Select/deselect all in a category
+  const toggleAllInCategory = (type, items) => {
+    setSelectedRecommendations(prev => {
+      const current = prev[type] || [];
+      const allSelected = items.length > 0 && current.length === items.length;
+      if (allSelected) {
+        return { ...prev, [type]: [] };
+      } else {
+        return { ...prev, [type]: items.map((_, idx) => idx) };
+      }
+    });
+  };
 
   // ============================================================================
   // DRAFT SOW FUNCTIONS
@@ -2790,6 +2854,13 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
       };
 
       setAnalysis(parsedAnalysis);
+      
+      // Initialize all recommendations as selected (checked) by default
+      setSelectedRecommendations({
+        critical: (parsedAnalysis.critical || []).map((_, idx) => idx),
+        recommended: (parsedAnalysis.recommended || []).map((_, idx) => idx),
+        redFlags: (parsedAnalysis.redFlags || []).map((_, idx) => idx)
+      });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -2798,24 +2869,48 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
   };
 
   const generateRevisedDraft = async () => {
-    if (!apiKey || !fileContent || !rawResponse) return;
+    if (!apiKey || !fileContent || !analysis) return;
     
     setIsDrafting(true);
     setReviewDraftError(null);
     
     try {
-      let messages = [];
-      const draftPrompt = `Based on the analysis provided, create a COMPLETE REVISED VERSION of this SOW that:
+      // Build filtered analysis based on selected recommendations
+      const selectedCritical = (analysis.critical || [])
+        .filter((_, idx) => selectedRecommendations.critical.includes(idx));
+      const selectedRecommended = (analysis.recommended || [])
+        .filter((_, idx) => selectedRecommendations.recommended.includes(idx));
+      const selectedRedFlags = (analysis.redFlags || [])
+        .filter((_, idx) => selectedRecommendations.redFlags.includes(idx));
+      
+      const filteredAnalysis = `## SELECTED CHANGES TO APPLY
 
-1. Applies ALL critical fixes identified
-2. Incorporates ALL recommended improvements
-3. Replaces ALL red flag language with the suggested alternatives (using "up to" language)
-4. Adds any missing required sections (client responsibilities, assumptions, exclusions)
+### Critical Issues to Fix (${selectedCritical.length} selected):
+${selectedCritical.length > 0 ? selectedCritical.map((issue, i) => `${i + 1}. ${issue}`).join('\n\n') : 'None selected'}
+
+### Recommended Improvements to Apply (${selectedRecommended.length} selected):
+${selectedRecommended.length > 0 ? selectedRecommended.map((issue, i) => `${i + 1}. ${issue}`).join('\n\n') : 'None selected'}
+
+### Red Flag Language to Replace (${selectedRedFlags.length} selected):
+${selectedRedFlags.length > 0 ? selectedRedFlags.map((flag, i) => `${i + 1}. ${flag}`).join('\n') : 'None selected'}
+
+### Additional Context (Structural Compliance, Budget, Overall):
+${analysis.compliance || 'N/A'}
+${analysis.budget || 'N/A'}
+${analysis.overall || 'N/A'}`;
+
+      let messages = [];
+      const draftPrompt = `Based on the SELECTED changes provided below, create a COMPLETE REVISED VERSION of this SOW that:
+
+1. Applies ONLY the critical fixes that were selected
+2. Incorporates ONLY the recommended improvements that were selected
+3. Replaces ONLY the red flag language that was selected (using "up to" language)
+4. Adds any missing required sections mentioned in the selected items
 5. Maintains the original structure and intent while improving quality
 6. Uses proper decimal numbering throughout
+7. KEEP unchanged any sections where the recommendation was NOT selected
 
-ANALYSIS TO APPLY:
-${rawResponse}
+${filteredAnalysis}
 
 Output the complete revised SOW text. Mark sections you've modified with [REVISED] and new sections with [NEW].`;
 
@@ -2888,6 +2983,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
     setRawResponse('');
     setDraftedSOW(null);
     setError(null);
+    setSelectedRecommendations({ critical: [], recommended: [], redFlags: [] });
   };
 
   // ============================================================================
@@ -3442,22 +3538,69 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               {analysis.critical?.length > 0 && (
                 <CollapsibleSection title="Critical Issues" icon={AlertCircle} count={analysis.critical.length} defaultOpen variant="critical">
-                  <p className="text-sm text-red-600 mb-4">Must be addressed before issuing to client.</p>
-                  {analysis.critical.map((issue, idx) => <IssueCard key={idx} issue={issue} type="critical" />)}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-red-600">Must be addressed before issuing to client.</p>
+                    <button
+                      onClick={() => toggleAllInCategory('critical', analysis.critical)}
+                      className="text-xs text-gray-500 hover:text-gray-900 underline"
+                    >
+                      {selectedRecommendations.critical.length === analysis.critical.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  {analysis.critical.map((issue, idx) => (
+                    <IssueCard 
+                      key={idx} 
+                      issue={issue} 
+                      type="critical"
+                      isSelected={selectedRecommendations.critical.includes(idx)}
+                      onToggle={() => toggleRecommendation('critical', idx)}
+                    />
+                  ))}
                 </CollapsibleSection>
               )}
 
               {analysis.recommended?.length > 0 && (
                 <CollapsibleSection title="Recommended Improvements" icon={AlertTriangle} count={analysis.recommended.length} defaultOpen variant="recommended">
-                  <p className="text-sm text-amber-600 mb-4">Would strengthen the SOW but not blocking.</p>
-                  {analysis.recommended.map((issue, idx) => <IssueCard key={idx} issue={issue} type="recommended" />)}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-amber-600">Would strengthen the SOW but not blocking.</p>
+                    <button
+                      onClick={() => toggleAllInCategory('recommended', analysis.recommended)}
+                      className="text-xs text-gray-500 hover:text-gray-900 underline"
+                    >
+                      {selectedRecommendations.recommended.length === analysis.recommended.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  {analysis.recommended.map((issue, idx) => (
+                    <IssueCard 
+                      key={idx} 
+                      issue={issue} 
+                      type="recommended"
+                      isSelected={selectedRecommendations.recommended.includes(idx)}
+                      onToggle={() => toggleRecommendation('recommended', idx)}
+                    />
+                  ))}
                 </CollapsibleSection>
               )}
 
               {analysis.redFlags?.length > 0 && (
                 <CollapsibleSection title="Red Flags Found" count={analysis.redFlags.length} icon={AlertTriangle}>
-                  <p className="text-sm text-gray-500 mb-4">Problematic language to replace. Click the copy button to grab the replacement text.</p>
-                  {analysis.redFlags.map((flag, idx) => <RedFlagCard key={idx} flag={flag} />)}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-500">Problematic language to replace. Click the copy button to grab the replacement text.</p>
+                    <button
+                      onClick={() => toggleAllInCategory('redFlags', analysis.redFlags)}
+                      className="text-xs text-gray-500 hover:text-gray-900 underline"
+                    >
+                      {selectedRecommendations.redFlags.length === analysis.redFlags.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  {analysis.redFlags.map((flag, idx) => (
+                    <RedFlagCard 
+                      key={idx} 
+                      flag={flag}
+                      isSelected={selectedRecommendations.redFlags.includes(idx)}
+                      onToggle={() => toggleRecommendation('redFlags', idx)}
+                    />
+                  ))}
                 </CollapsibleSection>
               )}
 
@@ -3492,9 +3635,25 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-white mb-2">Generate Revised SOW</h2>
-                  <p className="text-gray-400 mb-6">
-                    Create an updated draft that incorporates all critical fixes, recommended improvements, and red flag replacements from the analysis above.
+                  <p className="text-gray-400 mb-4">
+                    Create an updated draft incorporating your selected recommendations. Use the checkboxes above to include or exclude specific changes.
                   </p>
+                  
+                  {/* Selection Summary */}
+                  <div className="flex flex-wrap gap-3 mb-6">
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-900/30 border border-red-500/40 rounded-full text-red-300 text-sm">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {selectedRecommendations.critical.length}/{analysis.critical?.length || 0} Critical
+                    </span>
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-900/30 border border-amber-500/40 rounded-full text-amber-300 text-sm">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {selectedRecommendations.recommended.length}/{analysis.recommended?.length || 0} Recommended
+                    </span>
+                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-700/50 border border-gray-600 rounded-full text-gray-300 text-sm">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {selectedRecommendations.redFlags.length}/{analysis.redFlags?.length || 0} Red Flags
+                    </span>
+                  </div>
 
                   {reviewDraftError && (
                     <div className="mb-4 p-4 bg-red-900/30 border border-red-500/40 rounded-xl">
@@ -3505,6 +3664,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   {!draftedSOW ? (
                     <AntennaButton
                       onClick={generateRevisedDraft}
+                      disabled={selectedRecommendations.critical.length === 0 && selectedRecommendations.recommended.length === 0 && selectedRecommendations.redFlags.length === 0}
                       loading={isDrafting}
                       loadingText="Generating Draft..."
                       icon={Sparkles}

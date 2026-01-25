@@ -192,20 +192,25 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.3 (Current)
+### v2.1.5 (Current)
+- Added checkboxes to each recommendation (Critical, Recommended, Red Flags)
+- All recommendations selected by default (opt-out model)
+- Added "Select All / Deselect All" toggle for each section
+- Selection summary shown in Generate Revised SOW panel
+- Generate Draft button disabled when no recommendations selected
+- Deselected items appear faded/grayed out
+- Only selected recommendations are passed to SOW generation
+
+### v2.1.4
+- Renamed "Service-Line Compliance" to "Structural Compliance"
+
+### v2.1.3
 - Fixed section parsing to handle markdown formatting (##, **, etc.)
 - parseSection now accepts multiple possible header formats
 - IssueCard now strips markdown bold markers before parsing
 - Improved regex patterns for Current/Recommended extraction
 - Fixed duplicate code issue in IssueCard component
 - Section headers like "## CRITICAL ISSUES" now correctly detected
-
-### v2.1.2
-- Fixed parsing logic that was splitting exclusion lists into orphaned bullet points
-- Added smart filtering to remove non-actionable items from issue lists
-- Strengthened AI prompt to require full context for every reported issue
-- Issues must now have either Current/Recommended OR Missing/Add format
-- Prevents display of fragment items without explanations
 
 ### v2.1.1
 - Fixed issue where "missing element" recommendations were showing unrelated "Current" text
