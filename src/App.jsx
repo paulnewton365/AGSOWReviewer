@@ -699,7 +699,7 @@ Include provision: "If Client delays exceed [X] business days, Agency reserves r
 // COMPONENTS
 // ============================================================================
 
-// Antenna-style Button with text marquee and yellow highlight sweep
+// Antenna-style Button with yellow highlight that slides away on hover
 function AntennaButton({ children, onClick, disabled, loading, loadingText, icon: Icon, className = "", variant = "primary", size = "default" }) {
   const baseStyles = "group relative overflow-hidden font-semibold transition-all duration-300 flex items-center justify-center";
   
@@ -726,14 +726,6 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
       disabled={disabled || loading}
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${disabledStyles} ${className}`}
     >
-      {/* Yellow highlight sweep overlay */}
-      <span 
-        className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"
-        style={{ 
-          background: `linear-gradient(90deg, transparent 0%, ${highlightColor}40 50%, transparent 100%)`,
-        }}
-      />
-      
       {loading ? (
         <>
           <Loader2 className="w-5 h-5 animate-spin relative z-10" />
@@ -743,50 +735,33 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
         <>
           {Icon && <Icon className="w-5 h-5 relative z-10 flex-shrink-0" />}
           
-          {/* Text with marquee slide effect - fixed overflow */}
-          <span className="relative z-10" style={{ overflow: 'hidden', height: '1.25em', display: 'inline-flex', alignItems: 'center' }}>
-            <span 
-              className="transition-transform duration-300 ease-out group-hover:-translate-y-full"
-              style={{ display: 'flex', flexDirection: 'column' }}
-            >
-              <span style={{ height: '1.25em', display: 'flex', alignItems: 'center' }}>
-                {children}
-              </span>
+          {/* Text with yellow highlight that slides down on hover */}
+          <span className="relative z-10 flex-shrink-0 overflow-hidden">
+            <span className="relative inline-block">
+              {children}
+              {/* Yellow highlight block - slides down on hover */}
               <span 
-                style={{ height: '1.25em', display: 'flex', alignItems: 'center', color: highlightColor }}
-              >
-                {children}
-              </span>
+                className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
+                style={{ 
+                  backgroundColor: highlightColor,
+                  mixBlendMode: 'multiply',
+                }}
+              />
             </span>
           </span>
           
-          {/* Arrow with diagonal animation */}
-          <span className="relative flex-shrink-0 z-10" style={{ width: '1.25rem', height: '1.25rem', overflow: 'hidden' }}>
-            <svg 
-              className="absolute transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" 
-              style={{ width: '1.25rem', height: '1.25rem' }}
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M7 17L17 7M17 7H7M17 7V17" />
-            </svg>
-            <svg 
-              className="absolute translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" 
-              style={{ width: '1.25rem', height: '1.25rem' }}
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke={highlightColor}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M7 17L17 7M17 7H7M17 7V17" />
-            </svg>
-          </span>
+          {/* Arrow */}
+          <svg 
+            className="w-5 h-5 flex-shrink-0 relative z-10" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M7 17L17 7M17 7H7M17 7V17" />
+          </svg>
         </>
       )}
     </button>
@@ -1661,11 +1636,6 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 onClick={() => setCurrentView('draft')}
                 className="group relative p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left overflow-hidden"
               >
-                {/* Yellow highlight sweep */}
-                <span 
-                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, #C8E84230 50%, transparent 100%)' }}
-                />
                 <div className="relative z-10">
                   <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
                     <PenTool className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
@@ -1675,19 +1645,17 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     Create a Statement of Work from scratch using client call transcripts. AI analyzes the conversation to identify services and requirements.
                   </p>
                   <div className="flex items-center gap-2 text-[#12161E] font-semibold">
-                    <span style={{ overflow: 'hidden', height: '1.25em', display: 'inline-flex', alignItems: 'center' }}>
-                      <span 
-                        className="transition-transform duration-300 ease-out group-hover:-translate-y-full"
-                        style={{ display: 'flex', flexDirection: 'column' }}
-                      >
-                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center' }}>Get started</span>
-                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center', color: '#C8E842' }}>Get started</span>
+                    <span className="relative overflow-hidden">
+                      <span className="relative inline-block">
+                        Get started
+                        {/* Yellow highlight - slides down on hover */}
+                        <span 
+                          className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
+                          style={{ backgroundColor: '#C8E842', mixBlendMode: 'multiply' }}
+                        />
                       </span>
                     </span>
-                    <span style={{ width: '1rem', height: '1rem', overflow: 'hidden', position: 'relative' }}>
-                      <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" />
-                      <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" style={{ color: '#C8E842' }} />
-                    </span>
+                    <ArrowUpRight className="w-4 h-4" />
                   </div>
                 </div>
               </button>
@@ -1697,11 +1665,6 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 onClick={() => setCurrentView('review')}
                 className="group relative p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left overflow-hidden"
               >
-                {/* Yellow highlight sweep */}
-                <span 
-                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out pointer-events-none"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, #C8E84230 50%, transparent 100%)' }}
-                />
                 <div className="relative z-10">
                   <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
                     <Search className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
@@ -1711,19 +1674,17 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     Upload an SOW for automated quality assessment against Antenna Group standards. Get specific recommendations and generate revised drafts.
                   </p>
                   <div className="flex items-center gap-2 text-[#12161E] font-semibold">
-                    <span style={{ overflow: 'hidden', height: '1.25em', display: 'inline-flex', alignItems: 'center' }}>
-                      <span 
-                        className="transition-transform duration-300 ease-out group-hover:-translate-y-full"
-                        style={{ display: 'flex', flexDirection: 'column' }}
-                      >
-                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center' }}>Get started</span>
-                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center', color: '#C8E842' }}>Get started</span>
+                    <span className="relative overflow-hidden">
+                      <span className="relative inline-block">
+                        Get started
+                        {/* Yellow highlight - slides down on hover */}
+                        <span 
+                          className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
+                          style={{ backgroundColor: '#C8E842', mixBlendMode: 'multiply' }}
+                        />
                       </span>
                     </span>
-                    <span style={{ width: '1rem', height: '1rem', overflow: 'hidden', position: 'relative' }}>
-                      <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" />
-                      <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" style={{ color: '#C8E842' }} />
-                    </span>
+                    <ArrowUpRight className="w-4 h-4" />
                   </div>
                 </div>
               </button>
