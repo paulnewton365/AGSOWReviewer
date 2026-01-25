@@ -4,6 +4,11 @@ import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Heade
 import { saveAs } from 'file-saver';
 
 // ============================================================================
+// VERSION
+// ============================================================================
+const APP_VERSION = '2.1.0';
+
+// ============================================================================
 // DOCX GENERATION UTILITIES
 // ============================================================================
 
@@ -376,13 +381,455 @@ const downloadAsDocx = async (sowText, filename, projectInfo = {}) => {
 };
 
 // ============================================================================
-// SERVICE TRIGGER MAPPINGS
+// SERVICE TRIGGER MAPPINGS (Enhanced with comprehensive trigger patterns)
 // ============================================================================
 const SERVICE_TRIGGERS = [
   {
+    id: 'website',
+    category: 'Website & App Development',
+    description: 'Build or rebuild digital platforms',
+    services: [
+      'Website Strategy & Planning',
+      'Website Design & UX',
+      'Website Development',
+      'CMS Implementation',
+      'E-commerce Development',
+      'Mobile App Development',
+      'Landing Page Development',
+      'Website Migration',
+      'Technical SEO Audit',
+      'Performance Optimization'
+    ],
+    triggerPatterns: {
+      direct: ['need a new website', 'website redesign', 'site looks outdated', 'rebuild our site', 'new landing page', 'mobile-friendly'],
+      indirect: ['high bounce rates', 'site is slow', 'can\'t update the site ourselves', 'CMS is difficult', 'doesn\'t reflect our brand', 'can\'t integrate with our tools'],
+      situational: ['recent rebrand', 'merger', 'new product launch', 'expansion into new markets', 'adding e-commerce', 'company milestone'],
+      performance: ['low conversion rates', 'cart abandonment', 'poor search rankings', 'low time on site', 'customer complaints about UX', 'website not generating leads'],
+      sampleLanguage: ['people leave our site within seconds', 'can\'t compete with competitors\' sites', 'developer left and we can\'t make changes', 'looks fine on desktop but terrible on mobile', 'doesn\'t show up in Google', 'customers can\'t find what they\'re looking for', 'outgrown our platform', 'website doesn\'t tell our story']
+    }
+  },
+  {
+    id: 'integrated_strategy',
+    category: 'Integrated Marketing Strategy',
+    description: 'Develop cohesive marketing plans',
+    services: [
+      'Marketing Strategy Development',
+      'Channel Planning & Media Mix',
+      'Customer Journey Mapping',
+      'Marketing Audit & Assessment',
+      'Budget Allocation Strategy',
+      'Campaign Planning',
+      'Marketing Roadmap',
+      'Competitive Analysis',
+      'Market Research'
+    ],
+    triggerPatterns: {
+      direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
+      indirect: ['marketing not producing results', 'conflicting messages', 'no customer journey', 'which channels to prioritize', 'marketing and sales not aligned', 'budget spread too thin'],
+      situational: ['new fiscal year', 'leadership change', 'entering new market', 'product launch', 'competitive pressure', 'organizational shift'],
+      performance: ['declining market share', 'acquisition costs increasing', 'ROI unknown', 'lead quality issues', 'lifetime value decreasing', 'inconsistent channel performance'],
+      sampleLanguage: ['throwing spaghetti at the wall', 'don\'t know what\'s working', 'competitors seem to be everywhere', 'marketing and sales blame each other', 'never had a real strategy', 'channels aren\'t talking to each other', 'someone to make sense of all this', 'reactive instead of proactive']
+    }
+  },
+  {
+    id: 'brand',
+    category: 'Brand Strategy & Identity',
+    description: 'Define or refresh your brand foundation',
+    services: [
+      'Brand Strategy Development',
+      'Brand Positioning',
+      'Visual Identity System',
+      'Brand Guidelines',
+      'Brand Architecture',
+      'Naming & Nomenclature',
+      'Brand Messaging Framework',
+      'Rapid Discovery Workshop',
+      'Brand Refresh',
+      'Rebrand'
+    ],
+    triggerPatterns: {
+      direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
+      indirect: ['company evolved but identity hasn\'t', 'can\'t explain what makes us different', 'inconsistent messaging', 'employees can\'t articulate positioning', 'customer confusion', 'premium pricing not supported by perception'],
+      situational: ['merger or acquisition', 'spin-off', 'new leadership', 'expansion beyond original scope', 'new markets', 'negative reputation', 'company milestone', 'IPO'],
+      performance: ['brand awareness declining', 'NPS dropping', 'customer feedback about perception', 'can\'t command premium prices', 'losing deals to stronger brands', 'employee engagement declining'],
+      sampleLanguage: ['nobody knows who we are', 'look just like everyone else', 'brand worked when we were small but we\'ve grown', 'customers don\'t understand our value', 'visual identity all over the place', 'embarrassed to hand out business cards', 'can\'t attract talent', 'different departments use different logos', 'evolved but brand hasn\'t', 'associated with something we don\'t do anymore', 'launching in new markets']
+    }
+  },
+  {
+    id: 'creative_production',
+    category: 'Creative Production',
+    description: 'Design, video, animation, and content creation',
+    services: [
+      'Graphic Design',
+      'Video Production',
+      'Animation & Motion Graphics',
+      'Photography',
+      'Copywriting',
+      'Sales Collateral',
+      'Presentation Design',
+      'Social Media Content',
+      'Campaign Asset Creation',
+      'Brand Asset Library'
+    ],
+    triggerPatterns: {
+      direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
+      indirect: ['marketing team stretched thin', 'quality inconsistent', 'no in-house design', 'need specialized formats', 'high volume of creative needs', 'tight deadlines'],
+      situational: ['campaign launch', 'trade show', 'sales team needs collateral', 'product launch', 'seasonal campaign', 'executive presentations'],
+      performance: ['creative not generating engagement', 'sales team not using materials', 'A/B tests showing underperformance', 'feedback that materials aren\'t compelling', 'social engagement below benchmarks'],
+      sampleLanguage: ['don\'t have designers on staff', 'team is overwhelmed', 'need a video but don\'t know where to start', 'sales deck needs updating', 'need assets for our campaign', 'everything takes too long to produce', 'competitors\' materials look more polished', 'have the strategy but need help executing']
+    }
+  },
+  {
+    id: 'influencer',
+    category: 'Influencer Marketing',
+    description: 'Leverage creator partnerships',
+    services: [
+      'Influencer Strategy',
+      'Creator Identification & Vetting',
+      'Influencer Campaign Management',
+      'Content Collaboration',
+      'Ambassador Programs',
+      'Influencer Relations',
+      'Performance Tracking',
+      'UGC Programs'
+    ],
+    triggerPatterns: {
+      direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\'t work'],
+      indirect: ['difficulty reaching younger audiences', 'need authentic endorsements', 'product requires demonstration', 'brand awareness stalled', 'user-generated content insufficient'],
+      situational: ['product launch needing buzz', 'new demographic market', 'brand relevance concerns', 'competitors using influencers', 'need authentic content at scale', 'event amplification'],
+      performance: ['social engagement declining', 'owned content not resonating', 'advertising fatigue', 'high CPA on paid channels', 'brand trust declining'],
+      sampleLanguage: ['can\'t break through on social', 'younger audiences don\'t trust us directly', 'competitors partnering with creators', 'need authentic voices', 'tried on our own but didn\'t see results', 'don\'t know how to find the right creators', 'need content that feels genuine', 'want to be part of the conversation on TikTok']
+    }
+  },
+  {
+    id: 'creative_campaigns',
+    category: 'Creative Campaigns & Platforms',
+    description: 'Develop breakthrough campaign concepts',
+    services: [
+      'Creative Platform Development',
+      'Campaign Concept Development',
+      'Big Idea Generation',
+      'Integrated Campaign Planning',
+      'Storytelling Framework',
+      'Brand Anthem Development',
+      'Experiential Concepts',
+      'Cultural Moments Strategy'
+    ],
+    triggerPatterns: {
+      direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'need a creative platform', 'marketing lacks unifying concept'],
+      indirect: ['campaigns feel tactical', 'each effort is standalone', 'difficulty creating memorable work', 'need to differentiate', 'brand awareness plateaued'],
+      situational: ['major launch', 'brand repositioning', 'new market entry', 'competitive threat', 'company transformation', 'major anniversary'],
+      performance: ['brand recall declining', 'campaign metrics mediocre', 'share of voice decreasing', 'advertising not breaking through', 'content engagement low'],
+      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\'t break through the clutter', 'want something competitors can\'t copy', 'creative that people talk about', 'ads are forgettable']
+    }
+  },
+  {
+    id: 'pr',
+    category: 'Public Relations',
+    description: 'Media relations and press coverage',
+    services: [
+      'Media Relations',
+      'Press Release Development',
+      'Media Pitching',
+      'Press Kit Development',
+      'Media Training',
+      'Crisis Communications',
+      'Announcement Strategy',
+      'Media Monitoring',
+      'Journalist Relationship Building'
+    ],
+    triggerPatterns: {
+      direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency'],
+      indirect: ['important news not getting coverage', 'lack of third-party credibility', 'competitors in media more', 'no journalist relationships', 'story not being told externally', 'need crisis preparedness'],
+      situational: ['product launch', 'funding announcement', 'executive hire', 'research release', 'awards', 'company milestone', 'crisis', 'merger announcement', 'industry event'],
+      performance: ['low share of voice', 'minimal media mentions', 'negative coverage without response', 'lack of third-party validation', 'sales team lacking proof points'],
+      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story', 'launching something big and need coverage', 'not prepared if something goes wrong', 'need credibility with our audience']
+    }
+  },
+  {
+    id: 'media_outreach',
+    category: 'Media Outreach (Proactive & Reactive)',
+    description: 'Ongoing media engagement',
+    services: [
+      'Proactive Media Pitching',
+      'Rapid Response Program',
+      'Newsjacking Strategy',
+      'Commentary & Quotes',
+      'Media List Development',
+      'Industry Trend Monitoring',
+      'Spokesperson Preparation'
+    ],
+    triggerPatterns: {
+      direct: ['want to be seen as a source', 'want to comment on industry news', 'need rapid response', 'want more media mentions'],
+      indirect: ['industry conversations without us', 'journalists covering competitors', 'expertise not leveraged', 'missed opportunities to comment', 'no media monitoring'],
+      situational: ['industry news requiring commentary', 'breaking developments', 'regulatory changes', 'seasonal news cycles', 'industry crisis'],
+      performance: ['competitors quoted more', 'share of voice declining', 'opportunities going to others', 'reactive coverage only'],
+      sampleLanguage: ['when something happens we\'re never quoted', 'journalists don\'t know we exist', 'competitors are the go-to source', 'have expertise but no one asks', 'want to be top of mind for reporters', 'need to respond faster to news']
+    }
+  },
+  {
+    id: 'executive_visibility',
+    category: 'Executive Visibility & Thought Leadership',
+    description: 'Elevate leadership profiles',
+    services: [
+      'Executive Positioning Strategy',
+      'Thought Leadership Content',
+      'Byline & Op-Ed Development',
+      'Speaking Opportunity Development',
+      'Executive Social Media',
+      'Media Training',
+      'Awards Strategy',
+      'LinkedIn Optimization',
+      'Podcast Strategy'
+    ],
+    triggerPatterns: {
+      direct: ['CEO needs to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile'],
+      indirect: ['competitor executives more visible', 'difficulty attracting talent', 'investor relations need credibility', 'sales cycle requires leadership trust', 'industry influence desired'],
+      situational: ['new CEO', 'IPO preparation', 'fundraising', 'conference schedule', 'speaking pipeline', 'award nominations'],
+      performance: ['low leadership recognition', 'executive content not engaging', 'speaking invitations not coming', 'board feedback about visibility', 'LinkedIn engagement low'],
+      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership']
+    }
+  },
+  {
+    id: 'paid_social',
+    category: 'Paid Social Media',
+    description: 'Social advertising campaigns',
+    services: [
+      'Paid Social Strategy',
+      'Campaign Setup & Management',
+      'Audience Development & Targeting',
+      'Ad Creative Development',
+      'A/B Testing & Optimization',
+      'Retargeting Campaigns',
+      'Reporting & Analytics',
+      'Platform-Specific Campaigns'
+    ],
+    triggerPatterns: {
+      direct: ['need social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\'t working'],
+      indirect: ['organic reach declining', 'need precise targeting', 'have budget but no expertise', 'campaigns underperforming', 'need lead generation'],
+      situational: ['campaign launch', 'product launch', 'event promotion', 'time-sensitive offers', 'competitive pressure on social'],
+      performance: ['high CPA on social', 'low conversion rates', 'ad fatigue', 'poor targeting results', 'ROAS below benchmarks'],
+      sampleLanguage: ['organic reach has tanked', 'spending money but not seeing results', 'don\'t know if targeting is right', 'competitors\' ads everywhere', 'need to generate leads from social', 'not sure which platforms to focus on', 'social advertising is inconsistent', 'want to reach specific audience']
+    }
+  },
+  {
+    id: 'seo',
+    category: 'Search Engine Optimization',
+    description: 'Improve organic search visibility',
+    services: [
+      'SEO Audit & Strategy',
+      'Technical SEO',
+      'On-Page Optimization',
+      'Content SEO Strategy',
+      'Link Building',
+      'Local SEO',
+      'SEO Reporting',
+      'Keyword Research',
+      'Competitive SEO Analysis'
+    ],
+    triggerPatterns: {
+      direct: ['don\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
+      indirect: ['website not appearing in search', 'competitors outranking us', 'paid search costs too high', 'content not getting discovered', 'technical website issues'],
+      situational: ['website redesign', 'new content strategy', 'competitive threat in search', 'market expansion', 'algorithm update impact'],
+      performance: ['declining organic traffic', 'keyword rankings dropping', 'low domain authority', 'high reliance on paid search', 'competitor visibility increasing'],
+      sampleLanguage: ['don\'t show up when people search for what we do', 'competitors always rank above us', 'website redesign and traffic disappeared', 'paying too much for search ads', 'people can\'t find us online', 'content doesn\'t rank', 'don\'t understand SEO', 'hit by a Google update']
+    }
+  },
+  {
+    id: 'geo',
+    category: 'Generative Engine Optimization (GEO)',
+    description: 'Optimize for AI-powered search',
+    services: [
+      'GEO Strategy & Audit',
+      'AI Search Optimization',
+      'Structured Data Implementation',
+      'Content Optimization for AI',
+      'Citation Building',
+      'Knowledge Panel Optimization'
+    ],
+    triggerPatterns: {
+      direct: ['need to show up in AI search', 'want to be cited by ChatGPT', 'optimize for AI answers'],
+      indirect: ['concern about AI changing search', 'questions about future of organic search', 'interest in emerging search', 'competitors in AI content'],
+      situational: ['AI search feature launches', 'industry AI conversations', 'competitive monitoring', 'future planning'],
+      performance: ['declining traditional search traffic', 'absence from AI answers', 'competitors cited in AI', 'audience behavior changing'],
+      sampleLanguage: ['people using AI to search now', 'will ChatGPT mention us', 'how do we prepare for AI search', 'content needs to be AI-friendly', 'search is changing', 'want to be the authoritative source AI cites']
+    }
+  },
+  {
+    id: 'measurement',
+    category: 'Measurement & Analytics',
+    description: 'Track and prove marketing ROI',
+    services: [
+      'Analytics Strategy',
+      'Dashboard Development',
+      'Attribution Modeling',
+      'Marketing ROI Framework',
+      'KPI Development',
+      'Data Integration',
+      'Reporting Automation',
+      'Marketing Technology Audit'
+    ],
+    triggerPatterns: {
+      direct: ['don\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\'t prove ROI'],
+      indirect: ['decisions without data', 'tools not integrated', 'leadership asking for accountability', 'budget justification challenges', 'unclear attribution'],
+      situational: ['new leadership demanding accountability', 'budget review', 'board reporting', 'marketing technology audit', 'new initiatives'],
+      performance: ['can\'t report on basic metrics', 'data conflicts between systems', 'no baseline', 'unknown customer journey', 'efficiency unclear'],
+      sampleLanguage: ['have no idea what\'s working', 'data is all over the place', 'can\'t connect marketing to sales', 'board wants to see ROI', 'decisions based on gut feel', 'each tool tells us something different', 'need a dashboard that makes sense', 'can\'t justify marketing spend']
+    }
+  },
+  {
+    id: 'gtm',
+    category: 'Go-to-Market Strategy',
+    description: 'Launch products and enter markets',
+    services: [
+      'Go-to-Market Strategy',
+      'Launch Planning',
+      'Market Entry Strategy',
+      'Positioning & Messaging',
+      'Channel Strategy',
+      'Sales Enablement',
+      'Launch Campaign Planning',
+      'Competitive Positioning'
+    ],
+    triggerPatterns: {
+      direct: ['launching a new product', 'need a GTM strategy', 'need to bring this to market', 'entering a new market'],
+      indirect: ['uncertainty about target audience', 'no launch plan', 'pricing and positioning questions', 'channel strategy unclear', 'sales and marketing alignment needed'],
+      situational: ['product development completion', 'service line expansion', 'market expansion', 'competitive response', 'acquisition of new capabilities'],
+      performance: ['previous launches underperformed', 'new product uptake slow', 'market penetration below expectations', 'customer acquisition challenges', 'sales cycle too long'],
+      sampleLanguage: ['launching in Q[X] and need a plan', 'built something great but don\'t know how to sell it', 'need to understand who will buy this', 'how do we price this', 'entering a new category', 'need to generate demand quickly', 'last launch didn\'t go well', 'have the product but not the plan']
+    }
+  },
+  {
+    id: 'events',
+    category: 'Event Planning & Production',
+    description: 'Plan and execute events',
+    services: [
+      'Event Strategy',
+      'Conference Planning',
+      'Event Production',
+      'Virtual Event Production',
+      'Trade Show Management',
+      'Speaker Management',
+      'Event Marketing',
+      'Event Logistics'
+    ],
+    triggerPatterns: {
+      direct: ['have an event coming up', 'need to plan a conference', 'need event support'],
+      indirect: ['team doesn\'t have event experience', 'past events had issues', 'budget requires professional management', 'complex logistics', 'need creative concepts'],
+      situational: ['annual conference', 'product launch event', 'customer events', 'trade show', 'employee events', 'milestone celebrations', 'investor events'],
+      performance: ['event feedback poor', 'attendance declining', 'event ROI unclear', 'logistics challenges', 'content quality inconsistent'],
+      sampleLanguage: ['have our annual conference and need help', 'want to make this event memorable', 'don\'t have time to plan ourselves', 'need vendors and don\'t know where to start', 'last event was a disaster', 'want to elevate our event experience', 'need creative ideas for the event', 'budget is tight but want something special']
+    }
+  },
+  {
+    id: 'training',
+    category: 'Communications Training',
+    description: 'Media and communications training',
+    services: [
+      'Media Training',
+      'Spokesperson Training',
+      'Presentation Training',
+      'Crisis Communications Training',
+      'Brand Training',
+      'Marketing Skills Training'
+    ],
+    triggerPatterns: {
+      direct: ['team needs media training', 'need communications training', 'executives need spokesperson prep', 'want internal training'],
+      indirect: ['executives uncomfortable with media', 'teams lack marketing skills', 'inconsistent brand representation', 'new hires need onboarding', 'crisis preparedness concerns'],
+      situational: ['new spokesperson', 'upcoming media tour', 'crisis preparation', 'marketing team expansion', 'leadership changes', 'brand launch'],
+      performance: ['poor media interview performance', 'inconsistent external communication', 'brand message dilution', 'crisis response failures', 'employee communications issues'],
+      sampleLanguage: ['CEO freezes in front of cameras', 'need help training our team', 'spokespeople need practice', 'want to be prepared if something goes wrong', 'new team members need to understand our brand', 'marketing team has skill gaps']
+    }
+  },
+  {
+    id: 'impact_reports',
+    category: 'Impact Report Writing & Design',
+    description: 'Sustainability and impact communications',
+    services: [
+      'Impact Report Writing',
+      'Impact Report Design',
+      'Sustainability Communications',
+      'ESG Reporting',
+      'CSR Communications',
+      'Stakeholder Reports'
+    ],
+    triggerPatterns: {
+      direct: ['need an annual report', 'need an impact report', 'need help with CSR report', 'want to showcase our impact'],
+      indirect: ['stakeholder expectations for transparency', 'ESG reporting requirements', 'investor relations needs', 'employee engagement communications', 'competitor reports setting higher bar'],
+      situational: ['annual reporting cycle', 'sustainability milestones', 'stakeholder meeting', 'grant reporting', 'public accountability'],
+      performance: ['stakeholder feedback on transparency', 'competitor reports more compelling', 'internal data not shared', 'impact not being communicated'],
+      sampleLanguage: ['do great work but don\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story']
+    }
+  },
+  {
+    id: 'content_production',
+    category: 'Content Ideation & Production',
+    description: 'Content strategy and creation',
+    services: [
+      'Content Strategy',
+      'Content Calendar Development',
+      'Blog & Article Writing',
+      'Podcast Production',
+      'Video Content Series',
+      'Social Content Creation',
+      'Thought Leadership Content',
+      'Lead Magnet Development'
+    ],
+    triggerPatterns: {
+      direct: ['need more content', 'need a content strategy', 'run out of ideas', 'need help producing content'],
+      indirect: ['content calendar empty', 'publishing frequency declined', 'team stretched too thin', 'quality inconsistent', 'topics not resonating'],
+      situational: ['blog launch', 'newsletter launch', 'podcast initiative', 'video series', 'campaign content', 'thought leadership program'],
+      performance: ['content engagement declining', 'audience growth stalled', 'SEO content needed', 'social content underperforming', 'lead magnet requests'],
+      sampleLanguage: ['know we need content but don\'t know what to create', 'started a blog but ran out of steam', 'team doesn\'t have time to write', 'need fresh ideas', 'content isn\'t getting engagement', 'want to start a podcast', 'need more lead magnets']
+    }
+  },
+  {
+    id: 'performance_marketing',
+    category: 'Performance Marketing & Optimization',
+    description: 'Optimize for conversions and efficiency',
+    services: [
+      'Conversion Rate Optimization',
+      'A/B Testing Program',
+      'Landing Page Optimization',
+      'Funnel Optimization',
+      'Performance Analytics',
+      'Campaign Optimization',
+      'Marketing Automation'
+    ],
+    triggerPatterns: {
+      direct: ['need to optimize campaigns', 'want to A/B test', 'conversion rates need improvement', 'need CRO help'],
+      indirect: ['campaigns not meeting targets', 'high traffic low conversion', 'marketing efficiency concerns', 'budget pressure', 'data-driven culture needed'],
+      situational: ['new campaign needing optimization', 'declining performance', 'budget cuts', 'competitive pressure on costs', 'new conversion goals'],
+      performance: ['conversion rates below benchmark', 'CPA rising', 'ROAS declining', 'landing page performance poor', 'funnel dropoff identified'],
+      sampleLanguage: ['driving traffic but no one converts', 'campaigns used to work better', 'need to get more from our budget', 'want to test different approaches', 'something\'s broken in our funnel', 'need to understand what\'s working', 'leaving money on the table']
+    }
+  },
+  {
+    id: 'marketing_assessment',
+    category: 'Brand & Marketing Assessments',
+    description: 'Audit and assess current state',
+    services: [
+      'Marketing Audit',
+      'Brand Assessment',
+      'Competitive Analysis',
+      'Channel Assessment',
+      'Content Audit',
+      'Technology Audit',
+      'Customer Research'
+    ],
+    triggerPatterns: {
+      direct: ['need an audit of our marketing', 'want an assessment of our brand', 'need a fresh perspective', 'want a review of marketing activities'],
+      indirect: ['new leadership wanting baseline', 'performance declining without clear cause', 'pre-planning phase', 'budget allocation uncertainty', 'agency review consideration'],
+      situational: ['new CMO', 'pre-RFP assessment', 'annual planning', 'post-campaign retrospective', 'merger integration'],
+      performance: ['overall marketing underperformance', 'uncertainty about gaps', 'need for prioritization', 'competitive concerns', 'stakeholder questions'],
+      sampleLanguage: ['need someone to look at everything we\'re doing', 'new to this role and need to understand where we are', 'not sure what\'s working and what\'s not', 'before we start anything new we need to assess', 'been doing the same things and need fresh eyes', 'where should we be investing', 'what are our biggest gaps']
+    }
+  },
+  // Preserve original categories with enhanced patterns
+  {
     id: 'awareness',
-    triggers: ['need awareness', 'brand awareness', 'nobody knows us', 'increase visibility', 'get our name out', 'build awareness'],
     category: 'Awareness & Reach',
+    description: 'Build awareness through paid and earned channels',
     services: [
       'Performance Marketing (Paid Media)',
       'SEO Strategy & Implementation',
@@ -391,12 +838,18 @@ const SERVICE_TRIGGERS = [
       'Executive Visibility Campaign',
       'Media Outreach & Relations'
     ],
-    description: 'Build awareness through paid and earned channels'
+    triggerPatterns: {
+      direct: ['need awareness', 'brand awareness', 'nobody knows us', 'increase visibility', 'get our name out', 'build awareness'],
+      indirect: ['competitors getting all the attention', 'not on anyone\'s radar', 'market doesn\'t know we exist', 'need to raise our profile'],
+      situational: ['market entry', 'new product category', 'relaunch', 'competitive threat'],
+      performance: ['low brand recall', 'low aided awareness', 'minimal organic traffic', 'poor search visibility'],
+      sampleLanguage: ['need to get on people\'s radar', 'nobody knows what we do', 'want to be recognized', 'need more exposure', 'have to make noise in the market']
+    }
   },
   {
     id: 'reputation',
-    triggers: ['problem with reputation', 'reputation issue', 'reputation management', 'negative perception', 'trust issues', 'credibility problem', 'people don\'t believe us', 'not credible'],
     category: 'Reputation & Trust',
+    description: 'Address reputation challenges and build credibility',
     services: [
       'Brand Compass Assessment',
       'GEO (Generative Engine Optimization)',
@@ -409,12 +862,18 @@ const SERVICE_TRIGGERS = [
       'Purpose Discovery Workshop',
       'Theory of Change Development'
     ],
-    description: 'Address reputation challenges and build credibility'
+    triggerPatterns: {
+      direct: ['problem with reputation', 'reputation issue', 'reputation management', 'negative perception', 'trust issues', 'credibility problem'],
+      indirect: ['bad reviews', 'negative press', 'online critics', 'bad search results about us', 'stakeholders questioning us'],
+      situational: ['crisis aftermath', 'leadership scandal', 'product failure', 'negative news cycle', 'industry controversy'],
+      performance: ['NPS declining', 'trust scores down', 'negative sentiment', 'customer churn due to trust', 'recruitment challenges'],
+      sampleLanguage: ['people don\'t believe us', 'not credible', 'our online reputation is terrible', 'keep getting bad press', 'reviews are killing us', 'need to rebuild trust']
+    }
   },
   {
     id: 'influence',
-    triggers: ['greater influence', 'visibility in our sector', 'industry influence', 'thought leader', 'landscape visibility', 'sector leadership', 'policy influence'],
     category: 'Influence & Authority',
+    description: 'Establish authority and influence in your sector',
     services: [
       'Original Research & Studies',
       'Strategic Media Relations',
@@ -425,14 +884,20 @@ const SERVICE_TRIGGERS = [
       'Awards Program Strategy',
       'Influencer Marketing'
     ],
-    description: 'Establish authority and influence in your sector'
+    triggerPatterns: {
+      direct: ['greater influence', 'visibility in our sector', 'industry influence', 'thought leader', 'landscape visibility', 'sector leadership', 'policy influence'],
+      indirect: ['want to shape the conversation', 'be seen as the authority', 'competitors seen as leaders', 'not invited to important discussions'],
+      situational: ['regulatory changes', 'industry consolidation', 'emerging category', 'standards setting'],
+      performance: ['not cited as source', 'not invited to speak', 'low share of voice in industry', 'competitors winning thought leadership'],
+      sampleLanguage: ['want to be seen as the go-to experts', 'want to shape industry direction', 'should be leading this conversation', 'want a seat at the table']
+    }
   },
   {
     id: 'audience',
-    triggers: ['struggling to reach', 'identify our audiences', 'audience identification', 'who are our customers', 'target audience', 'reach the right people', 'look at our reputation'],
     category: 'Audience Strategy',
+    description: 'Identify and connect with your target audiences',
     services: [
-      'Reputation Strategy',
+      'Audience Research & Segmentation',
       'Content Marketing & Storytelling',
       'Creative Platform Development',
       'Community Management',
@@ -441,39 +906,39 @@ const SERVICE_TRIGGERS = [
       'Connections Plan',
       'Influencer Marketing'
     ],
-    description: 'Identify and connect with your target audiences'
-  },
-  {
-    id: 'brand',
-    triggers: ['not found our voice', 'brand is uninspiring', 'brand is confused', 'badly structured', 'marketing is disjointed', 'don\'t know who we are', 'look and feel is stale', 'more differentiated', 'no clear foundation', 'brand identity', 'rebrand', 'brand refresh'],
-    category: 'Brand & Identity',
-    services: [
-      'Rapid Discovery Workshop',
-      'Brand Strategy Development',
-      'Brand Hierarchy & Architecture',
-      'Visual Identity System',
-      'Brand Guidelines',
-      'Website Refresh or Rebuild'
-    ],
-    description: 'Define or refresh your brand foundation'
+    triggerPatterns: {
+      direct: ['struggling to reach', 'identify our audiences', 'audience identification', 'who are our customers', 'target audience', 'reach the right people'],
+      indirect: ['don\'t know who buys from us', 'messaging doesn\'t resonate', 'campaigns not landing', 'content not connecting'],
+      situational: ['new market entry', 'product pivot', 'customer base shift', 'demographic changes'],
+      performance: ['low engagement rates', 'high bounce rates', 'poor ad targeting results', 'audience mismatch'],
+      sampleLanguage: ['need to understand our audience better', 'who are we really talking to', 'content not resonating with anyone', 'can\'t seem to connect with the right people']
+    }
   },
   {
     id: 'messaging',
-    triggers: ['coherent message for media', 'don\'t know what stories to tell', 'media messaging', 'pr messaging', 'press messaging', 'journalist outreach', 'earned media'],
     category: 'PR & Media Messaging',
+    description: 'Develop compelling media narratives',
     services: [
       'Earned Media/PR Messaging',
       'Key Message Development',
       'Spokesperson Training',
       'Media Kit Development',
-      'Press Release Strategy'
+      'Press Release Strategy',
+      'Narrative Development',
+      'Crisis Messaging'
     ],
-    description: 'Develop compelling media narratives'
+    triggerPatterns: {
+      direct: ['coherent message for media', 'don\'t know what stories to tell', 'media messaging', 'pr messaging', 'press messaging', 'journalist outreach', 'earned media'],
+      indirect: ['can\'t explain what we do simply', 'every interview goes differently', 'no consistent story', 'journalists confused about us'],
+      situational: ['media tour', 'product announcement', 'executive transition', 'crisis situation'],
+      performance: ['inconsistent coverage', 'message not landing', 'journalists getting it wrong', 'not getting the coverage we want'],
+      sampleLanguage: ['need a clearer story', 'don\'t know what to tell journalists', 'message is all over the place', 'need to control the narrative']
+    }
   },
   {
     id: 'content',
-    triggers: ['issues with our content', 'content is poor', 'content is bad', 'content is awful', 'not consistent', 'lacks coherent theme', 'content quality', 'content problems', 'content inconsistent'],
     category: 'Content & Quality',
+    description: 'Improve content quality and consistency',
     services: [
       'Content Strategy & Planning',
       'Integrated Campaign Development',
@@ -485,12 +950,18 @@ const SERVICE_TRIGGERS = [
       'Content Training',
       'Website Content Refresh'
     ],
-    description: 'Improve content quality and consistency'
+    triggerPatterns: {
+      direct: ['issues with our content', 'content is poor', 'not consistent', 'lacks coherent theme', 'content quality', 'content problems'],
+      indirect: ['different teams creating different content', 'no content standards', 'brand voice varies', 'quality all over the place'],
+      situational: ['scaling content production', 'new channels launching', 'team growth', 'agency consolidation'],
+      performance: ['content engagement low', 'high unsubscribe rates', 'social shares declining', 'content not driving results'],
+      sampleLanguage: ['content is poor', 'content is bad', 'content is awful', 'not consistent', 'lacks coherent theme', 'team creates content but it doesn\'t perform']
+    }
   },
   {
     id: 'leads',
-    triggers: ['need leads', 'need conversions', 'content to work better', 'content not targeted', 'problem with conversion', 'problem with targeting', 'problem with engagement', 'extend our reach', 'target new audiences', 'lead generation', 'demand gen'],
     category: 'Performance & Conversion',
+    description: 'Drive leads, conversions, and engagement',
     services: [
       'Audience Research & Segmentation',
       'Analytics Infrastructure',
@@ -503,12 +974,18 @@ const SERVICE_TRIGGERS = [
       'Attribution Modeling',
       'Website UX & Design Refresh'
     ],
-    description: 'Drive leads, conversions, and engagement'
+    triggerPatterns: {
+      direct: ['need leads', 'need conversions', 'lead generation', 'demand gen', 'pipeline', 'MQLs', 'SQLs'],
+      indirect: ['sales team starving for leads', 'pipeline is empty', 'marketing not feeding sales', 'need more qualified opportunities'],
+      situational: ['sales target increase', 'new sales team', 'market expansion', 'competitive pressure'],
+      performance: ['lead volume down', 'conversion rates declining', 'high cost per lead', 'poor lead quality', 'long sales cycles'],
+      sampleLanguage: ['content to work better', 'content not targeted', 'problem with conversion', 'problem with targeting', 'problem with engagement', 'extend our reach', 'target new audiences']
+    }
   },
   {
     id: 'creative',
-    triggers: ['marketing is uninspiring', 'creative is ineffective', 'engagement is low', 'cut through the noise', 'breakthrough ideas', 'inspire our audiences', 'campaigns are dull', 'campaigns are safe', 'innovation leader', 'make technical interesting', 'inspire action', 'stunts'],
     category: 'Creative & Innovation',
+    description: 'Create breakthrough creative work',
     services: [
       'Creative Strategy',
       'Big Ideas & Concept Development',
@@ -519,12 +996,18 @@ const SERVICE_TRIGGERS = [
       'Experiential Design',
       'Website Experience Redesign'
     ],
-    description: 'Create breakthrough creative work'
+    triggerPatterns: {
+      direct: ['marketing is uninspiring', 'creative is ineffective', 'breakthrough ideas', 'inspire our audiences', 'campaigns are dull', 'innovation leader'],
+      indirect: ['work is boring', 'looks like everyone else', 'not getting attention', 'nobody talks about our campaigns'],
+      situational: ['major launch', 'rebrand', 'new competitive entrant', 'category disruption'],
+      performance: ['engagement is low', 'creative fatigue', 'declining response rates', 'ad performance dropping'],
+      sampleLanguage: ['cut through the noise', 'campaigns are safe', 'make technical interesting', 'inspire action', 'stunts', 'need something people will remember']
+    }
   },
   {
     id: 'impact',
-    triggers: ['don\'t believe us', 'not credible', 'service makes the world better', 'product makes lives better', 'impact story', 'sustainability story', 'esg communications', 'purpose driven'],
     category: 'Impact & Purpose',
+    description: 'Communicate your impact and purpose',
     services: [
       'Impact Communications Training',
       'Impact Report Design & Writing',
@@ -533,14 +1016,21 @@ const SERVICE_TRIGGERS = [
       'Theory of Change',
       'Impact Measurement Framework',
       'Creative Content Creation',
-      'Manifesto Writing'
+      'Manifesto Writing',
+      'Sustainability Communications'
     ],
-    description: 'Communicate your impact and purpose'
+    triggerPatterns: {
+      direct: ['impact story', 'sustainability story', 'esg communications', 'purpose driven', 'CSR', 'social impact'],
+      indirect: ['need to show we care', 'customers want to know our values', 'employees asking about purpose', 'investors asking about ESG'],
+      situational: ['B Corp certification', 'sustainability milestone', 'stakeholder pressure', 'new impact initiatives'],
+      performance: ['brand purpose scores low', 'employee engagement on mission declining', 'customers not seeing our values'],
+      sampleLanguage: ['don\'t believe us', 'not credible', 'service makes the world better', 'product makes lives better', 'want people to know we\'re more than just a business']
+    }
   },
   {
     id: 'leadership',
-    triggers: ['leadership is invisible', 'credibility problem', 'inspiring leaders', 'audiences don\'t know them', 'communications is timid', 'lacks confidence', 'ceo needs visibility', 'executive visibility', 'ceo profile', 'leadership profile', 'apologetic'],
     category: 'Executive & Leadership',
+    description: 'Elevate leadership visibility and credibility',
     services: [
       'Executive Positioning Strategy',
       'Media Training',
@@ -553,7 +1043,33 @@ const SERVICE_TRIGGERS = [
       'Speaking Strategy',
       'Crisis Preparedness'
     ],
-    description: 'Elevate leadership visibility and credibility'
+    triggerPatterns: {
+      direct: ['leadership is invisible', 'ceo needs visibility', 'executive visibility', 'ceo profile', 'leadership profile'],
+      indirect: ['board wants more visible CEO', 'investors don\'t know our leaders', 'competitors\' CEOs are famous', 'talent attracted to visible leaders'],
+      situational: ['new CEO', 'IPO', 'fundraising', 'acquisition', 'crisis'],
+      performance: ['low executive recognition', 'not invited to speak', 'LinkedIn engagement poor', 'no media requests'],
+      sampleLanguage: ['credibility problem', 'inspiring leaders', 'audiences don\'t know them', 'communications is timid', 'lacks confidence', 'apologetic']
+    }
+  },
+  {
+    id: 'project_management',
+    category: 'Project Management',
+    description: 'Coordinate complex marketing initiatives',
+    services: [
+      'Project Management',
+      'Marketing Operations',
+      'Agency Coordination',
+      'Campaign Management',
+      'Resource Planning',
+      'Process Development'
+    ],
+    triggerPatterns: {
+      direct: ['need help managing projects', 'overwhelmed with coordination', 'need a PM'],
+      indirect: ['projects always late', 'over budget', 'multiple agencies not coordinated', 'quality control problems'],
+      situational: ['complex campaign launch', 'multiple initiatives', 'major event', 'organizational change', 'agency consolidation'],
+      performance: ['missed deadlines', 'budget overruns', 'quality inconsistencies', 'team burnout', 'stakeholder dissatisfaction'],
+      sampleLanguage: ['things keep falling through the cracks', 'can\'t keep all the pieces coordinated', 'internal team is overwhelmed', 'projects always go over budget', 'need someone to keep everything on track', 'communication is a mess']
+    }
   }
 ];
 
@@ -579,10 +1095,17 @@ const REVIEW_ENGAGEMENT_TYPES = [
 ];
 
 // ============================================================================
-// ASSESSMENT FRAMEWORK (for review flow)
+// ASSESSMENT FRAMEWORK (Comprehensive - for review flow)
 // ============================================================================
 const ASSESSMENT_FRAMEWORK = `
-# SOW Assessment Framework
+# SOW Assessment Framework (Comprehensive)
+
+A Statement of Work serves as both a legal document and project management tool. Its purposes are:
+- Establishing clear, mutual understanding about what is being delivered, how, when, and under what terms
+- Transforming high-level commitments into actionable plans
+- Preventing scope creep by distinguishing between what is included and what falls outside boundaries
+- Reducing disputes by establishing accountability measures and performance standards
+- Serving as the single source of truth throughout the project lifecycle
 
 ## Reference Standards by Engagement Type
 - Branding: Switch Energy Alliance SOW (R1000)
@@ -591,108 +1114,533 @@ const ASSESSMENT_FRAMEWORK = `
 - Creative Retainers: Integrated Creative & Strategic Support Retainer
 - PR/Comms: TerraPower UK PR Support SOW
 
-## Part 1: Universal Requirements (Apply to ALL SOWs)
+---
 
-### 1.1 Document Structure and Numbering
-- Must use decimal numbering (5.1, 5.1.1, 5.1.1.1) NOT bullet points
-- Every deliverable, activity, output, assumption must have unique reference number
+## PART 1: ESSENTIAL SOW COMPONENTS (Verify presence and quality)
 
-### 1.2 Completion Criteria
-- Every deliverable must have explicit completion trigger
-- Acceptable: approval-based, output-based, time-based, gate-based
-- Must have stage gates requiring approval before subsequent phases
+### 1.1 Project Overview and Background
+Must include:
+- Context for the project and its purpose
+- Business need being addressed
+- Parties involved
+- High-level success criteria
 
-### 1.3 Controlled Language - RED FLAGS TO IDENTIFY
-Search for and flag these phrases. When replacing, prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quantification. This provides flexibility while still setting boundaries.
+FLAGS:
+✗ Missing context that helps readers understand purpose
+✗ No stated business objective or success criteria
+✗ Unclear identification of parties
 
-- "ad hoc" → replace with bounded support (e.g., "up to 4 hours per month of support")
-- "ongoing" → add term limits or define cadence (e.g., "for up to 12 months")
-- "as and when" → specify triggers or quantities with caps
-- "as needed" → define scope boundaries with maximums
-- "various" → enumerate specific items with counts
-- "regular" → specify frequency (e.g., "weekly" or "up to 2 times per week")
-- "continuous" → define iterations or rounds (e.g., "up to 2 rounds of revisions")
-- "flexible" → add parameters with upper bounds
-- "unlimited" → NEVER use, always specify cap with "up to"
-- "best efforts" → define measurable success criteria
-- "reasonable" → quantify with "up to" bounds where possible
-- "mutually agreed" without default → specify default window (e.g., "up to 5 business days")
+### 1.2 Objectives and Purpose
+Must include:
+- Specific goals the project aims to achieve
+- Measurable definition of success
+- Alignment with client's stated business objectives
 
-### 1.4 Deliverable Structure
+FLAGS:
+✗ Vague objectives that cannot be measured
+✗ Objectives stated as activities rather than outcomes
+✗ No connection between objectives and deliverables
+
+### 1.3 Scope of Work
+Must include:
+- All tasks and activities to be performed
+- Clear, action-oriented language
+- Complex tasks broken into smaller components
+- Specific quantities, frequencies, and formats
+- Methodology or approach at appropriate detail level
+
+FLAGS:
+✗ Tasks described in vague terms
+✗ No quantification of effort or output
+✗ Scope that could have multiple interpretations
+✗ Missing activities required to achieve stated objectives
+
+### 1.4 Out of Scope and Exclusions (CRITICAL)
+This section PREVENTS SCOPE CREEP. Must explicitly list:
+- Services, deliverables, or activities NOT included
+- Adjacent services clients commonly assume are included
+- Specific enough to prevent misunderstanding
+
+Common items to consider for exclusions:
+- Rush fees and expedited timelines
+- Additional revision rounds beyond stated limits
+- Crisis communications support
+- Paid media spend and management
+- Event staffing or on-site support
+- Travel outside defined geography
+- Third-party vendor management
+- Photography, video production, content creation
+- Translation or localization
+- Legal review of materials
+- Regulatory compliance verification
+
+FLAGS:
+✗ Missing exclusions section entirely
+✗ Exclusions too vague to be useful
+✗ Common adjacent services not addressed
+
+### 1.5 Deliverables
 Each deliverable MUST include:
-- Activities: What Agency will DO (active voice: "Agency will...")
-- Outputs: What Agency will PRODUCE (use "1x" notation with quantities)
-- Assumptions: Conditions that must be true for scope/fee to hold
+- Clear description of what will be produced
+- Format and specifications
+- Quantity or volume (use "1x" notation)
+- Quality standards or requirements
+- Dependencies on client inputs
 
-### 1.5 Objectives and Value Articulation
-- Must state business outcomes, NOT just activities
-- Good: "Establish brand hierarchy and align stakeholders"
-- Bad: "Conduct brand workshop"
+FLAGS:
+✗ Deliverables without format or specifications
+✗ No stated quantity or volume limits
+✗ Deliverables depending on client inputs without those inputs specified
+✗ Vague descriptions that could encompass varying effort levels
 
-## Part 2: Client Responsibilities (MUST be present)
+### 1.6 Acceptance Criteria
+For each major deliverable, define:
+- Specific conditions for acceptance
+- Who has authority to approve
+- Timeframe for client review
+- Process if deliverable does not meet criteria
+- Deemed acceptance provision for client non-response
 
-### 2.1 Consolidated Feedback Requirement
-MUST include language: "Client agrees to consolidate all internal feedback before submission to Agency. Feedback must represent unified organizational direction; Agency is not responsible for reconciling conflicting stakeholder input."
+Acceptance criteria MUST be:
+- Objective and measurable
+- Agreed upon before work begins
+- Clear about what constitutes completion
 
-### 2.2 Approval Windows
+FLAGS:
+✗ No acceptance criteria defined
+✗ Subjective criteria that invite dispute
+✗ No review window specified
+✗ No deemed acceptance provision
+✗ No process for rejected deliverables
+
+### 1.7 Timeline and Milestones
+Must include:
+- Realistic schedule with clear deadlines
+- Major milestones with target dates
+- Dependencies between tasks
+- Client review and approval cycles
+- Critical path items
+
+FLAGS:
+✗ No specific dates or timeframes
+✗ Timeline not accounting for client review periods
+✗ Dependencies not identified
+✗ Milestones not tied to specific deliverables
+✗ No buffer for client delays or revisions
+
+### 1.8 Roles and Responsibilities
+
+AGENCY responsibilities:
+- Specific tasks agency will perform
+- Resources agency will provide
+- Communication and reporting cadence
+- Project management approach
+
+CLIENT responsibilities (CRITICAL):
+- Materials, content, or assets client must provide
+- Access to systems, personnel, or information
+- Response and approval timeframes
+- Feedback consolidation requirements
+- Decision-making authority and designated approvers
+
+FLAGS:
+✗ Client responsibilities missing or vague
+✗ No specified response timeframes for client
+✗ No designated approver identified
+✗ No consequences for client failure to meet responsibilities
+✗ Feedback consolidation not addressed
+
+### 1.9 Assumptions
+Document conditions expected to exist. Common assumptions include:
+- Client cooperation and responsiveness
+- Access to required systems or information
+- Availability of client personnel
+- Accuracy of information provided by client
+- Third-party performance or availability
+- Technical environment stability
+- Regulatory environment stability
+
+Each assumption MUST have:
+- Clear statement of what is assumed
+- Consequence or contingency if assumption proves false
+
+FLAGS:
+✗ No assumptions section
+✗ Assumptions without consequences for failure
+✗ Critical dependencies not identified as assumptions
+✗ Response time assumptions missing
+✗ No provision for adjusting scope, timeline, or fee if assumptions fail
+
+### 1.10 Change Management Process
+Must define:
+- How changes are requested
+- Who can authorize changes
+- How impact to timeline and budget is assessed
+- Documentation requirements
+- Process for approving and implementing changes
+
+FLAGS:
+✗ No change management process defined
+✗ No requirement for written approval before work proceeds
+✗ No provision for impact assessment
+✗ Unclear authorization requirements
+
+### 1.11 Fees and Payment Terms
+Must specify:
+- Total fee or fee structure
+- Payment schedule and milestones
+- Invoice timing and payment terms
+- Late payment consequences
+- Rate schedule for out-of-scope work
+- Expense handling and approval thresholds
+
+FLAGS:
+✗ Fee not clearly stated
+✗ Payment not tied to milestones or deliverables
+✗ No late payment provisions
+✗ No rate for additional work
+✗ Expense handling unclear
+
+### 1.12 Termination Provisions
+Must address:
+- Termination for cause (material breach)
+- Termination for convenience
+- Notice requirements
+- Payment obligations upon termination
+- Kill fee or early termination fee if applicable
+- Transition obligations
+
+FLAGS:
+✗ No termination provisions
+✗ No notice period specified
+✗ Payment upon termination unclear
+✗ No protection for agency if client terminates early
+
+---
+
+## PART 2: LANGUAGE QUALITY STANDARDS
+
+### 2.1 VAGUE QUALIFIERS TO FLAG (Replace with specific language)
+- "Approximately" or "about" → specify tolerance range
+- "Reasonable" → define specifically
+- "As needed" or "as appropriate" → add parameters with "up to" caps
+- "Best efforts" → define measurable standard
+- "Standard" or "typical" → specify what standard means
+- "Ongoing" → add time boundary (e.g., "for up to 12 months")
+- "Regular" → specify frequency (e.g., "up to 2 times per week")
+- "Timely" → specify timeframe (e.g., "within 5 business days")
+- "Various" or "multiple" → specify exact number
+- "Etc." or "and so on" → enumerate all items
+- "Including but not limited to" → enumerate specific items
+
+### 2.2 PROBLEMATIC SCOPE LANGUAGE TO FLAG
+- "Support" → define specific activities
+- "Assistance" → define specific activities
+- "Management" → define specific activities
+- "Oversight" → define specific activities
+- "Coordination" → define specific activities
+- "Consultation" → define format, frequency, limits (e.g., "up to 4 hours per month")
+- "Guidance" → define format or limits
+- "Strategy" → define specific deliverables
+
+### 2.3 UNLIMITED/OPEN-ENDED COMMITMENTS TO FLAG (CRITICAL)
+These MUST be replaced with bounded language:
+- "Unlimited revisions" → "Up to [X] rounds of revisions"
+- "As many as needed" → "Up to [X]"
+- "Until client is satisfied" → objective completion criteria
+- "Ongoing support" → bounded term with hour cap
+- "Continuous improvement" → defined iterations
+- "Ad hoc" → "Up to [X] hours per month"
+- "As and when" → specify triggers with caps
+- Any commitment without stated limits
+
+### 2.4 PASSIVE VOICE OBSCURING RESPONSIBILITY
+Flag and recommend active voice:
+- "Work will be completed" → "Agency will complete..."
+- "Deliverables will be provided" → "Agency will deliver..."
+- "Feedback will be incorporated" → "Agency will incorporate up to [X] rounds..."
+- "Approval will be obtained" → "Client will approve within [X] business days..."
+
+### 2.5 RECOMMENDED LANGUAGE PATTERNS
+
+CONTROLLED QUANTIFICATION (use "up to" language):
+- "Up to X hours of consultation"
+- "Up to X rounds of revisions"
+- "Up to X deliverables per month"
+- "Up to X proactive media pitches"
+
+Benefits of "up to" language:
+- Sets ceiling client cannot exceed without additional fees
+- Does not commit agency to minimum if circumstances change
+- Creates natural conversation point when approaching limits
+- Provides no discount for unused capacity (it is reserved, not delivered)
+
+SPECIFIC TIMEFRAMES:
+- "Within X business days of [trigger event]"
+- "By [specific date]"
+- "No later than X days before [milestone]"
+- "Weekly, delivered every [day] by [time]"
+
+CLEAR RESPONSIBILITY ASSIGNMENT:
+- "Agency will deliver..."
+- "Client will provide..."
+- "Client's designated approver will respond..."
+
+CONDITIONAL LANGUAGE FOR DEPENDENCIES:
+- "Agency will deliver X, contingent upon receiving Y from Client by [date]"
+- "Timeline assumes Client provides Z within [timeframe]; delays may require schedule adjustment"
+
+REVISION LIMITS PATTERN:
+"This scope includes up to [number] rounds of revisions of decreasing complexity. A round of revisions consists of one consolidated set of feedback from Client's designated approver. Additional revision rounds beyond those included will be billed at [rate] per round or quoted separately."
+
+CONSOLIDATED FEEDBACK PATTERN:
+"Client will consolidate all stakeholder feedback into a single submission per revision round. Multiple separate feedback submissions addressing the same deliverable will each count as a separate revision round."
+
+---
+
+## PART 3: CLIENT RESPONSIBILITIES (MUST be present)
+
+### 3.1 Consolidated Feedback Requirement
+MUST include language similar to: "Client agrees to consolidate all internal feedback before submission to Agency. Feedback must represent unified organizational direction; Agency is not responsible for reconciling conflicting stakeholder input."
+
+### 3.2 Approval Windows
 MUST specify: "Client commits to providing feedback within [X] business days of deliverable submission. Deliverables not rejected within this window shall be deemed approved."
 
-### 2.3 Change Control
+### 3.3 Change Control
 MUST include: "Any change to scope, timeline, or budget requires mutual written agreement via change order. Agency may decline changes that compromise quality or timeline."
 
-### 2.4 Stakeholder Protection
-Include default language: "Agency will interface with a maximum of [X] client stakeholders for feedback purposes. Additional stakeholders require scope adjustment."
+### 3.4 Stakeholder Protection
+Include language: "Agency will interface with a maximum of [X] client stakeholders for feedback purposes. Additional stakeholders require scope adjustment."
 
-## Part 3: Master Assumptions (MUST appear somewhere)
+### 3.5 Client Obligations with Consequences
+Each client obligation should include:
+- Specific action required
+- Timeframe for completion
+- Consequence for failure
 
-### 3.1 Scope Boundaries
-- Explicit statement of what is NOT included
-- "This SOW does not include..." section
+Pattern: "Client will [specific action] within [timeframe] of [trigger event]. If Client fails to meet this obligation, Agency may [consequence: adjust timeline, pause work, adjust fee, etc.]."
 
-### 3.2 Revision/Iteration Limits
-MUST specify rounds: "Up to [X] rounds of revisions included. Additional rounds at prevailing rates."
+---
 
-### 3.3 Response Time Expectations
-Client response times must be defined for:
-- Feedback on deliverables
-- Approval of materials
-- Provision of required inputs
+## PART 4: CONTRACT TYPE SPECIFIC REQUIREMENTS
 
-### 3.4 Pause/Termination Ladder
-Include provision: "If Client delays exceed [X] business days, Agency reserves right to [pause work / adjust timeline / invoice for work completed]."
+### 4.1 Fixed Fee Contracts
+REQUIRED ELEMENTS:
+□ Scope exhaustively defined (all deliverables with specifications)
+□ Quantities and volumes specified
+□ Revision rounds specified and limited
+□ Meeting and consultation time limited
+□ Exclusions clearly stated
+□ Assumptions documented with consequences
+□ Change order process requiring written approval
+□ Client obligations with timeframes and consequences
+□ Completion clearly defined with acceptance criteria
+□ Deemed acceptance provision
 
-## Part 4: Service-Line Specific Requirements
+HIGH RISK INDICATORS:
+✗ Unlimited revision language
+✗ Scope in vague terms
+✗ No exclusions section
+✗ No assumptions documented
+✗ Client obligations without consequences
+✗ No change order process
+✗ Completion tied to subjective client satisfaction
 
-### 4.1 Branding Projects
-- Brand architecture/hierarchy explicitly addressed
-- Stakeholder alignment sessions defined
-- Asset formats and file deliverables listed
-- Guidelines scope (what's covered, what's not)
+### 4.2 Time & Materials Contracts
+REQUIRED ELEMENTS:
+□ Rate schedule complete (all roles, billing increment, adjustment provisions)
+□ Initial estimate provided (clearly stated as estimate, not cap)
+□ Notification thresholds when approaching estimate
+□ Tracking increment specified
+□ Reporting frequency and content defined
+□ Client access to detailed time logs
+□ Scope guidance (intended objectives and boundaries)
 
-### 4.2 Website Projects
-- Technical requirements (CMS, hosting, etc.)
-- Content responsibility clearly assigned
-- Browser/device compatibility defined
-- Post-launch support period specified
-- Training deliverables included
+RISK INDICATORS:
+✗ No estimate provided
+✗ No notification thresholds
+✗ Vague or no reporting requirements
+✗ No billing increment specified
+✗ No scope guidance or boundaries
 
-### 4.3 PR/Communications
-- Media target list scope defined
-- Pitch quantities or cadence specified
-- Reporting frequency and metrics defined
-- Spokesperson preparation included
+### 4.3 Time & Materials with Cap (Not to Exceed)
+REQUIRED ELEMENTS:
+□ Cap clearly defined (total amount, inclusions, exclusions)
+□ Cap explicitly tied to defined scope
+□ Notification thresholds (percentage trigger)
+□ Work stoppage rights when cap approached
+□ Scope change provisions requiring cap adjustment
+□ Assumption protection (failure grounds for cap adjustment)
+□ No obligation to work beyond cap without authorization
 
-### 4.4 Creative Retainers
-- Monthly hour allocation clearly stated
-- Rollover policy defined
-- Utilization reporting specified
-- Rate card for overage included
+HIGH RISK INDICATORS:
+✗ Cap not tied to specific scope
+✗ No notification thresholds
+✗ No work stoppage provision
+✗ No scope change adjustment mechanism
+✗ Assumptions not documented or protected
+✗ Cap includes pass-through costs agency cannot control
 
-### 4.5 Integrated/Multi-Service
-- Workstream dependencies mapped
-- Cross-functional coordination specified
-- Integrated timeline with milestones
-- Single point of accountability identified
+### 4.4 Retainer Contracts
+REQUIRED ELEMENTS:
+□ Minimum term specified
+□ Monthly fee clearly stated
+□ Early termination provisions and fees
+□ Services included clearly enumerated
+□ Deliverables or hours quantified
+□ Services explicitly excluded
+□ Monthly allocation specified
+□ Rollover policy clearly stated (recommend: limited or no rollover)
+□ Overage handling defined (rate, notification, pre-approval)
+□ Utilization tracking and reporting
+□ Notice period for non-renewal
+
+ROLLOVER POLICY OPTIONS:
+- Option A (Recommended): No rollover - unused allocation forfeited
+- Option B: Limited rollover to immediately following month only, with cap
+- Option C: No monthly rollover with quarterly true-up review
+
+RISK INDICATORS:
+✗ No minimum term commitment
+✗ Unlimited rollover
+✗ Vague scope definition
+✗ No overage mechanism
+✗ No utilization reporting
+✗ No early termination protection
+✗ Discount without corresponding commitment
+
+---
+
+## PART 5: SERVICE-LINE SPECIFIC REQUIREMENTS
+
+### 5.1 Branding Projects
+□ Brand architecture/hierarchy explicitly addressed
+□ Stakeholder alignment sessions defined
+□ Number of concepts at each stage specified
+□ Revision rounds per phase specified
+□ Asset formats and file deliverables listed (file formats, sizes)
+□ Guidelines scope (what's covered, what's not)
+□ Usage rights and licensing terms
+□ Photography and stock imagery handling
+
+### 5.2 Website Projects
+□ Technical requirements (CMS, hosting, etc.)
+□ Content responsibility clearly assigned
+□ Browser/device compatibility defined
+□ Page counts specified
+□ Post-launch support period specified
+□ Training deliverables included
+□ UAT (User Acceptance Testing) process defined
+□ Warranty period specified
+□ Third-party integrations listed
+
+### 5.3 PR/Communications
+□ Media target list scope defined
+□ Number of proactive pitches per period specified
+□ Reporting frequency and format defined
+□ Measurement metrics specified
+□ Reactive media inquiry handling (included or excluded)
+□ Spokesperson preparation (included or excluded)
+□ Message development ownership
+□ Crisis communications (typically excluded unless explicit)
+
+### 5.4 Creative Retainers
+□ Monthly hour allocation clearly stated
+□ Rollover policy defined
+□ Utilization reporting specified
+□ Rate card for overage included
+□ Request parameters (lead times, formats)
+□ SLAs for response times
+□ Exclusions clearly listed
+
+### 5.5 Paid Media
+□ Separation of media spend from agency fees
+□ Media spend ownership and management
+□ Ad account ownership
+□ Reporting frequency and format
+□ Optimization responsibilities and frequency
+□ Platform-specific requirements
+□ Audience development and targeting scope
+
+### 5.6 Integrated/Multi-Service
+□ Workstream dependencies mapped
+□ Cross-functional coordination specified
+□ Boundaries between service lines defined
+□ Handoff points between teams identified
+□ Which team leads on strategy vs execution
+□ Consolidated vs separate reporting
+□ Single point of contact vs multiple
+□ Integrated timeline with milestones
+□ Single point of accountability identified
+
+---
+
+## PART 6: SCOPE CREEP PREVENTION CHECKLIST
+
+### 6.1 Does the SOW include these protection mechanisms?
+□ Explicit exclusions section
+□ Client obligations with documented consequences
+□ Revision limits with process for additional rounds
+□ Consolidated feedback requirement
+□ Assumptions documentation with adjustment provisions
+□ Formal change order process
+□ Stop work provisions for client non-compliance
+
+### 6.2 Stop Work / Pause Clause
+Should include:
+- Trigger events (payment default, failure to respond, failure to provide inputs)
+- Grace period before pause takes effect
+- Notification requirements
+- Impact on timeline
+- Restart conditions and potential restart fee
+- Relationship to termination rights
+
+Pattern: "If Client fails to make a payment when due, or fails to respond to requests within [specified period], Agency may stop work upon written notice until Client cures the failure. Client acknowledges that stopping work will cause delay, and timeline will be adjusted accordingly. If Agency stops work for more than [period], Agency may require a restart fee before resuming."
+
+---
+
+## PART 7: QUICK REFERENCE - REVIEW FLAGS
+
+### FLAG AS HIGH PRIORITY (Must fix before issuing):
+Missing Elements:
+- No exclusions section
+- No client obligations
+- No revision limits
+- No change order process
+- No assumptions documentation
+- No acceptance criteria
+
+Problematic Language:
+- "Unlimited" anything
+- "As needed" without parameters
+- "Reasonable" without definition
+- Any commitment without limits
+
+Structural Issues:
+- Payment not tied to milestones or deliverables
+- No consequences for client non-performance
+- No termination protection
+- Scope not aligned with pricing model
+
+### FLAG AS MODERATE PRIORITY (Should fix):
+Missing Elements:
+- Incomplete acceptance criteria
+- Vague timeline
+- Unclear roles
+- Missing reporting requirements
+
+Language Issues:
+- Passive voice obscuring responsibility
+- Vague qualifiers
+- Undefined terms
+- Inconsistent terminology
+
+### FLAG FOR IMPROVEMENT (Would strengthen):
+- Could be more specific
+- Could benefit from examples
+- Terms could be defined
+- Could add flexibility mechanisms
+- Could strengthen protections
 `;
 
 // ============================================================================
@@ -1103,10 +2051,22 @@ export default function App() {
     setSelectedServices([]);
     
     try {
-      // Build service categories description for AI
-      const serviceCategoriesPrompt = SERVICE_TRIGGERS.map(cat => 
-        `- ${cat.id}: "${cat.category}" - ${cat.description}. Indicators include themes like: ${cat.triggers.slice(0, 3).join(', ')}, or similar expressions of these needs.`
-      ).join('\n');
+      // Build comprehensive service categories description for AI using enhanced trigger patterns
+      const serviceCategoriesPrompt = SERVICE_TRIGGERS.map(cat => {
+        const patterns = cat.triggerPatterns || {};
+        const directExamples = patterns.direct?.slice(0, 3).join(', ') || '';
+        const indirectExamples = patterns.indirect?.slice(0, 3).join(', ') || '';
+        const sampleLanguage = patterns.sampleLanguage?.slice(0, 3).join('" | "') || '';
+        const situational = patterns.situational?.slice(0, 2).join(', ') || '';
+        const performance = patterns.performance?.slice(0, 2).join(', ') || '';
+        
+        return `- ${cat.id}: "${cat.category}" - ${cat.description}
+    Direct triggers: ${directExamples}
+    Indirect signals: ${indirectExamples}
+    Situational triggers: ${situational}
+    Performance issues: ${performance}
+    Client often says: "${sampleLanguage}"`;
+      }).join('\n\n');
       
       // Use AI to analyze transcript AND detect relevant service categories semantically
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1119,63 +2079,110 @@ export default function App() {
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 5000,
-          system: `You are an expert at analyzing client call transcripts to extract key information for Statement of Work development. Your job is to identify the core elements that will inform the SOW AND recommend relevant service categories based on the client's expressed needs, challenges, and goals.
+          max_tokens: 6000,
+          system: `You are an expert at analyzing client call transcripts to extract key information for Statement of Work development at a marketing and communications agency. Your job is to identify the core elements that will inform the SOW AND recommend relevant service categories based on the client's expressed needs.
 
-When recommending service categories, think semantically - if a client expresses a need that aligns with the INTENT of a category, recommend it even if they don't use the exact phrases. For example:
-- "Our competitors are getting all the attention" suggests awareness needs
-- "We keep getting bad press" or "our online reviews are terrible" suggests reputation needs
-- "Nobody knows what we stand for" suggests brand/identity needs
-- "Our team creates content but it doesn't perform" suggests content or performance needs
-- "We want to be seen as the go-to experts" suggests influence/authority needs
+## CRITICAL: SEMANTIC TRIGGER DETECTION
 
-Be generous in recommendations - it's better to suggest a category that might be relevant than to miss one.`,
+Do NOT look for exact phrase matches. Instead, understand the INTENT and MEANING behind what clients say. Client triggers manifest as:
+
+1. **Pain Points**: Problems the client is experiencing (listen for frustration, complaints, "we're struggling with", "our challenge is")
+2. **Ambitions**: Goals they want to achieve (listen for "we want to", "our goal is", "we're hoping to")
+3. **Situational Changes**: Business events requiring marketing support (mergers, launches, new leadership, funding, expansion)
+4. **Performance Gaps**: Metrics that aren't meeting expectations (declining numbers, competitive losses, ROI questions)
+5. **Resource Constraints**: Lack of internal capacity or expertise (no team, overwhelmed, don't have time, don't know how)
+
+## TRIGGER INTENSITY INDICATORS
+
+Pay attention to urgency signals:
+- **High Intensity** (urgent): "need this for [date]", "priority for the board", "losing money/customers", "competitor just [action]"
+- **Medium Intensity** (active): "we've been thinking about", "it's on our roadmap", "want to explore"
+- **Low Intensity** (consideration): "curious about", "someday we'd like to"
+
+## COMBINED TRIGGER PATTERNS
+
+Common combinations to look for:
+- **Launch Scenarios** (product launch, funding, market entry) → GTM, PR, creative, paid social, website
+- **Brand Transformation** (rebrand, repositioning, new leadership) → brand strategy, website, creative, integrated
+- **Growth Mode** (scaling, expansion, competitive pressure) → SEO, performance marketing, content, measurement
+- **Awareness Building** (low visibility, thought leadership goals) → PR, media outreach, executive visibility, content
+- **Performance Optimization** (declining metrics, budget pressure) → performance marketing, measurement, A/B testing
+
+## IMPORTANT GUIDELINES
+
+1. Be GENEROUS in recommendations - it's better to suggest a category that might be relevant than to miss one
+2. Look for the underlying NEED, not just the stated want
+3. If a client mentions multiple pain points, recommend multiple categories
+4. Consider what services often go TOGETHER (e.g., website + brand, PR + executive visibility)
+5. If unsure, include the category - the user can deselect services they don't need`,
           messages: [{
             role: 'user',
             content: `Analyze this client call transcript and provide TWO things:
 
 PART 1: TRANSCRIPT ANALYSIS
-Extract:
-1. SUCCESS DEFINITION - What does success look like for this engagement? What outcomes is the client hoping to achieve?
-2. PROBLEM STATEMENT - What specific problem(s) is the client trying to solve? What pain points did they express?
-3. MANDATORIES - What explicit requirements or must-haves did the client mention?
-4. TIMELINE - Any deadlines, milestones, or timing requirements mentioned.
-5. BUDGET SIGNALS - Any budget ranges, constraints, or expectations mentioned.
-6. KEY STAKEHOLDERS - Who are the decision makers and key contacts?
-7. CONTEXT - Important background about the client's situation, industry, or competitive landscape.
+Extract the following information from the transcript:
+
+1. **SUCCESS DEFINITION** - What does success look like for this engagement? What specific outcomes is the client hoping to achieve? What would make them say "this was worth it"?
+
+2. **PROBLEM STATEMENT** - What specific problem(s) is the client trying to solve? What pain points did they express? What frustrations came through in the conversation?
+
+3. **MANDATORIES** - What explicit requirements or must-haves did the client mention? What are the non-negotiables?
+
+4. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent.
+
+5. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned.
+
+6. **KEY STAKEHOLDERS** - Who are the decision makers and key contacts? Who needs to be involved in approvals?
+
+7. **CONTEXT** - Important background about the client's situation, industry, competitive landscape, or internal dynamics that should inform the SOW.
+
+8. **TRIGGER INTENSITY** - How urgent is this need? (High/Medium/Low based on language used)
 
 PART 2: RECOMMENDED SERVICE CATEGORIES
-Based on the client's expressed needs, challenges, goals, and pain points, identify which of these service categories are relevant. Think about the INTENT behind what the client is saying, not just exact phrases.
+Based on the client's expressed needs, challenges, goals, pain points, and situational context, identify which service categories are relevant.
 
-Available categories:
+Think about:
+- The INTENT behind what the client is saying
+- What they need even if they didn't explicitly ask for it
+- What services naturally go together for their situation
+- Both their stated wants AND their underlying needs
+
+Available categories (with trigger pattern examples):
+
 ${serviceCategoriesPrompt}
 
 Format your response EXACTLY as:
 
 ## SUCCESS DEFINITION
-[Clear statement of what success looks like]
+[Clear statement of what success looks like for this client]
 
 ## PROBLEM STATEMENT
-[The core problem(s) to solve]
+[The core problem(s) to solve - be specific about the pain points]
 
 ## MANDATORIES
 - [Explicit requirement 1]
 - [Explicit requirement 2]
+(List all non-negotiable requirements mentioned)
 
 ## TIMELINE
-[Any timeline information, or "Not specified" if none mentioned]
+[Any timeline information, urgency level, or "Not specified" if none mentioned]
 
 ## BUDGET SIGNALS
 [Any budget information, or "Not specified" if none mentioned]
 
 ## KEY STAKEHOLDERS
-[Stakeholder information, or "Not specified" if none mentioned]
+[Stakeholder information, decision-making structure, or "Not specified" if none mentioned]
 
 ## CONTEXT
-[Relevant background]
+[Relevant background that should inform the SOW - industry, competition, internal dynamics]
+
+## TRIGGER INTENSITY
+[High/Medium/Low with brief explanation of why]
 
 ## RECOMMENDED_CATEGORIES
-[List ONLY the category IDs that are relevant, comma-separated, e.g.: awareness, brand, content, leads]
+[List ONLY the category IDs that are relevant, comma-separated. Be generous - include any category that might be relevant based on the analysis above.]
+
+Example: website, brand, pr, executive_visibility, content_production
 
 TRANSCRIPT:
 ${transcript}`
@@ -1197,14 +2204,19 @@ ${transcript}`
       if (categoriesMatch) {
         detectedCategoryIds = categoriesMatch[1]
           .split(',')
-          .map(s => s.trim().toLowerCase())
+          .map(s => s.trim().toLowerCase().replace(/[_\s]+/g, '_'))
           .filter(s => s.length > 0);
       }
       
-      // Map category IDs to full trigger objects
-      const detected = SERVICE_TRIGGERS.filter(trigger => 
-        detectedCategoryIds.includes(trigger.id.toLowerCase())
-      );
+      // Map category IDs to full trigger objects (flexible matching)
+      const detected = SERVICE_TRIGGERS.filter(trigger => {
+        const triggerId = trigger.id.toLowerCase();
+        return detectedCategoryIds.some(detected => 
+          detected === triggerId || 
+          detected.includes(triggerId) || 
+          triggerId.includes(detected)
+        );
+      });
       
       setDetectedTriggers(detected);
       
@@ -1239,6 +2251,59 @@ ${transcript}`
     
     try {
       const engagementLabel = DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label || 'Fixed Fee';
+      const engagementType = draftEngagementType || 'fixed_fee';
+      
+      // Get engagement-specific guidance
+      const engagementGuidance = {
+        fixed_fee: `FIXED FEE ENGAGEMENT REQUIREMENTS:
+- Scope must be exhaustively defined - all deliverables with specifications
+- All quantities and volumes must be specified
+- Revision rounds must be specified and limited (recommend: up to 2 rounds per deliverable)
+- Meeting and consultation time must be limited (use "up to X hours")
+- Include strong exclusions section listing what is NOT included
+- Document all assumptions with consequences if they prove false
+- Include change order process requiring written approval for ANY additions
+- Client obligations must have specific timeframes and consequences for non-compliance
+- Define clear acceptance criteria for each deliverable
+- Include deemed acceptance provision (e.g., "if no response within 5 business days")
+- Fee should be tied to milestones or phases, not a single lump sum payment`,
+        
+        tm_cap: `TIME & MATERIALS WITH CAP (NOT TO EXCEED) REQUIREMENTS:
+- Cap must be clearly stated with inclusions and exclusions
+- Cap must be explicitly tied to the defined scope
+- Include notification thresholds (e.g., "Agency will notify Client when 75% of cap is consumed")
+- Include work stoppage rights when cap is approached
+- Scope changes must require cap adjustment
+- Assumption failures are grounds for cap adjustment
+- Specify billing rates by role
+- Specify billing increment (e.g., 15-minute increments)
+- Include reporting requirements (frequency and content)
+- No obligation to work beyond cap without written authorization`,
+        
+        tm: `TIME & MATERIALS REQUIREMENTS:
+- Complete rate schedule for all roles that may work on the project
+- Clear billing increment (e.g., 15-minute increments)
+- Initial estimate clearly stated as estimate, NOT a guarantee or cap
+- Notification thresholds when approaching estimate
+- Tracking increment specified
+- Reporting frequency and content defined
+- Client access to detailed time logs
+- Scope guidance with intended objectives and boundaries
+- Conditions that would trigger revised estimate`,
+        
+        retainer: `RETAINER REQUIREMENTS:
+- Minimum term specified (recommend: 6-12 months)
+- Monthly fee clearly stated
+- Early termination provisions and fees (e.g., 60-day notice, or fee for early termination)
+- Services included clearly enumerated
+- Monthly hour allocation or deliverable allocation specified
+- Services explicitly EXCLUDED
+- Rollover policy clearly stated (recommend: limited or no rollover)
+- Overage handling defined (rate, notification threshold, pre-approval)
+- Utilization tracking and reporting frequency
+- Notice period for non-renewal
+- Annual rate adjustment provisions if applicable`
+      };
       
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -1251,45 +2316,114 @@ ${transcript}`
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 16000,
-          system: `You are an expert at drafting professional Statements of Work for a marketing and communications agency (Antenna Group). 
+          system: `You are an expert at drafting professional Statements of Work for Antenna Group, a marketing and communications agency. You create SOWs that protect the agency while being fair and professional for clients.
 
-Your SOWs must follow these standards:
-- Use decimal numbering (1.1, 1.1.1, etc.) NOT bullet points
-- Every deliverable must have explicit completion criteria
-- Use "up to" language for flexibility (e.g., "up to 4 hours per month")
-- Include Activities (what agency will DO), Outputs (what agency will PRODUCE with quantities), and Assumptions
-- Include Client Responsibilities section with consolidated feedback requirement and approval windows
-- Include clear scope boundaries and what is NOT included
-- Specify revision limits (e.g., "up to 2 rounds of revisions")
+## CORE SOW STANDARDS (Apply to ALL SOWs)
+
+### Structure and Numbering
+- Use decimal numbering throughout (1.1, 1.1.1, 1.1.1.1) - NEVER bullet points in formal sections
+- Every deliverable, activity, output, and assumption must have a unique reference number
+
+### Language Standards
+- Use "up to" language for flexibility (e.g., "up to 4 hours per month", "up to 2 rounds of revisions")
+- NEVER use vague terms like: "as needed", "ongoing", "various", "reasonable", "unlimited", "best efforts"
+- Use active voice with clear responsibility: "Agency will...", "Client will..."
+- Define any terms that could be interpreted differently
+
+### Deliverable Structure
+Each deliverable MUST include:
+- **Activities**: What Agency will DO (active voice)
+- **Outputs**: What Agency will PRODUCE (with quantities using "1x", "up to 3x" notation)
+- **Assumptions**: Conditions that must be true for this scope/fee to hold
+- **Completion Criteria**: Explicit trigger for when this deliverable is considered complete
+
+### Client Responsibilities Section (REQUIRED)
+Must include:
+1. Consolidated Feedback: "Client agrees to consolidate all internal feedback before submission to Agency. Feedback must represent unified organizational direction."
+2. Approval Windows: "Client commits to providing feedback within [X] business days. Deliverables not rejected within this window shall be deemed approved."
+3. Change Control: "Any change to scope, timeline, or budget requires mutual written agreement via change order."
+4. Stakeholder Limits: "Agency will interface with a maximum of [X] client stakeholders for feedback purposes."
+5. Input Requirements: What materials, access, or information client must provide
+6. Consequences: What happens if client fails to meet obligations
+
+### Master Assumptions Section (REQUIRED)
+Must include:
+1. Scope Boundaries: "This SOW does not include..." with specific exclusions
+2. Revision Limits: "Up to [X] rounds of revisions included per deliverable"
+3. Response Times: Expected client response times for different actions
+4. Pause/Termination Ladder: "If Client delays exceed [X] business days, Agency may pause work"
+
+### Out of Scope / Exclusions (REQUIRED)
+Explicitly list what is NOT included. Consider:
+- Rush fees and expedited timelines
+- Additional revision rounds beyond stated limits
+- Crisis communications (unless included)
+- Paid media spend management
+- Travel outside defined geography
+- Third-party vendor management
+- Content creation not explicitly listed
+- Legal or regulatory review
+
+${engagementGuidance[engagementType] || engagementGuidance.fixed_fee}
 
 ${ASSESSMENT_FRAMEWORK}`,
           messages: [{
             role: 'user',
-            content: `Create a professional Statement of Work based on the following:
+            content: `Create a professional Statement of Work based on the following information:
 
-ENGAGEMENT TYPE: ${engagementLabel}
+## ENGAGEMENT TYPE
+${engagementLabel}
 
-ADDITIONAL NOTES FROM ACCOUNT TEAM:
+## ADDITIONAL NOTES FROM ACCOUNT TEAM
 ${draftNotes || 'None provided'}
 
-CLIENT TRANSCRIPT ANALYSIS:
+## CLIENT TRANSCRIPT ANALYSIS
 ${transcriptAnalysis || 'No transcript analyzed'}
 
-SELECTED SERVICES TO INCLUDE:
+## SELECTED SERVICES TO INCLUDE
 ${selectedServices.map(s => `- ${s}`).join('\n')}
 
-Generate a complete, professional SOW that:
-1. Addresses the success criteria and problems identified
-2. Includes all selected services as properly structured deliverables
-3. Has clear completion criteria for each deliverable
-4. Includes Client Responsibilities section
-5. Has Master Assumptions section
-6. Uses proper decimal numbering throughout
-7. Uses "up to" language for quantities and timeframes
-8. Includes a Fee Summary section appropriate for ${engagementLabel} engagement
-9. Is ready for client presentation with minimal editing
+## REQUIREMENTS FOR THIS SOW
 
-Format the SOW professionally with clear sections.`
+Generate a complete, client-ready SOW that:
+
+1. **Addresses Client Needs**: Directly addresses the success criteria and problems identified in the transcript analysis
+
+2. **Structured Deliverables**: Includes all selected services as properly structured deliverables with:
+   - Clear activities (what Agency will DO)
+   - Specific outputs (what Agency will PRODUCE with quantities)
+   - Assumptions for each deliverable
+   - Explicit completion criteria
+
+3. **Client Responsibilities**: Comprehensive section including:
+   - Consolidated feedback requirement
+   - Approval windows with deemed acceptance
+   - Change control process
+   - Stakeholder limits
+   - Input requirements with deadlines
+   - Consequences for non-compliance
+
+4. **Master Assumptions**: Including:
+   - Scope boundaries and exclusions
+   - Revision limits
+   - Response time expectations
+   - Pause/termination provisions
+
+5. **Proper Formatting**:
+   - Decimal numbering throughout (1.1, 1.1.1, etc.)
+   - "Up to" language for all quantities and timeframes
+   - Clear section headers
+   - Professional tone
+
+6. **Fee Summary**: Appropriate for a ${engagementLabel} engagement with:
+   - Clear fee structure
+   - Payment schedule tied to milestones or phases
+   - Rate card for additional work if applicable
+   - Expense handling
+
+7. **Scope Protection**: Clear exclusions and boundaries to prevent scope creep
+
+The SOW should be ready for client presentation with minimal editing needed. Make it thorough but readable.`
           }]
         })
       });
@@ -1697,6 +2831,11 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   </div>
                 </div>
               </button>
+            </div>
+            
+            {/* Version number */}
+            <div className="mt-16 text-right">
+              <span className="text-xs text-gray-400 font-mono">v{APP_VERSION}</span>
             </div>
           </div>
         )}
