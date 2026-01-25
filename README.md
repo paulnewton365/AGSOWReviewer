@@ -1,38 +1,19 @@
-# SOW Workbench
+# SOW Workbench v2.0.0
 
-**Version 2.1.0**
+A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
 
-A comprehensive Statement of Work tool for Antenna Group that helps draft new SOWs from client calls and review existing SOWs against quality standards.
+## What's New in v2.0.0
 
-## Features
+### Enhanced Semantic Trigger Detection
+The AI now uses sophisticated semantic analysis to identify client needs, not just keyword matching. It understands:
+- **Pain points**: Problems expressed through frustration, complaints, challenges
+- **Ambitions**: Goals expressed through "we want to", "our goal is", aspirational language
+- **Situational triggers**: Business events like mergers, launches, new leadership, funding
+- **Performance gaps**: Declining metrics, competitive losses, ROI questions
+- **Resource constraints**: Team capacity issues, expertise gaps, time pressure
 
-### Draft Mode (Create New SOWs)
-- **Intelligent Transcript Analysis**: Paste client call transcripts and AI identifies key requirements, success criteria, timelines, and stakeholders
-- **Semantic Service Detection**: Recognizes client needs through multiple trigger types:
-  - Direct triggers (explicit requests)
-  - Indirect signals (related problems implying needs)
-  - Situational triggers (business events like mergers, launches)
-  - Performance triggers (metrics and outcomes)
-  - Natural language patterns (how clients actually express needs)
-- **Trigger Intensity Detection**: Identifies urgency level (High/Medium/Low)
-- **Smart Service Recommendations**: Auto-suggests relevant services based on detected needs
-- **Professional SOW Generation**: Creates properly structured SOWs with decimal numbering, "up to" language, completion criteria
-
-### Review Mode (Assess Existing SOWs)
-- **Document Support**: Upload PDF, DOCX, or plain text SOW documents
-- **Engagement Type Assessment**: Specialized criteria for Branding, Website, PR/Communications, Creative Retainer, and Integrated engagements
-- **Comprehensive Analysis**: 
-  - Critical issues that must be fixed
-  - Recommended improvements
-  - Red flag language detection with replacement suggestions
-  - Service-line compliance checking
-  - Budget verification
-- **Revised Draft Generation**: Creates updated SOW incorporating all recommended fixes
-- **Word Document Export**: Download as branded .docx files
-
-## Service Categories (31 total)
-
-The app recognizes needs across all major marketing service areas:
+### Expanded Service Categories (23 categories)
+Now includes comprehensive coverage of all agency service lines:
 - Website & App Development
 - Integrated Marketing Strategy
 - Brand Strategy & Identity
@@ -40,10 +21,10 @@ The app recognizes needs across all major marketing service areas:
 - Influencer Marketing
 - Creative Campaigns & Platforms
 - Public Relations
-- Media Outreach
+- Media Outreach (Proactive & Reactive)
 - Executive Visibility & Thought Leadership
 - Paid Social Media
-- Search Engine Optimization (SEO)
+- SEO
 - Generative Engine Optimization (GEO)
 - Measurement & Analytics
 - Go-to-Market Strategy
@@ -53,14 +34,56 @@ The app recognizes needs across all major marketing service areas:
 - Content Ideation & Production
 - Performance Marketing & Optimization
 - Brand & Marketing Assessments
-- And more...
+- Plus enhanced versions of original categories
+
+### Comprehensive SOW Assessment Framework
+The review engine now checks against a much more detailed framework including:
+- All 12 essential SOW components with specific requirements
+- Language quality standards with 25+ red flag patterns
+- Contract-type specific requirements (Fixed Fee, T&M, T&M with Cap, Retainer)
+- Service-line specific checklists
+- Scope creep prevention mechanisms
+- Detailed acceptance criteria and client responsibility patterns
+
+### Trigger Intensity Detection
+AI now identifies urgency level:
+- **High Intensity**: Board priorities, revenue impact, competitive threats, hard deadlines
+- **Medium Intensity**: Roadmap items, exploration mode, planning phase
+- **Low Intensity**: Curiosity, future consideration
+
+### Combined Trigger Pattern Recognition
+Recognizes common service combinations:
+- Launch scenarios → GTM, PR, creative, paid social, website
+- Brand transformation → brand strategy, website, creative, integrated
+- Growth mode → SEO, performance marketing, content, measurement
+- Awareness building → PR, media outreach, executive visibility, content
+
+## Features
+
+### Draft Mode (Create New SOWs)
+- Paste client call transcripts for AI analysis
+- Automatic extraction of: success criteria, problem statements, mandatories, timeline, budget signals, stakeholders, context
+- Smart service category recommendations based on semantic analysis
+- Customizable service selection with expandable categories
+- Complete SOW generation following Antenna Group standards
+- Engagement-type specific guidance (Fixed Fee, T&M, T&M with Cap, Retainer)
+- Download as branded Word document
+
+### Review Mode (Assess Existing SOWs)
+- Upload PDF, DOCX, or text files
+- Comprehensive assessment against quality framework
+- Categorized feedback: Critical Issues, Recommended Improvements, Red Flags
+- Service-line compliance checking
+- Budget verification
+- Generate revised drafts incorporating all fixes
+- Download revised versions as Word documents
 
 ## Tech Stack
 
 - React 18
 - Vite
 - Tailwind CSS
-- Claude API (Anthropic)
+- Claude API (Anthropic) - Sonnet 4
 - docx library for Word document generation
 
 ## Local Development
@@ -89,53 +112,93 @@ See DEPLOYMENT.md for step-by-step instructions.
 
 ## Usage
 
-### Draft Mode
+### Drafting a New SOW
 1. Enter your Anthropic API key
-2. Select the engagement type (Fixed Fee, T&M, T&M with Cap, or Retainer)
+2. Select engagement type (Fixed Fee, T&M, T&M with Cap, or Retainer)
 3. Add any notes from the account team (optional)
 4. Paste the client call transcript
-5. Click "Analyze Transcript" - AI will extract key info and recommend services
-6. Review and adjust selected services
+5. Click "Analyze Transcript"
+6. Review detected service categories and adjust selections as needed
 7. Click "Generate SOW Draft"
-8. Download as Word document
+8. Download the Word document
 
-### Review Mode
+### Reviewing an Existing SOW
 1. Enter your Anthropic API key
 2. Upload your SOW document (PDF, DOCX, or TXT)
 3. Select the engagement type
 4. Click "Analyze SOW"
 5. Review the structured feedback
-6. Optionally generate a revised draft incorporating all fixes
-7. Download as Word document
+6. Optionally generate a revised draft
+7. Download the revised Word document
 
-## Assessment Framework
+## Assessment Framework Overview
 
-The tool checks SOWs against comprehensive criteria including:
-
-### Universal Requirements
-- Decimal numbering structure
-- Completion criteria for each deliverable
-- Controlled language (no red flag phrases like "unlimited", "as needed", "ongoing")
+### Universal Requirements (All SOWs)
+- Decimal numbering structure (1.1, 1.1.1, etc.)
+- Explicit completion criteria for each deliverable
+- Controlled language (no vague qualifiers)
 - Deliverable structure (activities, outputs, assumptions)
-- Client responsibilities (consolidated feedback, approval windows, change control)
-- Master assumptions (scope boundaries, revision limits, pause/termination)
+- Client responsibilities with consequences
+- Master assumptions with contingencies
 - Explicit scope exclusions
-- Budget alignment
+- Change management process
 
-### Contract Type Specific
-- **Fixed Fee**: Exhaustive scope, revision limits, strong assumptions
-- **T&M**: Rate schedule, estimates, notification thresholds
-- **T&M with Cap**: Cap-scope linkage, work stoppage rights
-- **Retainer**: Term commitment, utilization management, rollover policy
+### Contract-Type Requirements
+
+**Fixed Fee**
+- Exhaustive scope definition
+- Revision limits
+- Strong assumptions section
+- Change order process
+- Deemed acceptance provisions
+
+**Time & Materials**
+- Complete rate schedule
+- Initial estimate (not cap)
+- Notification thresholds
+- Reporting requirements
+
+**T&M with Cap**
+- Cap tied to scope
+- Work stoppage rights
+- Cap adjustment mechanisms
+- Assumption protection
+
+**Retainer**
+- Minimum term
+- Hour/deliverable allocation
+- Rollover policy
+- Overage handling
+- Utilization reporting
 
 ### Service-Line Specific
-- **Branding**: Phase gates, creative territories, brand components
-- **Website**: BRD, page counts, UAT, warranty, hosting
-- **PR/Comms**: Retainer structure, rate card, reporting cadence
-- **Creative Retainer**: Drawdown, request parameters, SLAs
-- **Integrated**: Fee structure, timeline visualization, quarterly planning
+- **Branding**: Phase gates, concept counts, brand components, file formats
+- **Website**: Technical specs, content responsibility, browser compatibility, warranty
+- **PR/Comms**: Pitch quantities, media lists, reporting cadence, crisis exclusions
+- **Creative Retainer**: Hour allocation, rollover, SLAs, rate card
+- **Integrated**: Workstream dependencies, coordination, single accountability
 
-## Changelog
+## Red Flag Language Patterns
+
+The tool flags and suggests replacements for:
+- "As needed" → bounded quantities with "up to"
+- "Ongoing" → defined term limits
+- "Reasonable" → specific definitions
+- "Unlimited" → capped quantities
+- "Best efforts" → measurable criteria
+- "Various" → enumerated items
+- "Regular" → specified frequency
+- And 15+ more patterns
+
+## Version History
+
+### v2.1.1 (Current)
+- Fixed issue where "missing element" recommendations were showing unrelated "Current" text
+- AI now distinguishes between two types of issues:
+  - **Language Issues**: Existing text that needs improvement (shows Current → Recommended)
+  - **Missing Elements**: Required sections that don't exist (shows "Add This Language" only)
+- Updated IssueCard component to render both issue types appropriately
+- Improved prompt clarity for SOW review output formatting
 
 ### v2.1.0
 - Enhanced semantic trigger detection with 5 trigger types per service category
@@ -145,13 +208,17 @@ The tool checks SOWs against comprehensive criteria including:
 - Added version number display on homepage
 
 ### v2.0.0
-- Complete redesign with Draft and Review modes
-- Enhanced service trigger patterns
-- Comprehensive ASSESSMENT_FRAMEWORK
-- Word document generation with Antenna branding
+- Enhanced semantic trigger detection
+- 23 service categories with detailed trigger patterns
+- Comprehensive SOW assessment framework
+- Engagement-type specific guidance
+- Combined trigger pattern recognition
 
 ### v1.0.0
-- Initial release with SOW review functionality
+- Initial release
+- Basic SOW review functionality
+- Simple trigger matching
+- Word document generation
 
 ## License
 
