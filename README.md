@@ -192,7 +192,15 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.2 (Current)
+### v2.1.3 (Current)
+- Fixed section parsing to handle markdown formatting (##, **, etc.)
+- parseSection now accepts multiple possible header formats
+- IssueCard now strips markdown bold markers before parsing
+- Improved regex patterns for Current/Recommended extraction
+- Fixed duplicate code issue in IssueCard component
+- Section headers like "## CRITICAL ISSUES" now correctly detected
+
+### v2.1.2
 - Fixed parsing logic that was splitting exclusion lists into orphaned bullet points
 - Added smart filtering to remove non-actionable items from issue lists
 - Strengthened AI prompt to require full context for every reported issue

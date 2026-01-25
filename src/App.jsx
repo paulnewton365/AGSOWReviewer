@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.2';
+const APP_VERSION = '2.1.4';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1816,35 +1816,44 @@ function IssueCard({ issue, type }) {
       missingElement: null,
       addLanguage: null,
       why: null,
-      issueType: null // 'language' or 'missing'
+      issueType: null,
+      title: null
     };
     
-    // Extract section
-    const sectionMatch = text.match(/(?:Section|§)[:\s]*([\d.A-Za-z]+)/i);
+    // Clean up markdown formatting
+    let cleanText = text.replace(/\*\*/g, ''); // Remove bold markers
+    
+    // Extract section - handle various formats like "Section D.2.2:" or "**Section D.2.2:**"
+    const sectionMatch = cleanText.match(/(?:Section|§)\s*([\d.A-Za-z]+)/i);
     if (sectionMatch) result.section = sectionMatch[1];
     
+    // Extract title (text after section number, before Current/Missing)
+    const titleMatch = cleanText.match(/Section\s*[\d.A-Za-z]+[:\s]*([^\n]+?)(?=\n|Current:|Missing:|$)/i);
+    if (titleMatch) result.title = titleMatch[1].trim();
+    
     // Check for "Missing" format (Type B - missing elements)
-    const missingMatch = text.match(/Missing:\s*[""]?([^"""\n]+)[""]?/i);
-    const addMatch = text.match(/Add:\s*[""]?([^""]+)[""]?/i);
+    const missingMatch = cleanText.match(/Missing:\s*[""]?([^""\n]+)[""]?/i);
+    const addMatch = cleanText.match(/Add:\s*[""]([^""]+)[""]|Add:\s*"([^"]+)"/i);
     
     if (missingMatch || addMatch) {
       result.issueType = 'missing';
       if (missingMatch) result.missingElement = missingMatch[1].trim();
-      if (addMatch) result.addLanguage = addMatch[1].trim();
+      if (addMatch) result.addLanguage = (addMatch[1] || addMatch[2]).trim();
     }
     
     // Check for "Current/Recommended" format (Type A - language issues)
-    const currentMatch = text.match(/Current:\s*[""]?([^""]+)[""]?/i);
-    const recommendedMatch = text.match(/Recommended:\s*[""]?([^""]+)[""]?/i);
+    // Handle both quoted and unquoted, multiline content
+    const currentMatch = cleanText.match(/Current:\s*[""]([^""]+)[""]|Current:\s*"([^"]+)"/i);
+    const recommendedMatch = cleanText.match(/Recommended:\s*[""]([^""]+)[""]|Recommended:\s*"([^"]+)"/i);
     
     if (currentMatch && recommendedMatch) {
       result.issueType = 'language';
-      result.currentLanguage = currentMatch[1].trim();
-      result.recommendation = recommendedMatch[1].trim();
+      result.currentLanguage = (currentMatch[1] || currentMatch[2]).trim();
+      result.recommendation = (recommendedMatch[1] || recommendedMatch[2]).trim();
     }
     
     // Fallback: arrow format
-    const arrowMatch = text.match(/[""]([^""]+)[""]\s*[→→>-]+\s*[""]([^""]+)[""]/);
+    const arrowMatch = cleanText.match(/[""]([^""]+)[""]\s*[→→>-]+\s*[""]([^""]+)[""]/);
     if (arrowMatch && !result.issueType) {
       result.issueType = 'language';
       result.currentLanguage = arrowMatch[1].trim();
@@ -1852,7 +1861,7 @@ function IssueCard({ issue, type }) {
     }
     
     // Extract "Why" explanation
-    const whyMatch = text.match(/Why:\s*([^\n]+)/i);
+    const whyMatch = cleanText.match(/Why:\s*([^\n]+)/i);
     if (whyMatch) result.why = whyMatch[1].trim();
     
     return result;
@@ -1860,16 +1869,18 @@ function IssueCard({ issue, type }) {
 
   const parsed = parseIssue(issue);
   
-  // Get the issue description (text before the structured parts)
+  // Get the issue description/title
   const getIssueDescription = () => {
-    let desc = issue;
+    if (parsed.title) return parsed.title;
+    
+    let desc = issue.replace(/\*\*/g, ''); // Remove bold
     // Remove the structured parts to get just the description
     desc = desc.replace(/Current:[\s\S]*?(?=Recommended:|Missing:|Add:|Why:|$)/i, '');
     desc = desc.replace(/Recommended:[\s\S]*?(?=Why:|$)/i, '');
     desc = desc.replace(/Missing:[\s\S]*?(?=Add:|Why:|$)/i, '');
     desc = desc.replace(/Add:[\s\S]*?(?=Why:|$)/i, '');
     desc = desc.replace(/Why:[\s\S]*$/i, '');
-    desc = desc.replace(/Section[:\s]*[\d.A-Za-z]+/i, '').trim();
+    desc = desc.replace(/Section[:\s]*[\d.A-Za-z]+[:\s]*/i, '').trim();
     // Clean up and get first meaningful line
     const lines = desc.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     return lines[0] || '';
@@ -2634,7 +2645,7 @@ Why: [one sentence explaining the risk]
 Format EACH as: "[exact phrase found]" in Section X.X → "[recommended replacement]"
 Prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quantification.
 
-4. SERVICE-LINE COMPLIANCE - Check each required element for ${engagementLabel} engagements
+4. STRUCTURAL COMPLIANCE - Check each required element for ${engagementLabel} engagements
 ✓ Present: [element] - [where found]
 ✗ Missing: [element] - [what to add]
 
@@ -2697,22 +2708,34 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
       const responseText = data.content[0].text;
       setRawResponse(responseText);
 
-      // Parse response into sections - improved to handle issues properly
-      const parseSection = (text, startMarker, endMarkers) => {
-        const startIdx = text.indexOf(startMarker);
+      // Parse response into sections - improved to handle various AI formatting styles
+      const parseSection = (text, startMarkers, endMarkers) => {
+        // Try multiple possible start markers
+        const markers = Array.isArray(startMarkers) ? startMarkers : [startMarkers];
+        let startIdx = -1;
+        let usedMarkerLength = 0;
+        
+        for (const marker of markers) {
+          const idx = text.indexOf(marker);
+          if (idx !== -1 && (startIdx === -1 || idx < startIdx)) {
+            startIdx = idx;
+            usedMarkerLength = marker.length;
+          }
+        }
+        
         if (startIdx === -1) return [];
         
         let endIdx = text.length;
         for (const marker of endMarkers) {
-          const idx = text.indexOf(marker, startIdx + startMarker.length);
+          const idx = text.indexOf(marker, startIdx + usedMarkerLength);
           if (idx !== -1 && idx < endIdx) endIdx = idx;
         }
         
-        const section = text.slice(startIdx + startMarker.length, endIdx).trim();
+        const section = text.slice(startIdx + usedMarkerLength, endIdx).trim();
         
-        // Split on issue boundaries: "Section X.X" or numbered items like "1." "2." etc.
-        // But NOT on simple bullet points (- or •) which might be sub-items
-        const issuePattern = /\n(?=Section\s+[\d.A-Za-z]+:|(?:^|\n)\d+\.\s+[A-Z])/gi;
+        // Split on issue boundaries - handle various formats:
+        // **Section D.2.2:** or Section D.2.2: or ### Section or numbered items
+        const issuePattern = /\n(?=\*{0,2}Section\s+[\d.A-Za-z]+[:\*]|#{1,3}\s+Section|(?:^|\n)\d+\.\s+[A-Z])/gi;
         let items = section.split(issuePattern).map(s => s.trim()).filter(s => s.length > 0);
         
         // If no splits occurred, try splitting on double newlines (paragraph breaks)
@@ -2722,11 +2745,14 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
         
         // Filter out items that are:
         // 1. Too short (< 20 chars) - likely orphaned fragments
-        // 2. Just simple bullet points without context (start with "- " and have no ":" or explanation)
-        // 3. Don't contain actionable content
+        // 2. Just simple bullet points without context
+        // 3. Headers without content
         return items.filter(item => {
           // Must be substantial
-          if (item.length < 20) return false;
+          if (item.length < 30) return false;
+          
+          // Skip if it's just a header line
+          if (/^#{1,3}\s+\w+$/.test(item.trim())) return false;
           
           // If it starts with "- " and doesn't contain actionable markers, skip it
           if (item.startsWith('- ') && !item.includes(':') && !item.includes('→') && item.length < 100) {
@@ -2735,19 +2761,32 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
           
           // Keep items that have structure (Section, Current/Recommended, Missing/Add, etc.)
           const hasStructure = /Section|Current:|Recommended:|Missing:|Add:|Why:|→/i.test(item);
-          const isSubstantive = item.length > 50 || hasStructure;
+          const isSubstantive = item.length > 60 || hasStructure;
           
           return isSubstantive;
         });
       };
 
+      // Try multiple variations of section headers the AI might use
       const parsedAnalysis = {
-        critical: parseSection(responseText, '1. CRITICAL ISSUES', ['2. RECOMMENDED', '3. RED FLAGS']),
-        recommended: parseSection(responseText, '2. RECOMMENDED IMPROVEMENTS', ['3. RED FLAGS', '4. SERVICE-LINE']),
-        redFlags: parseSection(responseText, '3. RED FLAGS FOUND', ['4. SERVICE-LINE', '5. BUDGET']),
-        compliance: responseText.match(/4\. SERVICE-LINE COMPLIANCE[\s\S]*?(?=5\. BUDGET|6\. OVERALL|$)/)?.[0]?.replace('4. SERVICE-LINE COMPLIANCE', '').trim(),
-        budget: responseText.match(/5\. BUDGET VERIFICATION[\s\S]*?(?=6\. OVERALL|$)/)?.[0]?.replace('5. BUDGET VERIFICATION', '').trim(),
-        overall: responseText.match(/6\. OVERALL ASSESSMENT[\s\S]*$/)?.[0]?.replace('6. OVERALL ASSESSMENT', '').trim()
+        critical: parseSection(responseText, 
+          ['## CRITICAL ISSUES', '1. CRITICAL ISSUES', '**CRITICAL ISSUES', '# CRITICAL ISSUES', 'CRITICAL ISSUES'], 
+          ['## RECOMMENDED', '2. RECOMMENDED', '**RECOMMENDED', '## 2.', '3. RED FLAGS', '## RED FLAGS']
+        ),
+        recommended: parseSection(responseText, 
+          ['## RECOMMENDED IMPROVEMENTS', '2. RECOMMENDED IMPROVEMENTS', '**RECOMMENDED', '# RECOMMENDED'], 
+          ['## RED FLAGS', '3. RED FLAGS', '**RED FLAGS', '## 3.', '4. STRUCTURAL', '4. SERVICE-LINE', '## STRUCTURAL', '## SERVICE-LINE']
+        ),
+        redFlags: parseSection(responseText, 
+          ['## RED FLAGS', '3. RED FLAGS FOUND', '3. RED FLAGS', '**RED FLAGS'], 
+          ['## STRUCTURAL', '## SERVICE-LINE', '4. STRUCTURAL', '4. SERVICE-LINE', '**STRUCTURAL', '**SERVICE-LINE', '## 4.', '5. BUDGET', '## BUDGET']
+        ),
+        compliance: responseText.match(/(?:##?\s*)?(?:4\.\s*)?(?:STRUCTURAL|SERVICE-LINE) COMPLIANCE[\s\S]*?(?=(?:##?\s*)?(?:5\.\s*)?BUDGET|(?:##?\s*)?(?:6\.\s*)?OVERALL|$)/i)?.[0]
+          ?.replace(/(?:##?\s*)?(?:4\.\s*)?(?:STRUCTURAL|SERVICE-LINE) COMPLIANCE/i, '').trim(),
+        budget: responseText.match(/(?:##?\s*)?(?:5\.\s*)?BUDGET VERIFICATION[\s\S]*?(?=(?:##?\s*)?(?:6\.\s*)?OVERALL|$)/i)?.[0]
+          ?.replace(/(?:##?\s*)?(?:5\.\s*)?BUDGET VERIFICATION/i, '').trim(),
+        overall: responseText.match(/(?:##?\s*)?(?:6\.\s*)?OVERALL ASSESSMENT[\s\S]*$/i)?.[0]
+          ?.replace(/(?:##?\s*)?(?:6\.\s*)?OVERALL ASSESSMENT/i, '').trim()
       };
 
       setAnalysis(parsedAnalysis);
@@ -3423,7 +3462,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
               )}
 
               {analysis.compliance && (
-                <CollapsibleSection title="Service-Line Compliance" icon={CheckCircle}>
+                <CollapsibleSection title="Structural Compliance" icon={CheckCircle}>
                   <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto font-mono text-gray-900">{analysis.compliance}</pre>
                 </CollapsibleSection>
               )}
