@@ -720,6 +720,11 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
   // Lime yellow color from Antenna brand
   const highlightColor = "#E8FF00";
   
+  // Determine text colors based on variant
+  const isLightBg = variant === 'secondary' || variant === 'ghost';
+  const baseTextColor = isLightBg ? '#12161E' : 'white';
+  const highlightTextColor = '#12161E'; // Always black on yellow
+  
   return (
     <button
       onClick={onClick}
@@ -735,18 +740,18 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
         <>
           {Icon && <Icon className="w-5 h-5 relative z-10 flex-shrink-0" />}
           
-          {/* Text with yellow highlight that slides down on hover */}
+          {/* Text container with yellow highlight that slides down on hover */}
           <span className="relative z-10 flex-shrink-0 overflow-hidden">
-            <span className="relative inline-block">
+            {/* Base text (revealed on hover) */}
+            <span className="relative inline-block" style={{ color: baseTextColor }}>
               {children}
-              {/* Yellow highlight block - slides down on hover */}
+              {/* Yellow highlight with black text on top - slides down on hover */}
               <span 
-                className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
-                style={{ 
-                  backgroundColor: highlightColor,
-                  mixBlendMode: 'multiply',
-                }}
-              />
+                className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
+                style={{ backgroundColor: highlightColor }}
+              >
+                <span style={{ color: highlightTextColor }}>{children}</span>
+              </span>
             </span>
           </span>
           
@@ -1648,11 +1653,13 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     <span className="relative overflow-hidden">
                       <span className="relative inline-block">
                         Get started
-                        {/* Yellow highlight - slides down on hover */}
+                        {/* Yellow highlight with black text - slides down on hover */}
                         <span 
-                          className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
-                          style={{ backgroundColor: '#E8FF00', mixBlendMode: 'multiply' }}
-                        />
+                          className="absolute inset-0 flex items-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
+                          style={{ backgroundColor: '#E8FF00' }}
+                        >
+                          <span style={{ color: '#12161E' }}>Get started</span>
+                        </span>
                       </span>
                     </span>
                     <ArrowUpRight className="w-4 h-4" />
@@ -1677,11 +1684,13 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     <span className="relative overflow-hidden">
                       <span className="relative inline-block">
                         Get started
-                        {/* Yellow highlight - slides down on hover */}
+                        {/* Yellow highlight with black text - slides down on hover */}
                         <span 
-                          className="absolute inset-0 transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
-                          style={{ backgroundColor: '#E8FF00', mixBlendMode: 'multiply' }}
-                        />
+                          className="absolute inset-0 flex items-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none"
+                          style={{ backgroundColor: '#E8FF00' }}
+                        >
+                          <span style={{ color: '#12161E' }}>Get started</span>
+                        </span>
                       </span>
                     </span>
                     <ArrowUpRight className="w-4 h-4" />
