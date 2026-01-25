@@ -741,17 +741,19 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
         </>
       ) : (
         <>
-          {Icon && <Icon className="w-5 h-5 relative z-10" />}
+          {Icon && <Icon className="w-5 h-5 relative z-10 flex-shrink-0" />}
           
-          {/* Text with marquee slide effect */}
-          <span className="relative z-10 overflow-hidden h-[1.2em]">
-            <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
-              <span className="flex items-center gap-1">
+          {/* Text with marquee slide effect - fixed overflow */}
+          <span className="relative z-10" style={{ overflow: 'hidden', height: '1.25em', display: 'inline-flex', alignItems: 'center' }}>
+            <span 
+              className="transition-transform duration-300 ease-out group-hover:-translate-y-full"
+              style={{ display: 'flex', flexDirection: 'column' }}
+            >
+              <span style={{ height: '1.25em', display: 'flex', alignItems: 'center' }}>
                 {children}
               </span>
               <span 
-                className="flex items-center gap-1"
-                style={{ color: highlightColor }}
+                style={{ height: '1.25em', display: 'flex', alignItems: 'center', color: highlightColor }}
               >
                 {children}
               </span>
@@ -759,9 +761,10 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
           </span>
           
           {/* Arrow with diagonal animation */}
-          <span className="relative w-5 h-5 overflow-hidden z-10">
+          <span className="relative flex-shrink-0 z-10" style={{ width: '1.25rem', height: '1.25rem', overflow: 'hidden' }}>
             <svg 
-              className="absolute w-5 h-5 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" 
+              className="absolute transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" 
+              style={{ width: '1.25rem', height: '1.25rem' }}
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
@@ -772,7 +775,8 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
               <path d="M7 17L17 7M17 7H7M17 7V17" />
             </svg>
             <svg 
-              className="absolute w-5 h-5 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" 
+              className="absolute translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" 
+              style={{ width: '1.25rem', height: '1.25rem' }}
               viewBox="0 0 24 24" 
               fill="none" 
               stroke={highlightColor}
@@ -1671,13 +1675,16 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     Create a Statement of Work from scratch using client call transcripts. AI analyzes the conversation to identify services and requirements.
                   </p>
                   <div className="flex items-center gap-2 text-[#12161E] font-semibold">
-                    <span className="relative overflow-hidden h-[1.2em]">
-                      <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
-                        <span>Get started</span>
-                        <span style={{ color: '#C8E842' }}>Get started</span>
+                    <span style={{ overflow: 'hidden', height: '1.25em', display: 'inline-flex', alignItems: 'center' }}>
+                      <span 
+                        className="transition-transform duration-300 ease-out group-hover:-translate-y-full"
+                        style={{ display: 'flex', flexDirection: 'column' }}
+                      >
+                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center' }}>Get started</span>
+                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center', color: '#C8E842' }}>Get started</span>
                       </span>
                     </span>
-                    <span className="relative w-4 h-4 overflow-hidden">
+                    <span style={{ width: '1rem', height: '1rem', overflow: 'hidden', position: 'relative' }}>
                       <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" />
                       <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" style={{ color: '#C8E842' }} />
                     </span>
@@ -1704,13 +1711,16 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     Upload an SOW for automated quality assessment against Antenna Group standards. Get specific recommendations and generate revised drafts.
                   </p>
                   <div className="flex items-center gap-2 text-[#12161E] font-semibold">
-                    <span className="relative overflow-hidden h-[1.2em]">
-                      <span className="flex flex-col transition-transform duration-300 ease-out group-hover:-translate-y-1/2">
-                        <span>Get started</span>
-                        <span style={{ color: '#C8E842' }}>Get started</span>
+                    <span style={{ overflow: 'hidden', height: '1.25em', display: 'inline-flex', alignItems: 'center' }}>
+                      <span 
+                        className="transition-transform duration-300 ease-out group-hover:-translate-y-full"
+                        style={{ display: 'flex', flexDirection: 'column' }}
+                      >
+                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center' }}>Get started</span>
+                        <span style={{ height: '1.25em', display: 'flex', alignItems: 'center', color: '#C8E842' }}>Get started</span>
                       </span>
                     </span>
-                    <span className="relative w-4 h-4 overflow-hidden">
+                    <span style={{ width: '1rem', height: '1rem', overflow: 'hidden', position: 'relative' }}>
                       <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 ease-out group-hover:-translate-y-full group-hover:translate-x-full" />
                       <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 ease-out group-hover:translate-y-0 group-hover:translate-x-0" style={{ color: '#C8E842' }} />
                     </span>
