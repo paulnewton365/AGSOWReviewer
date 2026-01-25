@@ -699,6 +699,75 @@ Include provision: "If Client delays exceed [X] business days, Agency reserves r
 // COMPONENTS
 // ============================================================================
 
+// Antenna-style Button with arrow and hover animation
+function AntennaButton({ children, onClick, disabled, loading, loadingText, icon: Icon, className = "", variant = "primary", size = "default" }) {
+  const baseStyles = "group relative overflow-hidden font-semibold transition-all duration-300 flex items-center justify-center gap-2";
+  
+  const variants = {
+    primary: "bg-[#12161E] text-white hover:bg-[#1a1f2a]",
+    secondary: "bg-white text-[#12161E] border-2 border-[#12161E] hover:bg-[#12161E] hover:text-white",
+    ghost: "bg-transparent text-[#12161E] hover:bg-[#12161E]/5"
+  };
+  
+  const sizes = {
+    small: "px-4 py-2 text-sm rounded-lg",
+    default: "px-6 py-3 text-base rounded-xl",
+    large: "px-8 py-4 text-lg rounded-xl"
+  };
+  
+  const disabledStyles = disabled || loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer";
+  
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${disabledStyles} ${className}`}
+    >
+      {loading ? (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>{loadingText || 'Loading...'}</span>
+        </>
+      ) : (
+        <>
+          {Icon && <Icon className="w-5 h-5" />}
+          <span className="relative">
+            {/* Main text */}
+            <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full group-hover:opacity-0">
+              {children}
+            </span>
+            {/* Hover text (slides up from below) */}
+            <span className="absolute left-0 top-full inline-block transition-transform duration-300 group-hover:-translate-y-full">
+              {children}
+            </span>
+          </span>
+          {/* Arrow with upward animation on hover */}
+          <span className="relative w-5 h-5 overflow-hidden">
+            <svg 
+              className="absolute w-5 h-5 transition-transform duration-300 group-hover:-translate-y-full group-hover:translate-x-full" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2"
+            >
+              <path d="M7 17L17 7M17 7H7M17 7V17" />
+            </svg>
+            <svg 
+              className="absolute w-5 h-5 translate-y-full -translate-x-full transition-transform duration-300 group-hover:translate-y-0 group-hover:translate-x-0" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2"
+            >
+              <path d="M7 17L17 7M17 7H7M17 7V17" />
+            </svg>
+          </span>
+        </>
+      )}
+    </button>
+  );
+}
+
 // Antenna Group Logo
 function AntennaLogo({ className = "h-8" }) {
   return (
@@ -1565,34 +1634,48 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
               {/* Draft SOW Card */}
               <button
                 onClick={() => setCurrentView('draft')}
-                className="group p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-gray-900 transition-all text-left"
+                className="group p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left"
               >
-                <div className="w-14 h-14 bg-gray-100 group-hover:bg-gray-900 rounded-xl flex items-center justify-center mb-6 transition-colors">
+                <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
                   <PenTool className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-3">Draft a New SOW</h2>
                 <p className="text-gray-500 mb-4">
                   Create a Statement of Work from scratch using client call transcripts. AI analyzes the conversation to identify services and requirements.
                 </p>
-                <div className="flex items-center gap-2 text-gray-900 font-semibold">
-                  Get started <ArrowUpRight className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-[#12161E] font-semibold">
+                  <span className="relative overflow-hidden">
+                    <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full group-hover:opacity-0">Get started</span>
+                    <span className="absolute left-0 top-full inline-block transition-transform duration-300 group-hover:-translate-y-full">Get started</span>
+                  </span>
+                  <span className="relative w-4 h-4 overflow-hidden">
+                    <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 group-hover:-translate-y-full group-hover:translate-x-full" />
+                    <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 group-hover:translate-y-0 group-hover:translate-x-0" />
+                  </span>
                 </div>
               </button>
               
               {/* Review SOW Card */}
               <button
                 onClick={() => setCurrentView('review')}
-                className="group p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-gray-900 transition-all text-left"
+                className="group p-8 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#12161E] transition-all text-left"
               >
-                <div className="w-14 h-14 bg-gray-100 group-hover:bg-gray-900 rounded-xl flex items-center justify-center mb-6 transition-colors">
+                <div className="w-14 h-14 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center mb-6 transition-colors">
                   <Search className="w-7 h-7 text-gray-600 group-hover:text-white transition-colors" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-3">Review an Existing SOW</h2>
                 <p className="text-gray-500 mb-4">
                   Upload an SOW for automated quality assessment against Antenna Group standards. Get specific recommendations and generate revised drafts.
                 </p>
-                <div className="flex items-center gap-2 text-gray-900 font-semibold">
-                  Get started <ArrowUpRight className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-[#12161E] font-semibold">
+                  <span className="relative overflow-hidden">
+                    <span className="inline-block transition-transform duration-300 group-hover:-translate-y-full group-hover:opacity-0">Get started</span>
+                    <span className="absolute left-0 top-full inline-block transition-transform duration-300 group-hover:-translate-y-full">Get started</span>
+                  </span>
+                  <span className="relative w-4 h-4 overflow-hidden">
+                    <ArrowUpRight className="absolute w-4 h-4 transition-transform duration-300 group-hover:-translate-y-full group-hover:translate-x-full" />
+                    <ArrowUpRight className="absolute w-4 h-4 translate-y-full -translate-x-full transition-transform duration-300 group-hover:translate-y-0 group-hover:translate-x-0" />
+                  </span>
                 </div>
               </button>
             </div>
@@ -1684,21 +1767,17 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     </div>
                   )}
                   
-                  <button
+                  <AntennaButton
                     onClick={analyzeTranscript}
-                    disabled={!apiKey || !transcript.trim() || isAnalyzingTranscript}
-                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
-                      !apiKey || !transcript.trim() || isAnalyzingTranscript
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }`}
+                    disabled={!apiKey || !transcript.trim()}
+                    loading={isAnalyzingTranscript}
+                    loadingText="Analyzing Transcript..."
+                    icon={Lightbulb}
+                    className="w-full"
+                    size="large"
                   >
-                    {isAnalyzingTranscript ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" />Analyzing Transcript...</>
-                    ) : (
-                      <><Lightbulb className="w-5 h-5" />Analyze Transcript</>
-                    )}
-                  </button>
+                    Analyze Transcript
+                  </AntennaButton>
                 </div>
               </div>
               
@@ -1785,21 +1864,17 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 Clear all
                               </button>
                             </div>
-                            <button
+                            <AntennaButton
                               onClick={generateSOW}
-                              disabled={isGeneratingDraft || !draftEngagementType}
-                              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
-                                isGeneratingDraft || !draftEngagementType
-                                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                  : 'bg-gray-900 text-white hover:bg-gray-800'
-                              }`}
+                              disabled={!draftEngagementType}
+                              loading={isGeneratingDraft}
+                              loadingText="Generating SOW..."
+                              icon={Sparkles}
+                              className="w-full"
+                              size="large"
                             >
-                              {isGeneratingDraft ? (
-                                <><Loader2 className="w-5 h-5 animate-spin" />Generating SOW...</>
-                              ) : (
-                                <><Sparkles className="w-5 h-5" />Generate SOW Draft</>
-                              )}
-                            </button>
+                              Generate SOW Draft
+                            </AntennaButton>
                             {!draftEngagementType && (
                               <p className="text-sm text-amber-600 mt-2 text-center">Please select an engagement type first</p>
                             )}
@@ -1846,21 +1921,17 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 Clear all
                               </button>
                             </div>
-                            <button
+                            <AntennaButton
                               onClick={generateSOW}
-                              disabled={isGeneratingDraft || !draftEngagementType}
-                              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
-                                isGeneratingDraft || !draftEngagementType
-                                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                  : 'bg-gray-900 text-white hover:bg-gray-800'
-                              }`}
+                              disabled={!draftEngagementType}
+                              loading={isGeneratingDraft}
+                              loadingText="Generating SOW..."
+                              icon={Sparkles}
+                              className="w-full"
+                              size="large"
                             >
-                              {isGeneratingDraft ? (
-                                <><Loader2 className="w-5 h-5 animate-spin" />Generating SOW...</>
-                              ) : (
-                                <><Sparkles className="w-5 h-5" />Generate SOW Draft</>
-                              )}
-                            </button>
+                              Generate SOW Draft
+                            </AntennaButton>
                             {!draftEngagementType && (
                               <p className="text-sm text-amber-600 mt-2 text-center">Please select an engagement type first</p>
                             )}
@@ -1896,19 +1967,20 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 </p>
               </div>
               <div className="flex gap-3">
-                <button
+                <AntennaButton
                   onClick={downloadGeneratedSOW}
-                  className="px-5 py-2.5 text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors flex items-center gap-2"
+                  icon={Download}
+                  size="default"
                 >
-                  <Download className="w-4 h-4" />
                   Download Word Doc
-                </button>
-                <button
+                </AntennaButton>
+                <AntennaButton
                   onClick={resetDraft}
-                  className="px-5 py-2.5 text-sm font-semibold text-gray-900 border-2 border-gray-900 rounded-xl hover:bg-gray-900 hover:text-white transition-colors"
+                  variant="secondary"
+                  size="default"
                 >
                   Start Over
-                </button>
+                </AntennaButton>
               </div>
             </div>
             
@@ -2022,21 +2094,16 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 </div>
               )}
 
-              <button
+              <AntennaButton
                 onClick={analyzeSOW}
-                disabled={!apiKey || !file || !reviewEngagementType || isAnalyzing}
-                className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
-                  !apiKey || !file || !reviewEngagementType || isAnalyzing
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                }`}
+                disabled={!apiKey || !file || !reviewEngagementType}
+                loading={isAnalyzing}
+                loadingText="Analyzing SOW..."
+                className="w-full"
+                size="large"
               >
-                {isAnalyzing ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" />Analyzing SOW...</>
-                ) : (
-                  <>Analyze SOW<ArrowUpRight className="w-5 h-5" /></>
-                )}
-              </button>
+                Analyze SOW
+              </AntennaButton>
             </div>
           </>
         )}
@@ -2049,9 +2116,9 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Analysis Complete</h1>
                 <p className="text-gray-500">{file?.name} • {REVIEW_ENGAGEMENT_TYPES.find(t => t.value === reviewEngagementType)?.label} Engagement</p>
               </div>
-              <button onClick={resetReview} className="px-5 py-2.5 text-sm font-semibold text-gray-900 border-2 border-gray-900 rounded-xl hover:bg-gray-900 hover:text-white transition-colors">
+              <AntennaButton onClick={resetReview} variant="secondary" size="default">
                 Review Another
-              </button>
+              </AntennaButton>
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
@@ -2118,21 +2185,16 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   )}
 
                   {!draftedSOW ? (
-                    <button
+                    <AntennaButton
                       onClick={generateRevisedDraft}
-                      disabled={isDrafting}
-                      className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-3 ${
-                        isDrafting
-                          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-900 hover:bg-gray-100'
-                      }`}
+                      loading={isDrafting}
+                      loadingText="Generating Draft..."
+                      icon={Sparkles}
+                      variant="secondary"
+                      className="bg-white hover:bg-gray-100"
                     >
-                      {isDrafting ? (
-                        <><Loader2 className="w-5 h-5 animate-spin" />Generating Draft...</>
-                      ) : (
-                        <><Sparkles className="w-5 h-5" />Draft Updated SOW</>
-                      )}
-                    </button>
+                      Draft Updated SOW
+                    </AntennaButton>
                   ) : (
                     <div className="space-y-4">
                       <div className="flex items-center gap-3 flex-wrap">
@@ -2140,13 +2202,15 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                           <CheckCircle className="w-4 h-4" />
                           Draft Generated
                         </span>
-                        <button
+                        <AntennaButton
                           onClick={downloadRevisedDraft}
-                          className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors flex items-center gap-2"
+                          icon={Download}
+                          variant="secondary"
+                          size="small"
+                          className="bg-white hover:bg-gray-100"
                         >
-                          <Download className="w-4 h-4" />
                           Download Word Doc
-                        </button>
+                        </AntennaButton>
                         <button
                           onClick={generateRevisedDraft}
                           disabled={isDrafting}
