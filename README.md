@@ -192,7 +192,14 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.1 (Current)
+### v2.1.2 (Current)
+- Fixed parsing logic that was splitting exclusion lists into orphaned bullet points
+- Added smart filtering to remove non-actionable items from issue lists
+- Strengthened AI prompt to require full context for every reported issue
+- Issues must now have either Current/Recommended OR Missing/Add format
+- Prevents display of fragment items without explanations
+
+### v2.1.1
 - Fixed issue where "missing element" recommendations were showing unrelated "Current" text
 - AI now distinguishes between two types of issues:
   - **Language Issues**: Existing text that needs improvement (shows Current → Recommended)

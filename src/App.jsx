@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.1.2';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1809,23 +1809,71 @@ function IssueCard({ issue, type }) {
   const { bg, icon, Icon } = styles[type] || styles.info;
 
   const parseIssue = (text) => {
-    const result = { section: null, currentLanguage: null, recommendation: null };
-    const sectionMatch = text.match(/(?:Section|§)\s*([\d.]+)/i);
+    const result = { 
+      section: null, 
+      currentLanguage: null, 
+      recommendation: null,
+      missingElement: null,
+      addLanguage: null,
+      why: null,
+      issueType: null // 'language' or 'missing'
+    };
+    
+    // Extract section
+    const sectionMatch = text.match(/(?:Section|§)[:\s]*([\d.A-Za-z]+)/i);
     if (sectionMatch) result.section = sectionMatch[1];
-    const currentMatch = text.match(/(?:Current(?:\s+language)?|Found|Issue):\s*[""]?([^""]+)[""]?/i);
-    if (currentMatch) result.currentLanguage = currentMatch[1].trim();
-    const recommendedMatch = text.match(/(?:Recommended(?:\s+(?:language|replacement))?|Replace\s+with|Suggested|Should\s+be|Change\s+to):\s*[""]?([^""]+)[""]?/i);
-    if (recommendedMatch) result.recommendation = recommendedMatch[1].trim();
+    
+    // Check for "Missing" format (Type B - missing elements)
+    const missingMatch = text.match(/Missing:\s*[""]?([^"""\n]+)[""]?/i);
+    const addMatch = text.match(/Add:\s*[""]?([^""]+)[""]?/i);
+    
+    if (missingMatch || addMatch) {
+      result.issueType = 'missing';
+      if (missingMatch) result.missingElement = missingMatch[1].trim();
+      if (addMatch) result.addLanguage = addMatch[1].trim();
+    }
+    
+    // Check for "Current/Recommended" format (Type A - language issues)
+    const currentMatch = text.match(/Current:\s*[""]?([^""]+)[""]?/i);
+    const recommendedMatch = text.match(/Recommended:\s*[""]?([^""]+)[""]?/i);
+    
+    if (currentMatch && recommendedMatch) {
+      result.issueType = 'language';
+      result.currentLanguage = currentMatch[1].trim();
+      result.recommendation = recommendedMatch[1].trim();
+    }
+    
+    // Fallback: arrow format
     const arrowMatch = text.match(/[""]([^""]+)[""]\s*[→→>-]+\s*[""]([^""]+)[""]/);
-    if (arrowMatch) {
+    if (arrowMatch && !result.issueType) {
+      result.issueType = 'language';
       result.currentLanguage = arrowMatch[1].trim();
       result.recommendation = arrowMatch[2].trim();
     }
+    
+    // Extract "Why" explanation
+    const whyMatch = text.match(/Why:\s*([^\n]+)/i);
+    if (whyMatch) result.why = whyMatch[1].trim();
+    
     return result;
   };
 
   const parsed = parseIssue(issue);
-  const hasStructuredRecommendation = parsed.currentLanguage && parsed.recommendation;
+  
+  // Get the issue description (text before the structured parts)
+  const getIssueDescription = () => {
+    let desc = issue;
+    // Remove the structured parts to get just the description
+    desc = desc.replace(/Current:[\s\S]*?(?=Recommended:|Missing:|Add:|Why:|$)/i, '');
+    desc = desc.replace(/Recommended:[\s\S]*?(?=Why:|$)/i, '');
+    desc = desc.replace(/Missing:[\s\S]*?(?=Add:|Why:|$)/i, '');
+    desc = desc.replace(/Add:[\s\S]*?(?=Why:|$)/i, '');
+    desc = desc.replace(/Why:[\s\S]*$/i, '');
+    desc = desc.replace(/Section[:\s]*[\d.A-Za-z]+/i, '').trim();
+    // Clean up and get first meaningful line
+    const lines = desc.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    return lines[0] || '';
+  };
 
   return (
     <div className={`p-4 rounded-xl border ${bg} mb-3`}>
@@ -1837,10 +1885,12 @@ function IssueCard({ issue, type }) {
               Section {parsed.section}
             </span>
           )}
-          {hasStructuredRecommendation ? (
+          
+          {parsed.issueType === 'language' && parsed.currentLanguage && parsed.recommendation ? (
+            // Type A: Language issue with Current → Recommended
             <div className="space-y-3">
-              <p className="text-sm text-gray-900 leading-relaxed">
-                {issue.split(/(?:Current|Recommended|Replace|→)/i)[0].trim()}
+              <p className="text-sm text-gray-900 leading-relaxed font-medium">
+                {getIssueDescription()}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="bg-white/50 rounded-lg p-3 border border-red-200">
@@ -1855,8 +1905,31 @@ function IssueCard({ issue, type }) {
                   <p className="text-sm text-gray-900 font-mono leading-relaxed">"{parsed.recommendation}"</p>
                 </div>
               </div>
+              {parsed.why && (
+                <p className="text-xs text-gray-500 italic">{parsed.why}</p>
+              )}
+            </div>
+          ) : parsed.issueType === 'missing' && (parsed.missingElement || parsed.addLanguage) ? (
+            // Type B: Missing element - show what to add
+            <div className="space-y-3">
+              <p className="text-sm text-gray-900 leading-relaxed font-medium">
+                {parsed.missingElement ? `Missing: ${parsed.missingElement}` : getIssueDescription()}
+              </p>
+              {parsed.addLanguage && (
+                <div className="bg-white/50 rounded-lg p-3 border border-green-200 relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Add This Language</p>
+                    <CopyButton text={parsed.addLanguage} />
+                  </div>
+                  <p className="text-sm text-gray-900 font-mono leading-relaxed">"{parsed.addLanguage}"</p>
+                </div>
+              )}
+              {parsed.why && (
+                <p className="text-xs text-gray-500 italic">{parsed.why}</p>
+              )}
             </div>
           ) : (
+            // Fallback: just show the raw text
             <div className="text-sm whitespace-pre-wrap text-gray-900 leading-relaxed">{issue}</div>
           )}
         </div>
@@ -2518,42 +2591,61 @@ The SOW should be ready for client presentation with minimal editing needed. Mak
 
 You are reviewing an SOW for a ${engagementLabel} engagement.
 
-For each issue you find, provide SPECIFIC RECOMMENDATIONS with:
-- Section reference (e.g., "Section 5.2.1")
-- Current language (quote the exact text from the document)
-- Recommended replacement language (ready to copy-paste)
-- Brief explanation of why this change matters
+## CRITICAL FORMATTING REQUIREMENTS
 
-Example format for each issue:
-Section 3.2: Missing consolidated feedback requirement.
-Current: "Client will provide feedback on deliverables."
-Recommended: "Client agrees to consolidate all internal feedback before submission to Agency. Feedback must represent unified organizational direction; Agency is not responsible for reconciling conflicting stakeholder input."
-[One sentence explaining why this change matters]
+Every issue you report MUST include:
+1. A clear description of the problem
+2. The specific action needed to fix it
+3. Either the exact text to change OR the exact text to add
 
-Structure your response as:
+DO NOT output simple bullet lists without context. Each issue must be self-contained and actionable.
+
+## Issue Format
+
+**For LANGUAGE ISSUES (text exists but needs improvement):**
+Section X.X: [Clear description of the problem]
+Current: "[quote the EXACT problematic text from the document]"
+Recommended: "[the replacement text - ready to copy/paste]"
+Why: [one sentence explaining the risk]
+
+**For MISSING ELEMENTS (something is entirely absent):**
+Section: [where to add it, or "New section needed"]
+Missing: [what element is missing - be specific]
+Add: "[the complete language to add - ready to copy/paste]"
+Why: [one sentence explaining the risk]
+
+## IMPORTANT RULES
+
+1. NEVER output orphaned bullet points without context
+2. NEVER just list items that are in the SOW without explaining what's wrong
+3. Every issue MUST have either "Current/Recommended" OR "Missing/Add" format
+4. If something is GOOD (like having an exclusions section), don't list it as a critical issue
+5. Only flag actual problems that need fixing
+
+## Response Structure
 
 1. CRITICAL ISSUES - Things that MUST be fixed before issuing
-(For each: section, current language, recommended replacement, explanation)
+(Each issue must follow the format above with full context)
 
-2. RECOMMENDED IMPROVEMENTS - Things that SHOULD be fixed  
-(For each: section, current language, recommended replacement, explanation)
+2. RECOMMENDED IMPROVEMENTS - Things that SHOULD be fixed
+(Each issue must follow the format above with full context)
 
-3. RED FLAGS FOUND - Every instance of problematic phrases
-Format as: "[phrase found]" in Section X.X → "[recommended replacement]"
-IMPORTANT: Prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quantification. This provides flexibility while still setting clear boundaries.
+3. RED FLAGS FOUND - Problematic phrases that need replacement
+Format EACH as: "[exact phrase found]" in Section X.X → "[recommended replacement]"
+Prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quantification.
 
 4. SERVICE-LINE COMPLIANCE - Check each required element for ${engagementLabel} engagements
 ✓ Present: [element] - [where found]
 ✗ Missing: [element] - [what to add]
 
-5. BUDGET VERIFICATION - Check fee table arithmetic, billing schedule alignment, deliverable-to-fee mapping
+5. BUDGET VERIFICATION - Check fee table arithmetic, billing schedule alignment
 
 6. OVERALL ASSESSMENT
-- Compliance score (1-10) with brief justification
-- Top 3 priorities to address (be specific)
+- Compliance score (1-10) with justification
+- Top 3 priorities to address
 - What's working well
 
-Be extremely specific. Quote the actual document. Provide ready-to-use replacement language.`;
+Remember: Quality over quantity. Only report actual issues that need action, with complete context for each.`;
 
 
       let messages = [];
@@ -2605,7 +2697,7 @@ Be extremely specific. Quote the actual document. Provide ready-to-use replaceme
       const responseText = data.content[0].text;
       setRawResponse(responseText);
 
-      // Parse response into sections
+      // Parse response into sections - improved to handle issues properly
       const parseSection = (text, startMarker, endMarkers) => {
         const startIdx = text.indexOf(startMarker);
         if (startIdx === -1) return [];
@@ -2617,7 +2709,36 @@ Be extremely specific. Quote the actual document. Provide ready-to-use replaceme
         }
         
         const section = text.slice(startIdx + startMarker.length, endIdx).trim();
-        return section.split(/\n(?=Section|\d+\.|•|-)/).map(s => s.trim()).filter(s => s.length > 10);
+        
+        // Split on issue boundaries: "Section X.X" or numbered items like "1." "2." etc.
+        // But NOT on simple bullet points (- or •) which might be sub-items
+        const issuePattern = /\n(?=Section\s+[\d.A-Za-z]+:|(?:^|\n)\d+\.\s+[A-Z])/gi;
+        let items = section.split(issuePattern).map(s => s.trim()).filter(s => s.length > 0);
+        
+        // If no splits occurred, try splitting on double newlines (paragraph breaks)
+        if (items.length <= 1 && section.length > 100) {
+          items = section.split(/\n\n+/).map(s => s.trim()).filter(s => s.length > 0);
+        }
+        
+        // Filter out items that are:
+        // 1. Too short (< 20 chars) - likely orphaned fragments
+        // 2. Just simple bullet points without context (start with "- " and have no ":" or explanation)
+        // 3. Don't contain actionable content
+        return items.filter(item => {
+          // Must be substantial
+          if (item.length < 20) return false;
+          
+          // If it starts with "- " and doesn't contain actionable markers, skip it
+          if (item.startsWith('- ') && !item.includes(':') && !item.includes('→') && item.length < 100) {
+            return false;
+          }
+          
+          // Keep items that have structure (Section, Current/Recommended, Missing/Add, etc.)
+          const hasStructure = /Section|Current:|Recommended:|Missing:|Add:|Why:|→/i.test(item);
+          const isSubstantive = item.length > 50 || hasStructure;
+          
+          return isSubstantive;
+        });
       };
 
       const parsedAnalysis = {
