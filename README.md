@@ -1,6 +1,15 @@
-# SOW Workbench v2.3.1
+# SOW Workbench v2.3.2
 
 A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
+
+## What's New in v2.3.2
+
+### SOW Review: Pricing Validation
+When reviewing an existing SOW, the system now cross-checks pricing against guide ranges:
+- **Underpriced**: Flags services priced below the guide range (risk: undervaluing work)
+- **Overpriced**: Flags services priced above the guide range (risk: client pushback)
+- **In Range**: Confirms pricing falls within expected range
+- **Missing PM**: Alerts if Project Management fee is missing on non-PR engagements
 
 ## What's New in v2.3.1
 

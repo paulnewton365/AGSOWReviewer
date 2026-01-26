@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles, PenTool, Search, MessageSquare, Lightbulb, Target, Users, ChevronLeft } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles, PenTool, Search, MessageSquare, Lightbulb, Target, Users, ChevronLeft, DollarSign } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType, PageNumber, PageBreak, LevelFormat, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
 
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.3.1';
+const APP_VERSION = '2.3.2';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -664,22 +664,22 @@ const SERVICE_TRIGGERS = [
     engagementType: 'fixed_fee',
     services: [
       // Brand Strategy bundle
-      { name: 'Brand Research (Compass)', recommend: 'always', condition: 'for all brand refresh projects', pricing: { termLow: 1, termHigh: 2, budgetLow: 3000, budgetHigh: 3000, bundle: 'Brand Strategy' } },
+      { name: 'Brand Research (Compass)', recommend: 'always', condition: 'for all brand refresh projects', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 20000, bundle: 'Brand Strategy' } },
       { name: 'Stakeholder Interviews (IDIs)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Rapid Discovery (Landscape & Audience)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Brand Positioning', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Brand House Development', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Brand Workshop', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Authentic Foundation (Why, What, How)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
-      // Brand Expression - individual services
-      { name: 'Tone of Voice', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 1, termHigh: 1, budgetLow: 2000, budgetHigh: 4000 } },
-      { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 3000 } },
-      { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 2, termHigh: 4, budgetLow: 8000, budgetHigh: 18000 } },
-      // Brand Assets
-      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 6000 } },
-      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 6000 } },
-      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 2, termHigh: 3, budgetLow: 8000, budgetHigh: 10000 } }
+      // Brand Expression bundle - includes Tone of Voice, Manifesto, Visual Identity, Logo
+      { name: 'Tone of Voice', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 3, termHigh: 7, budgetLow: 25000, budgetHigh: 30000, bundle: 'Brand Expression' } },
+      { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
+      { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
+      { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
+      // Brand Assets bundle
+      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 15000, bundle: 'Brand Assets' } },
+      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } },
+      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } }
     ],
     triggerPatterns: {
       direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
@@ -980,10 +980,11 @@ const SERVICE_TRIGGERS = [
     description: 'Content strategy and creation',
     engagementType: 'tm',
     services: [
-      // Content Production bundle
-      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced', pricing: { termLow: 12, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Content Production', note: 'Quarterly to annual commitment' } },
+      // Content Strategy is Fixed Fee
+      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, note: 'Fixed Fee deliverable' } },
       { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time', pricing: { bundle: 'Content Production' } },
-      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
+      // Ongoing content production is T&M
+      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production', note: 'T&M ongoing' } },
       { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
       { name: 'Video Content Series', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
       { name: 'Social Content Creation', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
@@ -1324,6 +1325,134 @@ const REVIEW_ENGAGEMENT_TYPES = [
   { value: 'creative_retainer', label: 'Creative Retainer', description: 'Ongoing creative support' },
   { value: 'integrated', label: 'Integrated', description: 'Multi-service campaigns' }
 ];
+
+// ============================================================================
+// PRICING GUIDE FOR SOW REVIEW VALIDATION
+// ============================================================================
+const PRICING_GUIDE = `
+## SERVICE PRICING GUIDE - For Validation
+
+Use this guide to validate pricing in SOWs. Flag fees that are significantly below the low range (underpriced) or above the high range (overpriced).
+
+### Website & App Development (Fixed Fee)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Standard Website (Strategy, Design, Dev, CMS) | 8-16 weeks | $50,000 - $140,000 |
+| E-commerce Development | 2-4 weeks | $10,000 - $30,000 |
+| Mobile App Development | 3-10 weeks | $10,000 - $60,000 |
+| Landing Page Development | 1-3 weeks | $15,000 - $25,000 |
+| Website Migration | 1-3 weeks | $10,000 - $20,000 |
+| Performance Optimization | Annual | $24,000 - $30,000 |
+
+### Integrated Marketing Strategy (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Marketing Strategy Development | 1-4 weeks | $10,000 - $25,000 |
+| Channel Planning & Media Mix | 1-3 weeks | $10,000 - $20,000 |
+| Customer Journey Mapping | 1-2 weeks | $7,000 - $15,000 |
+| Marketing Audit (Compass) | 1-2 weeks | $3,000 - $4,000 |
+| Market & Competitive Research | 1-2 weeks | $2,000 - $5,000 |
+| Audience Research & Segmentation | 1-2 weeks | $2,000 - $5,000 |
+
+### Brand Strategy & Expression (Fixed Fee)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Brand Strategy (Research, IDIs, Discovery, Positioning, Brand House, Workshop, Foundation) | 2-4 weeks | $15,000 - $20,000 |
+| Brand Expression (Tone of Voice, Manifesto, Visual Identity, Logo) | 3-7 weeks | $25,000 - $30,000 |
+| Brand Assets (Deck, Social Lock-ups, Guidelines) | 1-2 weeks | $10,000 - $15,000 |
+
+### Creative Production (Time & Materials)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Creative Retainer (Design, Video, Animation, Photography, Copywriting, etc.) | Annual | $24,000 - $80,000/year minimum commitment |
+
+### Influencer Marketing (Retainer)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Influencer Program (Strategy, Identification, Campaign Management) | Annual | $30,000 - $100,000/year (excludes creator fees) |
+
+### Creative Campaigns & Innovation (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Creative Platform Development (Big Idea, Experiential) | 2-7 weeks | $18,000 - $30,000 |
+
+### Public Relations & Media Outreach (Retainer)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Standard PR (Media Relations, Press Kit) | Annual | $180,000 - $360,000/year ($15K-$30K/month) |
+| Media Training | Annual | $20,000 - $60,000 |
+| Crisis Communications | 1-4 weeks | $40,000 - $200,000 (T&M based on severity) |
+| Media Monitoring | Annual | $12,000 - $40,000 (excludes tool costs) |
+| Newsjacking Strategy | 1-4 weeks | $10,000 - $60,000 (T&M per opportunity) |
+| Industry Domain Consultancy | Annual | $52,000 - $100,000 |
+
+### Executive Visibility & Thought Leadership (Retainer)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Executive Visibility (Positioning, Content, Bylines, Speaking, Social, Awards) | Annual | $60,000 - $180,000/year ($5K-$15K/month per executive) |
+
+### Paid Social Media (Retainer)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Paid Social (Strategy, Campaign Management, Audience, Creative Testing, Reporting) | Annual | $80,000 - $200,000/year (excludes media spend) |
+
+### Search Engine Optimization (Retainer)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| SEO Program (Strategy, Technical, Content, Link Building, Reporting) | Annual | $60,000 - $120,000/year ($5K-$10K/month, 6-month minimum) |
+
+### Generative Engine Optimization (Retainer)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| GEO Program (Strategy, AI Search Optimization, Content Authority, Reporting) | Annual | $50,000 - $80,000/year (often bundled with SEO) |
+
+### Measurement & Analytics (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Analytics Strategy | 2-4 weeks | $10,000 - $20,000 |
+| Dashboard Development | 2-4 weeks | $10,000 - $20,000 |
+| Attribution Modeling | 1-2 weeks | $10,000 - $20,000 |
+| Marketing ROI Framework | 2-3 weeks | $10,000 - $20,000 |
+| KPI Development | 1-2 weeks | $10,000 - $20,000 |
+| Data Integration | 2-4 weeks | $20,000 - $30,000 |
+
+### Go-to-Market Strategy (Fixed Fee)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| GTM Strategy (Launch Planning, Market Entry, Channel, Sales Enablement) | 1-3 weeks | $10,000 - $30,000 |
+
+### Event Planning & Production (Fixed Fee)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Event Production (Strategy, Production, Virtual, Trade Show, Speaker, Marketing) | 4-16 weeks | $50,000 - $180,000 (excludes venue/vendor costs) |
+
+### Communications Training (Fixed Fee)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Training Program (Media, Presentation, Crisis, Brand) | 2-4 weeks | $20,000 - $50,000 per session/program |
+
+### Impact & Purpose Communications (Fixed Fee)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Impact Communications (Report, Sustainability, ESG, CSR, Purpose, Theory of Change) | 4-10 weeks | $60,000 - $150,000 |
+
+### Content Ideation & Production
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Content Strategy | 2-4 weeks | $15,000 - $30,000 (Fixed Fee) |
+| Ongoing Content Production | Varies | T&M based on volume |
+
+### Performance Marketing & Optimization (Retainer)
+| Service Bundle | Term | Budget Range |
+|----------------|------|--------------|
+| Performance Marketing (CRO, A/B Testing, Landing Page, Funnel, Automation, Reporting) | Annual | $120,000 - $200,000/year ($10K-$17K/month) |
+
+### Project Management
+| Service | Budget Range |
+|---------|--------------|
+| Project Management | ~10% of total project fee |
+| Note: Not required on PR/Earned-only engagements |
+`;
 
 // ============================================================================
 // ASSESSMENT FRAMEWORK (Comprehensive - for review flow)
@@ -3218,6 +3347,8 @@ The SOW should be ready for client presentation with minimal editing needed. Mak
       
       const promptText = `${ASSESSMENT_FRAMEWORK}
 
+${PRICING_GUIDE}
+
 You are reviewing an SOW for a ${engagementLabel} engagement.
 
 ## CRITICAL FORMATTING REQUIREMENTS
@@ -3275,9 +3406,21 @@ Prefer "UP TO" language (e.g., "up to 4 hours per month") rather than exact quan
 ✓ Present: [element] - [where found]
 ✗ Missing: [element] - [what to add]
 
-5. BUDGET VERIFICATION - Check fee table arithmetic, billing schedule alignment
+5. PRICING VALIDATION - Compare SOW fees against guide pricing
+For each service/deliverable with a fee mentioned in the SOW:
+- Identify the service category and fee amount stated
+- Compare against the PRICING GUIDE ranges above
+- Flag as:
+  ⚠️ UNDERPRICED: [Service] at $X is below guide range of $Y-$Z (risk: undervaluing work, profitability)
+  ⚠️ OVERPRICED: [Service] at $X is above guide range of $Y-$Z (risk: client pushback, competitive disadvantage)
+  ✓ IN RANGE: [Service] at $X falls within guide range of $Y-$Z
+- For retainers, convert to annual amounts for comparison (monthly × 12)
+- For bundled services, compare against bundle pricing, not individual service prices
+- Note if Project Management fee is missing on non-PR engagements (should be ~10% of project)
 
-6. OVERALL ASSESSMENT
+6. BUDGET VERIFICATION - Check fee table arithmetic, billing schedule alignment
+
+7. OVERALL ASSESSMENT
 - Compliance score (1-10) with justification
 - Top 3 priorities to address
 - What's working well
@@ -3405,14 +3548,16 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
         ),
         redFlags: parseSection(responseText, 
           ['## RED FLAGS', '3. RED FLAGS FOUND', '3. RED FLAGS', '**RED FLAGS'], 
-          ['## STRUCTURAL', '## SERVICE-LINE', '4. STRUCTURAL', '4. SERVICE-LINE', '**STRUCTURAL', '**SERVICE-LINE', '## 4.', '5. BUDGET', '## BUDGET']
+          ['## STRUCTURAL', '## SERVICE-LINE', '4. STRUCTURAL', '4. SERVICE-LINE', '**STRUCTURAL', '**SERVICE-LINE', '## 4.', '5. PRICING', '## PRICING']
         ),
-        compliance: responseText.match(/(?:##?\s*)?(?:4\.\s*)?(?:STRUCTURAL|SERVICE-LINE) COMPLIANCE[\s\S]*?(?=(?:##?\s*)?(?:5\.\s*)?BUDGET|(?:##?\s*)?(?:6\.\s*)?OVERALL|$)/i)?.[0]
+        compliance: responseText.match(/(?:##?\s*)?(?:4\.\s*)?(?:STRUCTURAL|SERVICE-LINE) COMPLIANCE[\s\S]*?(?=(?:##?\s*)?(?:5\.\s*)?PRICING|(?:##?\s*)?(?:6\.\s*)?BUDGET|(?:##?\s*)?(?:7\.\s*)?OVERALL|$)/i)?.[0]
           ?.replace(/(?:##?\s*)?(?:4\.\s*)?(?:STRUCTURAL|SERVICE-LINE) COMPLIANCE/i, '').trim(),
-        budget: responseText.match(/(?:##?\s*)?(?:5\.\s*)?BUDGET VERIFICATION[\s\S]*?(?=(?:##?\s*)?(?:6\.\s*)?OVERALL|$)/i)?.[0]
-          ?.replace(/(?:##?\s*)?(?:5\.\s*)?BUDGET VERIFICATION/i, '').trim(),
-        overall: responseText.match(/(?:##?\s*)?(?:6\.\s*)?OVERALL ASSESSMENT[\s\S]*$/i)?.[0]
-          ?.replace(/(?:##?\s*)?(?:6\.\s*)?OVERALL ASSESSMENT/i, '').trim()
+        pricing: responseText.match(/(?:##?\s*)?(?:5\.\s*)?PRICING VALIDATION[\s\S]*?(?=(?:##?\s*)?(?:6\.\s*)?BUDGET|(?:##?\s*)?(?:7\.\s*)?OVERALL|$)/i)?.[0]
+          ?.replace(/(?:##?\s*)?(?:5\.\s*)?PRICING VALIDATION/i, '').trim(),
+        budget: responseText.match(/(?:##?\s*)?(?:6\.\s*)?BUDGET VERIFICATION[\s\S]*?(?=(?:##?\s*)?(?:7\.\s*)?OVERALL|$)/i)?.[0]
+          ?.replace(/(?:##?\s*)?(?:6\.\s*)?BUDGET VERIFICATION/i, '').trim(),
+        overall: responseText.match(/(?:##?\s*)?(?:7\.\s*)?OVERALL ASSESSMENT[\s\S]*$/i)?.[0]
+          ?.replace(/(?:##?\s*)?(?:7\.\s*)?OVERALL ASSESSMENT/i, '').trim()
       };
 
       setAnalysis(parsedAnalysis);
@@ -3456,8 +3601,9 @@ ${selectedRecommended.length > 0 ? selectedRecommended.map((issue, i) => `${i + 
 ### Red Flag Language to Replace (${selectedRedFlags.length} selected):
 ${selectedRedFlags.length > 0 ? selectedRedFlags.map((flag, i) => `${i + 1}. ${flag}`).join('\n') : 'None selected'}
 
-### Additional Context (Structural Compliance, Budget, Overall):
+### Additional Context (Structural Compliance, Pricing, Budget, Overall):
 ${analysis.compliance || 'N/A'}
+${analysis.pricing || 'N/A'}
 ${analysis.budget || 'N/A'}
 ${analysis.overall || 'N/A'}`;
 
@@ -4219,6 +4365,12 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
               {analysis.compliance && (
                 <CollapsibleSection title="Structural Compliance" icon={CheckCircle}>
                   <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto font-mono text-gray-900">{analysis.compliance}</pre>
+                </CollapsibleSection>
+              )}
+
+              {analysis.pricing && (
+                <CollapsibleSection title="Pricing Validation" icon={DollarSign} defaultOpen>
+                  <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto font-mono text-gray-900">{analysis.pricing}</pre>
                 </CollapsibleSection>
               )}
 
