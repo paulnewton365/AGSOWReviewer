@@ -192,7 +192,21 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.8 (Current)
+### v2.1.9 (Current)
+- Added engagement type validation and recommendations based on selected services
+- System now suggests appropriate engagement types:
+  - **Fixed Fee**: Website/app production, branding, events, ring-fenced campaigns, upfront strategy
+  - **T&M**: Creative/integrated work where deliverables evolve (with minimum spend, monthly planning)
+  - **Retainer**: PR, media outreach, thought leadership, social media
+  - **T&M with Cap**: Only when specifically requested by client (shows warning)
+- Visual indicator when engagement type doesn't match services (with one-click switch)
+- Enhanced SOW generation with proper budget/billing language per engagement type:
+  - Fixed Fee: Milestone-based payments, total project fee presentation
+  - T&M: Minimum commitment language (not "drawdown"), monthly planning sessions
+  - Retainer: Monthly fee in advance, utilization reporting, rollover policies
+  - T&M Cap: Cap presentation, notification thresholds, work stoppage language
+
+### v2.1.8
 - AI no longer invents budget numbers in recommendations
 - Uses "$xxxx.xx" placeholder for unspecified amounts
 - Known Antenna Group minimums are used when applicable:

@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.8';
+const APP_VERSION = '2.1.9';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1308,6 +1308,135 @@ const DRAFT_ENGAGEMENT_TYPES = [
   { value: 'tm', label: 'Time & Materials', description: 'Hourly billing without cap' },
   { value: 'retainer', label: 'Retainer', description: 'Ongoing monthly engagement' }
 ];
+
+// Engagement type recommendations based on service categories
+const ENGAGEMENT_TYPE_RECOMMENDATIONS = {
+  // Fixed Fee is best for these categories
+  fixed_fee_preferred: [
+    'website',           // Website & App Development
+    'brand',             // Brand Strategy & Identity
+    'events',            // Event Planning & Production
+    'integrated_strategy', // Upfront planning and strategy work
+  ],
+  // T&M is best for these (with minimum spend)
+  tm_preferred: [
+    'creative_production', // Creative retainers
+    'content',            // Content ideation & production
+  ],
+  // Retainer is best for these professional services
+  retainer_preferred: [
+    'pr',                 // Public Relations
+    'media_outreach',     // Media Outreach
+    'executive_visibility', // Thought Leadership
+    'social',             // Social Media
+    'influencer',         // Influencer Marketing
+  ],
+  // T&M with Cap - only when client specifically requests
+  tm_cap_preferred: []  // Never recommended by default
+};
+
+// Get engagement type recommendation based on selected services
+const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, currentEngagementType) => {
+  if (!selectedServices || selectedServices.length === 0) return null;
+  
+  // Count services by their parent category
+  const categoryCount = {};
+  SERVICE_TRIGGERS.forEach(trigger => {
+    const matchingServices = trigger.services.filter(s => selectedServices.includes(s));
+    if (matchingServices.length > 0) {
+      categoryCount[trigger.id] = matchingServices.length;
+    }
+  });
+  
+  const categories = Object.keys(categoryCount);
+  if (categories.length === 0) return null;
+  
+  // Determine the dominant category
+  const dominantCategory = Object.entries(categoryCount)
+    .sort((a, b) => b[1] - a[1])[0][0];
+  
+  // Check what engagement type is recommended for these services
+  let recommendedType = null;
+  let reason = '';
+  let budgetGuidance = '';
+  
+  // Check fixed fee preferred
+  if (ENGAGEMENT_TYPE_RECOMMENDATIONS.fixed_fee_preferred.includes(dominantCategory)) {
+    recommendedType = 'fixed_fee';
+    if (dominantCategory === 'website') {
+      reason = 'Website and app production projects have well-defined deliverables that are best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee with milestone-based payments (e.g., 50% at kickoff, 25% at design approval, 25% at launch).';
+    } else if (dominantCategory === 'brand') {
+      reason = 'Branding projects (strategy and expression) have defined phases and deliverables best suited to Fixed Fee pricing. Minimum project value: $50,000.';
+      budgetGuidance = 'Present total project fee with phase-based payments aligned to Discovery, Strategy, and Expression phases.';
+    } else if (dominantCategory === 'events') {
+      reason = 'Event projects have fixed dates and defined deliverables best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee with milestone payments tied to planning phases and event date.';
+    } else if (dominantCategory === 'integrated_strategy') {
+      reason = 'Upfront planning and strategy work has defined deliverables best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee with milestone-based payments tied to deliverable phases.';
+    }
+  }
+  // Check T&M preferred
+  else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(dominantCategory) || 
+           categories.some(c => ['creative_production', 'content'].includes(c))) {
+    recommendedType = 'tm';
+    reason = 'Creative and integrated work where deliverables evolve is best suited to Time & Materials with a minimum spend commitment. Include monthly/quarterly planning and prioritization language.';
+    budgetGuidance = 'Present as minimum commitment (e.g., $24,000 annual minimum for creative retainer) with hourly rates for work. Include language about monthly planning sessions to prioritize work. Avoid "drawdown" language.';
+  }
+  // Check retainer preferred
+  else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.some(c => categories.includes(c))) {
+    recommendedType = 'retainer';
+    if (categories.includes('pr') || categories.includes('media_outreach')) {
+      reason = 'PR and media outreach are ongoing professional services best suited to a monthly Retainer structure. Minimum retainer: $15,000/month.';
+      budgetGuidance = 'Present as monthly retainer fee with defined scope of activities per month. Include utilization tracking and overage rates.';
+    } else if (categories.includes('executive_visibility')) {
+      reason = 'Thought leadership is an ongoing professional service best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined activities. Include utilization tracking.';
+    } else if (categories.includes('social') || categories.includes('influencer')) {
+      reason = 'Social media and influencer marketing are ongoing services best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined scope. Include utilization tracking and overage rates.';
+    } else {
+      reason = 'These professional services are best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined scope and utilization tracking.';
+    }
+  }
+  
+  // If T&M with Cap is selected, provide specific guidance
+  if (currentEngagementType === 'tm_cap') {
+    return {
+      type: 'warning',
+      title: 'T&M with Cap: Client Request Only',
+      message: 'Time & Materials with Cap should only be used when specifically requested by the client. It shifts risk to the agency. Consider if Fixed Fee or standard T&M would be more appropriate.',
+      recommendedType: recommendedType,
+      budgetGuidance: 'If proceeding with T&M Cap: Present cap amount with clear scope boundaries, notification thresholds at 75% consumption, and explicit language that work stops when cap is reached unless client authorizes additional budget.'
+    };
+  }
+  
+  // If current selection doesn't match recommendation
+  if (recommendedType && currentEngagementType && currentEngagementType !== recommendedType) {
+    return {
+      type: 'suggestion',
+      title: 'Consider a Different Engagement Type',
+      message: reason,
+      recommendedType: recommendedType,
+      budgetGuidance: budgetGuidance
+    };
+  }
+  
+  // If selection matches recommendation, provide positive confirmation
+  if (recommendedType && currentEngagementType === recommendedType) {
+    return {
+      type: 'confirmation',
+      title: 'Good Match',
+      message: reason,
+      recommendedType: recommendedType,
+      budgetGuidance: budgetGuidance
+    };
+  }
+  
+  return null;
+};
 
 // ============================================================================
 // REVIEW ENGAGEMENT TYPES (existing)
@@ -2697,9 +2826,20 @@ ${transcript}`
 - Client obligations must have specific timeframes and consequences for non-compliance
 - Define clear acceptance criteria for each deliverable
 - Include deemed acceptance provision (e.g., "if no response within 5 business days")
-- Fee should be tied to milestones or phases, not a single lump sum payment`,
+
+BUDGET & BILLING STRUCTURE FOR FIXED FEE:
+- Present total project fee prominently
+- Payment schedule tied to milestones or phases (NOT a single lump sum)
+- Recommended structure: 50% at project kickoff, 25% at [mid-project milestone], 25% upon completion
+- Alternative for larger projects: Monthly installments over project duration
+- All milestone payments are non-refundable once work commences
+- State: "Fee is based on scope defined herein. Changes to scope require a Change Order with fee adjustment."
+- For branding projects: Minimum project value $50,000
+- For brand assessments: $4,000`,
         
         tm_cap: `TIME & MATERIALS WITH CAP (NOT TO EXCEED) REQUIREMENTS:
+NOTE: T&M with Cap should only be used when specifically requested by client. It shifts risk to the agency.
+
 - Cap must be clearly stated with inclusions and exclusions
 - Cap must be explicitly tied to the defined scope
 - Include notification thresholds (e.g., "Agency will notify Client when 75% of cap is consumed")
@@ -2709,20 +2849,43 @@ ${transcript}`
 - Specify billing rates by role
 - Specify billing increment (e.g., 15-minute increments)
 - Include reporting requirements (frequency and content)
-- No obligation to work beyond cap without written authorization`,
+- No obligation to work beyond cap without written authorization
+
+BUDGET & BILLING STRUCTURE FOR T&M WITH CAP:
+- Present cap amount prominently with clear statement: "Total fees shall not exceed $[CAP] without prior written authorization"
+- Include rate card by role/seniority
+- Billing: Monthly in arrears based on actual time incurred
+- Payment: Net 30 from invoice date
+- Include utilization reporting with each invoice
+- State: "Agency will notify Client when 75% of cap has been consumed. Work will pause at cap unless Client authorizes additional budget in writing."
+- Cap does NOT include out-of-pocket expenses (list separately)`,
         
         tm: `TIME & MATERIALS REQUIREMENTS:
+Best suited for creative retainers and engagements where deliverables evolve based on business needs.
+
 - Complete rate schedule for all roles that may work on the project
 - Clear billing increment (e.g., 15-minute increments)
-- Initial estimate clearly stated as estimate, NOT a guarantee or cap
-- Notification thresholds when approaching estimate
-- Tracking increment specified
-- Reporting frequency and content defined
-- Client access to detailed time logs
+- MINIMUM COMMITMENT required (NOT a cap - this is a floor)
 - Scope guidance with intended objectives and boundaries
-- Conditions that would trigger revised estimate`,
+- Monthly or quarterly planning and prioritization process
+- Tracking and reporting requirements
+
+BUDGET & BILLING STRUCTURE FOR T&M:
+- Present as MINIMUM COMMITMENT, not a cap or estimate
+- State: "Client commits to a minimum of $[AMOUNT] for the term. This commitment enables Agency to reserve capacity and resources."
+- For creative retainers: Minimum commitment of $24,000 annually
+- For other T&M work: Minimum retainer of $15,000/month
+- Include rate card by role/seniority
+- Billing: Monthly in arrears based on actual time incurred
+- Payment: Net 30 from invoice date
+- Work exceeding minimum commitment billed at same rates
+- Include: "Agency and Client will conduct [monthly/quarterly] planning sessions to prioritize work and align on objectives."
+- DO NOT use "drawdown" language - this is not a deposit to be depleted, it's a minimum spend commitment
+- Unused commitment does NOT roll over or create refund obligations`,
         
         retainer: `RETAINER REQUIREMENTS:
+Best suited for ongoing professional services like PR, media relations, thought leadership, and social media.
+
 - Minimum term specified (recommend: 6-12 months)
 - Monthly fee clearly stated
 - Early termination provisions and fees (e.g., 60-day notice, or fee for early termination)
@@ -2733,7 +2896,17 @@ ${transcript}`
 - Overage handling defined (rate, notification threshold, pre-approval)
 - Utilization tracking and reporting frequency
 - Notice period for non-renewal
-- Annual rate adjustment provisions if applicable`
+- Annual rate adjustment provisions if applicable
+
+BUDGET & BILLING STRUCTURE FOR RETAINER:
+- Present monthly retainer fee prominently
+- Minimum retainer: $15,000/month
+- State: "Monthly retainer of $[AMOUNT] payable in advance on the first of each month"
+- Include: "Retainer secures [X hours / defined activities] per month"
+- Rollover: "Unused hours [do not roll over / may roll over up to X hours to the immediately following month only]"
+- Overage: "Work exceeding monthly allocation will be billed at $[RATE]/hour with Client pre-approval required for overages exceeding [X] hours"
+- Minimum term: "Initial term of [6/12] months. Either party may terminate with [60] days written notice after initial term."
+- Include utilization reporting: "Agency will provide monthly utilization reports showing hours/activities consumed against allocation."`
       };
       
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -3432,6 +3605,54 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                         </button>
                       ))}
                     </div>
+                    
+                    {/* Engagement Type Recommendation */}
+                    {(() => {
+                      const recommendation = getEngagementTypeRecommendation(selectedServices, detectedTriggers, draftEngagementType);
+                      if (!recommendation) return null;
+                      
+                      const bgColor = recommendation.type === 'warning' 
+                        ? 'bg-amber-50 border-amber-200' 
+                        : recommendation.type === 'suggestion'
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-green-50 border-green-200';
+                      const textColor = recommendation.type === 'warning'
+                        ? 'text-amber-800'
+                        : recommendation.type === 'suggestion'
+                        ? 'text-blue-800'
+                        : 'text-green-800';
+                      const iconColor = recommendation.type === 'warning'
+                        ? 'text-amber-600'
+                        : recommendation.type === 'suggestion'
+                        ? 'text-blue-600'
+                        : 'text-green-600';
+                      
+                      return (
+                        <div className={`mt-3 p-3 rounded-lg border ${bgColor}`}>
+                          <div className="flex items-start gap-2">
+                            {recommendation.type === 'warning' ? (
+                              <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColor}`} />
+                            ) : recommendation.type === 'suggestion' ? (
+                              <Lightbulb className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColor}`} />
+                            ) : (
+                              <CheckCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${iconColor}`} />
+                            )}
+                            <div>
+                              <p className={`text-sm font-medium ${textColor}`}>{recommendation.title}</p>
+                              <p className={`text-xs ${textColor} opacity-80 mt-1`}>{recommendation.message}</p>
+                              {recommendation.type !== 'confirmation' && recommendation.recommendedType && (
+                                <button
+                                  onClick={() => setDraftEngagementType(recommendation.recommendedType)}
+                                  className={`mt-2 text-xs font-medium ${textColor} underline hover:no-underline`}
+                                >
+                                  Switch to {DRAFT_ENGAGEMENT_TYPES.find(t => t.value === recommendation.recommendedType)?.label}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                   
                   {/* Notes */}
