@@ -192,7 +192,27 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.9 (Current)
+### v2.2.0 (Current)
+- **Major streamlining of service categories** from 31 to 19 categories
+- Each category now has explicit `engagementType` property for clearer recommendations
+- Categories merged/consolidated:
+  - Media Outreach → Public Relations & Media Outreach
+  - Executive & Leadership → Executive Visibility & Thought Leadership
+  - Creative & Innovation → Creative Campaigns & Innovation
+  - Impact Reports → Impact & Purpose Communications
+  - Removed: awareness, reputation, influence, audience, messaging, content, leads, creative, leadership, marketing_assessment (consolidated into other categories)
+- Updated Brand Strategy & Expression with new structure:
+  - Strategy: Research, Stakeholder Interviews (IDIs), Rapid Discovery, Positioning, Brand House, Brand Workshop, Authentic Foundation
+  - Expression: Tone of Voice, Manifesto, Visual Identity System, Logo/Wordmark Development
+  - Assets: Brand Deck, Social Lock-ups, Brand Guidelines
+- Creative Production now includes Content Ideation and Transcreation (Multi-language)
+- Content Ideation & Production now includes Reactive and Proactive Content
+- Performance Marketing now includes Measurement & Reporting across Owned, Earned, Paid, and Social
+- SEO now includes Technical SEO Audit (moved from Website)
+- Marketing Audit & Assessment renamed to Marketing Audit & Assessment (Compass)
+- Project Management marked as 'any' engagement type (can be applied to any engagement)
+
+### v2.1.9
 - Added engagement type validation and recommendations based on selected services
 - System now suggests appropriate engagement types:
   - **Fixed Fee**: Website/app production, branding, events, ring-fenced campaigns, upfront strategy

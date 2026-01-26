@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.9';
+const APP_VERSION = '2.2.0';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -607,13 +607,14 @@ const downloadAsDocx = async (sowText, filename, projectInfo = {}) => {
 };
 
 // ============================================================================
-// SERVICE TRIGGER MAPPINGS (Enhanced with comprehensive trigger patterns)
+// SERVICE TRIGGER MAPPINGS (Streamlined 19 categories)
 // ============================================================================
 const SERVICE_TRIGGERS = [
   {
     id: 'website',
     category: 'Website & App Development',
     description: 'Build or rebuild digital platforms',
+    engagementType: 'fixed_fee',
     services: [
       'Website Strategy & Planning',
       'Website Design & UX',
@@ -623,7 +624,6 @@ const SERVICE_TRIGGERS = [
       'Mobile App Development',
       'Landing Page Development',
       'Website Migration',
-      'Technical SEO Audit',
       'Performance Optimization'
     ],
     triggerPatterns: {
@@ -638,16 +638,18 @@ const SERVICE_TRIGGERS = [
     id: 'integrated_strategy',
     category: 'Integrated Marketing Strategy',
     description: 'Develop cohesive marketing plans',
+    engagementType: 'fixed_fee',
     services: [
       'Marketing Strategy Development',
       'Channel Planning & Media Mix',
       'Customer Journey Mapping',
-      'Marketing Audit & Assessment',
+      'Marketing Audit & Assessment (Compass)',
       'Budget Allocation Strategy',
       'Campaign Planning',
       'Marketing Roadmap',
       'Competitive Analysis',
-      'Market Research'
+      'Market Research',
+      'Audience Research & Segmentation'
     ],
     triggerPatterns: {
       direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
@@ -659,19 +661,27 @@ const SERVICE_TRIGGERS = [
   },
   {
     id: 'brand',
-    category: 'Brand Strategy & Identity',
+    category: 'Brand Strategy & Expression',
     description: 'Define or refresh your brand foundation',
+    engagementType: 'fixed_fee',
     services: [
-      'Brand Strategy Development',
+      // Strategy
+      'Brand Research',
+      'Stakeholder Interviews (IDIs)',
+      'Rapid Discovery (Landscape & Audience)',
       'Brand Positioning',
+      'Brand House Development',
+      'Brand Workshop',
+      'Authentic Foundation (Why, What, How)',
+      // Expression
+      'Tone of Voice',
+      'Manifesto',
       'Visual Identity System',
-      'Brand Guidelines',
-      'Brand Architecture',
-      'Naming & Nomenclature',
-      'Brand Messaging Framework',
-      'Rapid Discovery Workshop',
-      'Brand Refresh',
-      'Rebrand'
+      'Logo/Wordmark Development',
+      // Assets
+      'Brand Deck',
+      'Social Lock-ups',
+      'Brand Guidelines'
     ],
     triggerPatterns: {
       direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
@@ -685,6 +695,7 @@ const SERVICE_TRIGGERS = [
     id: 'creative_production',
     category: 'Creative Production',
     description: 'Design, video, animation, and content creation',
+    engagementType: 'tm',
     services: [
       'Graphic Design',
       'Video Production',
@@ -695,7 +706,9 @@ const SERVICE_TRIGGERS = [
       'Presentation Design',
       'Social Media Content',
       'Campaign Asset Creation',
-      'Brand Asset Library'
+      'Brand Asset Library',
+      'Content Ideation',
+      'Transcreation (Multi-language)'
     ],
     triggerPatterns: {
       direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
@@ -709,6 +722,7 @@ const SERVICE_TRIGGERS = [
     id: 'influencer',
     category: 'Influencer Marketing',
     description: 'Leverage creator partnerships',
+    engagementType: 'retainer',
     services: [
       'Influencer Strategy',
       'Creator Identification & Vetting',
@@ -729,8 +743,9 @@ const SERVICE_TRIGGERS = [
   },
   {
     id: 'creative_campaigns',
-    category: 'Creative Campaigns & Platforms',
+    category: 'Creative Campaigns & Innovation',
     description: 'Develop breakthrough campaign concepts',
+    engagementType: 'fixed_fee',
     services: [
       'Creative Platform Development',
       'Campaign Concept Development',
@@ -739,20 +754,24 @@ const SERVICE_TRIGGERS = [
       'Storytelling Framework',
       'Brand Anthem Development',
       'Experiential Concepts',
-      'Cultural Moments Strategy'
+      'Cultural Moments Strategy',
+      'Creative Strategy',
+      'Visual & Design Innovation',
+      'Experiential Design'
     ],
     triggerPatterns: {
-      direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'need a creative platform', 'marketing lacks unifying concept'],
-      indirect: ['campaigns feel tactical', 'each effort is standalone', 'difficulty creating memorable work', 'need to differentiate', 'brand awareness plateaued'],
-      situational: ['major launch', 'brand repositioning', 'new market entry', 'competitive threat', 'company transformation', 'major anniversary'],
-      performance: ['brand recall declining', 'campaign metrics mediocre', 'share of voice decreasing', 'advertising not breaking through', 'content engagement low'],
-      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\'t break through the clutter', 'want something competitors can\'t copy', 'creative that people talk about', 'ads are forgettable']
+      direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'need a creative platform', 'marketing lacks unifying concept', 'marketing is uninspiring', 'breakthrough ideas'],
+      indirect: ['campaigns feel tactical', 'each effort is standalone', 'difficulty creating memorable work', 'need to differentiate', 'brand awareness plateaued', 'work is boring', 'looks like everyone else'],
+      situational: ['major launch', 'brand repositioning', 'new market entry', 'competitive threat', 'company transformation', 'major anniversary', 'category disruption'],
+      performance: ['brand recall declining', 'campaign metrics mediocre', 'share of voice decreasing', 'advertising not breaking through', 'content engagement low', 'creative fatigue'],
+      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\'t break through the clutter', 'want something competitors can\'t copy', 'creative that people talk about', 'ads are forgettable', 'cut through the noise', 'campaigns are safe']
     }
   },
   {
     id: 'pr',
-    category: 'Public Relations',
-    description: 'Media relations and press coverage',
+    category: 'Public Relations & Media Outreach',
+    description: 'Media relations, press coverage, and ongoing media engagement',
+    engagementType: 'retainer',
     services: [
       'Media Relations',
       'Press Release Development',
@@ -762,21 +781,7 @@ const SERVICE_TRIGGERS = [
       'Crisis Communications',
       'Announcement Strategy',
       'Media Monitoring',
-      'Journalist Relationship Building'
-    ],
-    triggerPatterns: {
-      direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency'],
-      indirect: ['important news not getting coverage', 'lack of third-party credibility', 'competitors in media more', 'no journalist relationships', 'story not being told externally', 'need crisis preparedness'],
-      situational: ['product launch', 'funding announcement', 'executive hire', 'research release', 'awards', 'company milestone', 'crisis', 'merger announcement', 'industry event'],
-      performance: ['low share of voice', 'minimal media mentions', 'negative coverage without response', 'lack of third-party validation', 'sales team lacking proof points'],
-      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story', 'launching something big and need coverage', 'not prepared if something goes wrong', 'need credibility with our audience']
-    }
-  },
-  {
-    id: 'media_outreach',
-    category: 'Media Outreach (Proactive & Reactive)',
-    description: 'Ongoing media engagement',
-    services: [
+      'Journalist Relationship Building',
       'Proactive Media Pitching',
       'Rapid Response Program',
       'Newsjacking Strategy',
@@ -786,17 +791,18 @@ const SERVICE_TRIGGERS = [
       'Spokesperson Preparation'
     ],
     triggerPatterns: {
-      direct: ['want to be seen as a source', 'want to comment on industry news', 'need rapid response', 'want more media mentions'],
-      indirect: ['industry conversations without us', 'journalists covering competitors', 'expertise not leveraged', 'missed opportunities to comment', 'no media monitoring'],
-      situational: ['industry news requiring commentary', 'breaking developments', 'regulatory changes', 'seasonal news cycles', 'industry crisis'],
-      performance: ['competitors quoted more', 'share of voice declining', 'opportunities going to others', 'reactive coverage only'],
-      sampleLanguage: ['when something happens we\'re never quoted', 'journalists don\'t know we exist', 'competitors are the go-to source', 'have expertise but no one asks', 'want to be top of mind for reporters', 'need to respond faster to news']
+      direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency', 'want to be seen as a source', 'need rapid response'],
+      indirect: ['important news not getting coverage', 'lack of third-party credibility', 'competitors in media more', 'no journalist relationships', 'story not being told externally', 'need crisis preparedness', 'journalists covering competitors'],
+      situational: ['product launch', 'funding announcement', 'executive hire', 'research release', 'awards', 'company milestone', 'crisis', 'merger announcement', 'industry event', 'breaking developments'],
+      performance: ['low share of voice', 'minimal media mentions', 'negative coverage without response', 'lack of third-party validation', 'sales team lacking proof points', 'competitors quoted more'],
+      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story', 'launching something big and need coverage', 'not prepared if something goes wrong', 'need credibility with our audience', 'when something happens we\'re never quoted', 'want to be top of mind for reporters']
     }
   },
   {
     id: 'executive_visibility',
     category: 'Executive Visibility & Thought Leadership',
-    description: 'Elevate leadership profiles',
+    description: 'Elevate leadership profiles and establish authority',
+    engagementType: 'retainer',
     services: [
       'Executive Positioning Strategy',
       'Thought Leadership Content',
@@ -806,20 +812,25 @@ const SERVICE_TRIGGERS = [
       'Media Training',
       'Awards Strategy',
       'LinkedIn Optimization',
-      'Podcast Strategy'
+      'Podcast Strategy',
+      'Media Relations',
+      'Analyst Relations',
+      'Messaging Architecture',
+      'Crisis Preparedness'
     ],
     triggerPatterns: {
-      direct: ['CEO needs to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile'],
-      indirect: ['competitor executives more visible', 'difficulty attracting talent', 'investor relations need credibility', 'sales cycle requires leadership trust', 'industry influence desired'],
-      situational: ['new CEO', 'IPO preparation', 'fundraising', 'conference schedule', 'speaking pipeline', 'award nominations'],
-      performance: ['low leadership recognition', 'executive content not engaging', 'speaking invitations not coming', 'board feedback about visibility', 'LinkedIn engagement low'],
-      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership']
+      direct: ['CEO needs to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile', 'leadership is invisible', 'ceo profile'],
+      indirect: ['competitor executives more visible', 'difficulty attracting talent', 'investor relations need credibility', 'sales cycle requires leadership trust', 'industry influence desired', 'board wants more visible CEO'],
+      situational: ['new CEO', 'IPO preparation', 'fundraising', 'conference schedule', 'speaking pipeline', 'award nominations', 'acquisition', 'crisis'],
+      performance: ['low leadership recognition', 'executive content not engaging', 'speaking invitations not coming', 'board feedback about visibility', 'LinkedIn engagement low', 'not invited to speak'],
+      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership', 'credibility problem', 'communications is timid']
     }
   },
   {
     id: 'paid_social',
     category: 'Paid Social Media',
     description: 'Social advertising campaigns',
+    engagementType: 'retainer',
     services: [
       'Paid Social Strategy',
       'Campaign Setup & Management',
@@ -842,8 +853,10 @@ const SERVICE_TRIGGERS = [
     id: 'seo',
     category: 'Search Engine Optimization',
     description: 'Improve organic search visibility',
+    engagementType: 'retainer',
     services: [
       'SEO Audit & Strategy',
+      'Technical SEO Audit',
       'Technical SEO',
       'On-Page Optimization',
       'Content SEO Strategy',
@@ -865,6 +878,7 @@ const SERVICE_TRIGGERS = [
     id: 'geo',
     category: 'Generative Engine Optimization (GEO)',
     description: 'Optimize for AI-powered search',
+    engagementType: 'retainer',
     services: [
       'GEO Strategy & Audit',
       'AI Search Optimization',
@@ -885,6 +899,7 @@ const SERVICE_TRIGGERS = [
     id: 'measurement',
     category: 'Measurement & Analytics',
     description: 'Track and prove marketing ROI',
+    engagementType: 'fixed_fee',
     services: [
       'Analytics Strategy',
       'Dashboard Development',
@@ -907,6 +922,7 @@ const SERVICE_TRIGGERS = [
     id: 'gtm',
     category: 'Go-to-Market Strategy',
     description: 'Launch products and enter markets',
+    engagementType: 'fixed_fee',
     services: [
       'Go-to-Market Strategy',
       'Launch Planning',
@@ -929,6 +945,7 @@ const SERVICE_TRIGGERS = [
     id: 'events',
     category: 'Event Planning & Production',
     description: 'Plan and execute events',
+    engagementType: 'fixed_fee',
     services: [
       'Event Strategy',
       'Conference Planning',
@@ -951,6 +968,7 @@ const SERVICE_TRIGGERS = [
     id: 'training',
     category: 'Communications Training',
     description: 'Media and communications training',
+    engagementType: 'fixed_fee',
     services: [
       'Media Training',
       'Spokesperson Training',
@@ -968,29 +986,37 @@ const SERVICE_TRIGGERS = [
     }
   },
   {
-    id: 'impact_reports',
-    category: 'Impact Report Writing & Design',
-    description: 'Sustainability and impact communications',
+    id: 'impact',
+    category: 'Impact & Purpose Communications',
+    description: 'Sustainability, impact, and purpose communications',
+    engagementType: 'fixed_fee',
     services: [
       'Impact Report Writing',
       'Impact Report Design',
       'Sustainability Communications',
       'ESG Reporting',
       'CSR Communications',
-      'Stakeholder Reports'
+      'Stakeholder Reports',
+      'Impact Communications Training',
+      'Purpose Discovery Workshop',
+      'Vision Development',
+      'Theory of Change',
+      'Impact Measurement Framework',
+      'Manifesto Writing'
     ],
     triggerPatterns: {
-      direct: ['need an annual report', 'need an impact report', 'need help with CSR report', 'want to showcase our impact'],
-      indirect: ['stakeholder expectations for transparency', 'ESG reporting requirements', 'investor relations needs', 'employee engagement communications', 'competitor reports setting higher bar'],
-      situational: ['annual reporting cycle', 'sustainability milestones', 'stakeholder meeting', 'grant reporting', 'public accountability'],
-      performance: ['stakeholder feedback on transparency', 'competitor reports more compelling', 'internal data not shared', 'impact not being communicated'],
-      sampleLanguage: ['do great work but don\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story']
+      direct: ['need an annual report', 'need an impact report', 'need help with CSR report', 'want to showcase our impact', 'impact story', 'sustainability story', 'esg communications', 'purpose driven'],
+      indirect: ['stakeholder expectations for transparency', 'ESG reporting requirements', 'investor relations needs', 'employee engagement communications', 'competitor reports setting higher bar', 'customers want to know our values'],
+      situational: ['annual reporting cycle', 'sustainability milestones', 'stakeholder meeting', 'grant reporting', 'public accountability', 'B Corp certification'],
+      performance: ['stakeholder feedback on transparency', 'competitor reports more compelling', 'internal data not shared', 'impact not being communicated', 'brand purpose scores low'],
+      sampleLanguage: ['do great work but don\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story', 'want people to know we\'re more than just a business']
     }
   },
   {
     id: 'content_production',
     category: 'Content Ideation & Production',
     description: 'Content strategy and creation',
+    engagementType: 'tm',
     services: [
       'Content Strategy',
       'Content Calendar Development',
@@ -999,7 +1025,9 @@ const SERVICE_TRIGGERS = [
       'Video Content Series',
       'Social Content Creation',
       'Thought Leadership Content',
-      'Lead Magnet Development'
+      'Lead Magnet Development',
+      'Reactive Content',
+      'Proactive Content'
     ],
     triggerPatterns: {
       direct: ['need more content', 'need a content strategy', 'run out of ideas', 'need help producing content'],
@@ -1013,6 +1041,7 @@ const SERVICE_TRIGGERS = [
     id: 'performance_marketing',
     category: 'Performance Marketing & Optimization',
     description: 'Optimize for conversions and efficiency',
+    engagementType: 'retainer',
     services: [
       'Conversion Rate Optimization',
       'A/B Testing Program',
@@ -1020,7 +1049,11 @@ const SERVICE_TRIGGERS = [
       'Funnel Optimization',
       'Performance Analytics',
       'Campaign Optimization',
-      'Marketing Automation'
+      'Marketing Automation',
+      'Measurement & Reporting (Owned)',
+      'Measurement & Reporting (Earned)',
+      'Measurement & Reporting (Paid)',
+      'Measurement & Reporting (Social)'
     ],
     triggerPatterns: {
       direct: ['need to optimize campaigns', 'want to A/B test', 'conversion rates need improvement', 'need CRO help'],
@@ -1031,256 +1064,10 @@ const SERVICE_TRIGGERS = [
     }
   },
   {
-    id: 'marketing_assessment',
-    category: 'Brand & Marketing Assessments',
-    description: 'Audit and assess current state',
-    services: [
-      'Marketing Audit',
-      'Brand Assessment',
-      'Competitive Analysis',
-      'Channel Assessment',
-      'Content Audit',
-      'Technology Audit',
-      'Customer Research'
-    ],
-    triggerPatterns: {
-      direct: ['need an audit of our marketing', 'want an assessment of our brand', 'need a fresh perspective', 'want a review of marketing activities'],
-      indirect: ['new leadership wanting baseline', 'performance declining without clear cause', 'pre-planning phase', 'budget allocation uncertainty', 'agency review consideration'],
-      situational: ['new CMO', 'pre-RFP assessment', 'annual planning', 'post-campaign retrospective', 'merger integration'],
-      performance: ['overall marketing underperformance', 'uncertainty about gaps', 'need for prioritization', 'competitive concerns', 'stakeholder questions'],
-      sampleLanguage: ['need someone to look at everything we\'re doing', 'new to this role and need to understand where we are', 'not sure what\'s working and what\'s not', 'before we start anything new we need to assess', 'been doing the same things and need fresh eyes', 'where should we be investing', 'what are our biggest gaps']
-    }
-  },
-  // Preserve original categories with enhanced patterns
-  {
-    id: 'awareness',
-    category: 'Awareness & Reach',
-    description: 'Build awareness through paid and earned channels',
-    services: [
-      'Performance Marketing (Paid Media)',
-      'SEO Strategy & Implementation',
-      'Measurement & Analytics Framework',
-      'Thought Leadership Program',
-      'Executive Visibility Campaign',
-      'Media Outreach & Relations'
-    ],
-    triggerPatterns: {
-      direct: ['need awareness', 'brand awareness', 'nobody knows us', 'increase visibility', 'get our name out', 'build awareness'],
-      indirect: ['competitors getting all the attention', 'not on anyone\'s radar', 'market doesn\'t know we exist', 'need to raise our profile'],
-      situational: ['market entry', 'new product category', 'relaunch', 'competitive threat'],
-      performance: ['low brand recall', 'low aided awareness', 'minimal organic traffic', 'poor search visibility'],
-      sampleLanguage: ['need to get on people\'s radar', 'nobody knows what we do', 'want to be recognized', 'need more exposure', 'have to make noise in the market']
-    }
-  },
-  {
-    id: 'reputation',
-    category: 'Reputation & Trust',
-    description: 'Address reputation challenges and build credibility',
-    services: [
-      'Brand Compass Assessment',
-      'GEO (Generative Engine Optimization)',
-      'Wikipedia Optimization',
-      'Reddit & Community Optimization',
-      'Media Messaging Development',
-      'Media Outreach & Relations',
-      'Impact Communications Training',
-      'Impact Report Design & Writing',
-      'Purpose Discovery Workshop',
-      'Theory of Change Development'
-    ],
-    triggerPatterns: {
-      direct: ['problem with reputation', 'reputation issue', 'reputation management', 'negative perception', 'trust issues', 'credibility problem'],
-      indirect: ['bad reviews', 'negative press', 'online critics', 'bad search results about us', 'stakeholders questioning us'],
-      situational: ['crisis aftermath', 'leadership scandal', 'product failure', 'negative news cycle', 'industry controversy'],
-      performance: ['NPS declining', 'trust scores down', 'negative sentiment', 'customer churn due to trust', 'recruitment challenges'],
-      sampleLanguage: ['people don\'t believe us', 'not credible', 'our online reputation is terrible', 'keep getting bad press', 'reviews are killing us', 'need to rebuild trust']
-    }
-  },
-  {
-    id: 'influence',
-    category: 'Influence & Authority',
-    description: 'Establish authority and influence in your sector',
-    services: [
-      'Original Research & Studies',
-      'Strategic Media Relations',
-      'Content Ecosystem Development',
-      'Convening & Events Strategy',
-      'Policy Communications',
-      'Strategic Partnerships',
-      'Awards Program Strategy',
-      'Influencer Marketing'
-    ],
-    triggerPatterns: {
-      direct: ['greater influence', 'visibility in our sector', 'industry influence', 'thought leader', 'landscape visibility', 'sector leadership', 'policy influence'],
-      indirect: ['want to shape the conversation', 'be seen as the authority', 'competitors seen as leaders', 'not invited to important discussions'],
-      situational: ['regulatory changes', 'industry consolidation', 'emerging category', 'standards setting'],
-      performance: ['not cited as source', 'not invited to speak', 'low share of voice in industry', 'competitors winning thought leadership'],
-      sampleLanguage: ['want to be seen as the go-to experts', 'want to shape industry direction', 'should be leading this conversation', 'want a seat at the table']
-    }
-  },
-  {
-    id: 'audience',
-    category: 'Audience Strategy',
-    description: 'Identify and connect with your target audiences',
-    services: [
-      'Audience Research & Segmentation',
-      'Content Marketing & Storytelling',
-      'Creative Platform Development',
-      'Community Management',
-      'Sustainability & Impact Communications',
-      'Brand Consistency Audit',
-      'Connections Plan',
-      'Influencer Marketing'
-    ],
-    triggerPatterns: {
-      direct: ['struggling to reach', 'identify our audiences', 'audience identification', 'who are our customers', 'target audience', 'reach the right people'],
-      indirect: ['don\'t know who buys from us', 'messaging doesn\'t resonate', 'campaigns not landing', 'content not connecting'],
-      situational: ['new market entry', 'product pivot', 'customer base shift', 'demographic changes'],
-      performance: ['low engagement rates', 'high bounce rates', 'poor ad targeting results', 'audience mismatch'],
-      sampleLanguage: ['need to understand our audience better', 'who are we really talking to', 'content not resonating with anyone', 'can\'t seem to connect with the right people']
-    }
-  },
-  {
-    id: 'messaging',
-    category: 'PR & Media Messaging',
-    description: 'Develop compelling media narratives',
-    services: [
-      'Earned Media/PR Messaging',
-      'Key Message Development',
-      'Spokesperson Training',
-      'Media Kit Development',
-      'Press Release Strategy',
-      'Narrative Development',
-      'Crisis Messaging'
-    ],
-    triggerPatterns: {
-      direct: ['coherent message for media', 'don\'t know what stories to tell', 'media messaging', 'pr messaging', 'press messaging', 'journalist outreach', 'earned media'],
-      indirect: ['can\'t explain what we do simply', 'every interview goes differently', 'no consistent story', 'journalists confused about us'],
-      situational: ['media tour', 'product announcement', 'executive transition', 'crisis situation'],
-      performance: ['inconsistent coverage', 'message not landing', 'journalists getting it wrong', 'not getting the coverage we want'],
-      sampleLanguage: ['need a clearer story', 'don\'t know what to tell journalists', 'message is all over the place', 'need to control the narrative']
-    }
-  },
-  {
-    id: 'content',
-    category: 'Content & Quality',
-    description: 'Improve content quality and consistency',
-    services: [
-      'Content Strategy & Planning',
-      'Integrated Campaign Development',
-      'Style Guide Creation',
-      'QA & Proofreading Services',
-      'Digital Asset Management',
-      'Project Management',
-      'Channel Optimization',
-      'Content Training',
-      'Website Content Refresh'
-    ],
-    triggerPatterns: {
-      direct: ['issues with our content', 'content is poor', 'not consistent', 'lacks coherent theme', 'content quality', 'content problems'],
-      indirect: ['different teams creating different content', 'no content standards', 'brand voice varies', 'quality all over the place'],
-      situational: ['scaling content production', 'new channels launching', 'team growth', 'agency consolidation'],
-      performance: ['content engagement low', 'high unsubscribe rates', 'social shares declining', 'content not driving results'],
-      sampleLanguage: ['content is poor', 'content is bad', 'content is awful', 'not consistent', 'lacks coherent theme', 'team creates content but it doesn\'t perform']
-    }
-  },
-  {
-    id: 'leads',
-    category: 'Performance & Conversion',
-    description: 'Drive leads, conversions, and engagement',
-    services: [
-      'Audience Research & Segmentation',
-      'Analytics Infrastructure',
-      'Customer Journey Mapping',
-      'Strategic Planning',
-      'Media Strategy',
-      'SEO Optimization',
-      'Marketing Automation',
-      'A/B Testing Program',
-      'Attribution Modeling',
-      'Website UX & Design Refresh'
-    ],
-    triggerPatterns: {
-      direct: ['need leads', 'need conversions', 'lead generation', 'demand gen', 'pipeline', 'MQLs', 'SQLs'],
-      indirect: ['sales team starving for leads', 'pipeline is empty', 'marketing not feeding sales', 'need more qualified opportunities'],
-      situational: ['sales target increase', 'new sales team', 'market expansion', 'competitive pressure'],
-      performance: ['lead volume down', 'conversion rates declining', 'high cost per lead', 'poor lead quality', 'long sales cycles'],
-      sampleLanguage: ['content to work better', 'content not targeted', 'problem with conversion', 'problem with targeting', 'problem with engagement', 'extend our reach', 'target new audiences']
-    }
-  },
-  {
-    id: 'creative',
-    category: 'Creative & Innovation',
-    description: 'Create breakthrough creative work',
-    services: [
-      'Creative Strategy',
-      'Big Ideas & Concept Development',
-      'Storytelling Framework',
-      'Copywriting Excellence',
-      'Visual & Design Innovation',
-      'Video Production',
-      'Experiential Design',
-      'Website Experience Redesign'
-    ],
-    triggerPatterns: {
-      direct: ['marketing is uninspiring', 'creative is ineffective', 'breakthrough ideas', 'inspire our audiences', 'campaigns are dull', 'innovation leader'],
-      indirect: ['work is boring', 'looks like everyone else', 'not getting attention', 'nobody talks about our campaigns'],
-      situational: ['major launch', 'rebrand', 'new competitive entrant', 'category disruption'],
-      performance: ['engagement is low', 'creative fatigue', 'declining response rates', 'ad performance dropping'],
-      sampleLanguage: ['cut through the noise', 'campaigns are safe', 'make technical interesting', 'inspire action', 'stunts', 'need something people will remember']
-    }
-  },
-  {
-    id: 'impact',
-    category: 'Impact & Purpose',
-    description: 'Communicate your impact and purpose',
-    services: [
-      'Impact Communications Training',
-      'Impact Report Design & Writing',
-      'Purpose Discovery Workshop',
-      'Vision Development',
-      'Theory of Change',
-      'Impact Measurement Framework',
-      'Creative Content Creation',
-      'Manifesto Writing',
-      'Sustainability Communications'
-    ],
-    triggerPatterns: {
-      direct: ['impact story', 'sustainability story', 'esg communications', 'purpose driven', 'CSR', 'social impact'],
-      indirect: ['need to show we care', 'customers want to know our values', 'employees asking about purpose', 'investors asking about ESG'],
-      situational: ['B Corp certification', 'sustainability milestone', 'stakeholder pressure', 'new impact initiatives'],
-      performance: ['brand purpose scores low', 'employee engagement on mission declining', 'customers not seeing our values'],
-      sampleLanguage: ['don\'t believe us', 'not credible', 'service makes the world better', 'product makes lives better', 'want people to know we\'re more than just a business']
-    }
-  },
-  {
-    id: 'leadership',
-    category: 'Executive & Leadership',
-    description: 'Elevate leadership visibility and credibility',
-    services: [
-      'Executive Positioning Strategy',
-      'Media Training',
-      'Executive Social Media',
-      'Media Relations',
-      'Bylines & Op-Eds',
-      'Analyst Relations',
-      'Messaging Architecture',
-      'Awards Strategy',
-      'Speaking Strategy',
-      'Crisis Preparedness'
-    ],
-    triggerPatterns: {
-      direct: ['leadership is invisible', 'ceo needs visibility', 'executive visibility', 'ceo profile', 'leadership profile'],
-      indirect: ['board wants more visible CEO', 'investors don\'t know our leaders', 'competitors\' CEOs are famous', 'talent attracted to visible leaders'],
-      situational: ['new CEO', 'IPO', 'fundraising', 'acquisition', 'crisis'],
-      performance: ['low executive recognition', 'not invited to speak', 'LinkedIn engagement poor', 'no media requests'],
-      sampleLanguage: ['credibility problem', 'inspiring leaders', 'audiences don\'t know them', 'communications is timid', 'lacks confidence', 'apologetic']
-    }
-  },
-  {
     id: 'project_management',
     category: 'Project Management',
     description: 'Coordinate complex marketing initiatives',
+    engagementType: 'any',
     services: [
       'Project Management',
       'Marketing Operations',
@@ -1313,26 +1100,37 @@ const DRAFT_ENGAGEMENT_TYPES = [
 const ENGAGEMENT_TYPE_RECOMMENDATIONS = {
   // Fixed Fee is best for these categories
   fixed_fee_preferred: [
-    'website',           // Website & App Development
-    'brand',             // Brand Strategy & Identity
-    'events',            // Event Planning & Production
+    'website',             // Website & App Development
+    'brand',               // Brand Strategy & Expression
+    'events',              // Event Planning & Production
     'integrated_strategy', // Upfront planning and strategy work
+    'creative_campaigns',  // Ring-fenced campaigns
+    'gtm',                 // Go-to-Market Strategy
+    'training',            // Communications Training
+    'impact',              // Impact & Purpose Communications
+    'measurement',         // Measurement & Analytics (setup)
   ],
   // T&M is best for these (with minimum spend)
   tm_preferred: [
     'creative_production', // Creative retainers
-    'content',            // Content ideation & production
+    'content_production',  // Content ideation & production
   ],
   // Retainer is best for these professional services
   retainer_preferred: [
-    'pr',                 // Public Relations
-    'media_outreach',     // Media Outreach
+    'pr',                  // Public Relations & Media Outreach
     'executive_visibility', // Thought Leadership
-    'social',             // Social Media
-    'influencer',         // Influencer Marketing
+    'paid_social',         // Paid Social Media
+    'seo',                 // Search Engine Optimization
+    'geo',                 // Generative Engine Optimization
+    'performance_marketing', // Performance Marketing & Optimization
+    'influencer',          // Influencer Marketing
   ],
   // T&M with Cap - only when client specifically requests
-  tm_cap_preferred: []  // Never recommended by default
+  tm_cap_preferred: [],  // Never recommended by default
+  // Project Management can be applied to any engagement type
+  any_preferred: [
+    'project_management',  // Project Management (overlay)
+  ]
 };
 
 // Get engagement type recommendation based on selected services
@@ -1355,6 +1153,11 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
   const dominantCategory = Object.entries(categoryCount)
     .sort((a, b) => b[1] - a[1])[0][0];
   
+  // Project management can be applied to any engagement type - skip recommendation
+  if (dominantCategory === 'project_management' && categories.length === 1) {
+    return null;
+  }
+  
   // Check what engagement type is recommended for these services
   let recommendedType = null;
   let reason = '';
@@ -1375,26 +1178,50 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
     } else if (dominantCategory === 'integrated_strategy') {
       reason = 'Upfront planning and strategy work has defined deliverables best suited to Fixed Fee pricing.';
       budgetGuidance = 'Present total project fee with milestone-based payments tied to deliverable phases.';
+    } else if (dominantCategory === 'creative_campaigns') {
+      reason = 'Ring-fenced campaigns with defined deliverables are best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee with milestone-based payments tied to campaign phases.';
+    } else if (dominantCategory === 'gtm') {
+      reason = 'Go-to-Market strategy projects have defined phases and deliverables best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee with milestone-based payments tied to GTM phases.';
+    } else if (dominantCategory === 'training') {
+      reason = 'Training engagements have defined sessions and deliverables best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee per training session or program.';
+    } else if (dominantCategory === 'impact') {
+      reason = 'Impact and purpose communications projects have defined deliverables best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee with milestone-based payments tied to deliverable phases.';
+    } else if (dominantCategory === 'measurement') {
+      reason = 'Measurement and analytics setup has defined deliverables best suited to Fixed Fee pricing.';
+      budgetGuidance = 'Present total project fee for setup. Consider ongoing retainer for maintenance and reporting.';
     }
   }
   // Check T&M preferred
   else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(dominantCategory) || 
-           categories.some(c => ['creative_production', 'content'].includes(c))) {
+           categories.some(c => ['creative_production', 'content_production'].includes(c))) {
     recommendedType = 'tm';
-    reason = 'Creative and integrated work where deliverables evolve is best suited to Time & Materials with a minimum spend commitment. Include monthly/quarterly planning and prioritization language.';
+    reason = 'Creative and content work where deliverables evolve is best suited to Time & Materials with a minimum spend commitment. Include monthly/quarterly planning and prioritization language.';
     budgetGuidance = 'Present as minimum commitment (e.g., $24,000 annual minimum for creative retainer) with hourly rates for work. Include language about monthly planning sessions to prioritize work. Avoid "drawdown" language.';
   }
   // Check retainer preferred
   else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.some(c => categories.includes(c))) {
     recommendedType = 'retainer';
-    if (categories.includes('pr') || categories.includes('media_outreach')) {
+    if (categories.includes('pr')) {
       reason = 'PR and media outreach are ongoing professional services best suited to a monthly Retainer structure. Minimum retainer: $15,000/month.';
       budgetGuidance = 'Present as monthly retainer fee with defined scope of activities per month. Include utilization tracking and overage rates.';
     } else if (categories.includes('executive_visibility')) {
       reason = 'Thought leadership is an ongoing professional service best suited to a monthly Retainer structure.';
       budgetGuidance = 'Present as monthly retainer fee with defined activities. Include utilization tracking.';
-    } else if (categories.includes('social') || categories.includes('influencer')) {
-      reason = 'Social media and influencer marketing are ongoing services best suited to a monthly Retainer structure.';
+    } else if (categories.includes('paid_social')) {
+      reason = 'Paid social media management is an ongoing service best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined scope. Separate media spend from agency fees.';
+    } else if (categories.includes('seo') || categories.includes('geo')) {
+      reason = 'SEO and GEO are ongoing optimization services best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined activities and reporting.';
+    } else if (categories.includes('performance_marketing')) {
+      reason = 'Performance marketing optimization is an ongoing service best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined scope and measurement reporting.';
+    } else if (categories.includes('influencer')) {
+      reason = 'Influencer marketing is an ongoing service best suited to a monthly Retainer structure.';
       budgetGuidance = 'Present as monthly retainer fee with defined scope. Include utilization tracking and overage rates.';
     } else {
       reason = 'These professional services are best suited to a monthly Retainer structure.';
