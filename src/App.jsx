@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.2.2';
+const APP_VERSION = '2.2.3';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -2539,9 +2539,11 @@ ${transcript}`
       const data = await response.json();
       const analysisText = data.content[0].text;
       
-      // Extract recommended categories from the response
-      const categoriesMatch = analysisText.match(/## RECOMMENDED_CATEGORIES\s*\n([^\n#]+)/i);
+      // Extract recommended categories from the response - try multiple patterns
       let detectedCategoryIds = [];
+      
+      // Try pattern 1: ## RECOMMENDED_CATEGORIES followed by content
+      const categoriesMatch = analysisText.match(/## RECOMMENDED_CATEGORIES\s*\n([^\n#]+)/i);
       if (categoriesMatch) {
         detectedCategoryIds = categoriesMatch[1]
           .split(',')
@@ -2549,15 +2551,33 @@ ${transcript}`
           .filter(s => s.length > 0);
       }
       
+      // Try pattern 2: Look for category IDs anywhere after RECOMMENDED_CATEGORIES header
+      if (detectedCategoryIds.length === 0) {
+        const altMatch = analysisText.match(/RECOMMENDED_CATEGORIES[:\s]*\n?([^#]+?)(?=\n\n|$)/i);
+        if (altMatch) {
+          detectedCategoryIds = altMatch[1]
+            .split(/[,\n]/)
+            .map(s => s.trim().toLowerCase().replace(/[_\s-]+/g, '_').replace(/[^a-z_]/g, ''))
+            .filter(s => s.length > 0);
+        }
+      }
+      
+      console.log('AI Response categories section:', analysisText.substring(analysisText.indexOf('RECOMMENDED_CATEGORIES')));
+      console.log('Extracted category IDs:', detectedCategoryIds);
+      
       // Map category IDs to full trigger objects (flexible matching)
       const detected = SERVICE_TRIGGERS.filter(trigger => {
         const triggerId = trigger.id.toLowerCase();
-        return detectedCategoryIds.some(detected => 
-          detected === triggerId || 
-          detected.includes(triggerId) || 
-          triggerId.includes(detected)
+        return detectedCategoryIds.some(detectedId => 
+          detectedId === triggerId || 
+          detectedId.includes(triggerId) || 
+          triggerId.includes(detectedId) ||
+          // Also match without underscores
+          detectedId.replace(/_/g, '') === triggerId.replace(/_/g, '')
         );
       });
+      
+      console.log('Matched triggers:', detected.map(t => t.id));
       
       setDetectedTriggers(detected);
       
@@ -2567,7 +2587,22 @@ ${transcript}`
           .filter(service => typeof service === 'object' && service.recommend === 'always')
           .map(service => service.name)
       );
+      
+      console.log('Auto-selected services:', autoSelectedServices);
+      
       setSelectedServices([...new Set(autoSelectedServices)]);
+      
+      // Auto-set engagement type based on dominant category
+      if (detected.length > 0) {
+        const dominantCategory = detected[0].id;
+        if (ENGAGEMENT_TYPE_RECOMMENDATIONS.fixed_fee_preferred.includes(dominantCategory)) {
+          setDraftEngagementType('fixed_fee');
+        } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(dominantCategory)) {
+          setDraftEngagementType('tm');
+        } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.includes(dominantCategory)) {
+          setDraftEngagementType('retainer');
+        }
+      }
       
       // Remove the RECOMMENDED_CATEGORIES section from the displayed analysis
       const cleanedAnalysis = analysisText.replace(/## RECOMMENDED_CATEGORIES[\s\S]*$/, '').trim();
@@ -3393,7 +3428,9 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     
                     {/* Engagement Type Recommendation */}
                     {(() => {
+                      console.log('Checking engagement recommendation - selectedServices:', selectedServices, 'draftEngagementType:', draftEngagementType);
                       const recommendation = getEngagementTypeRecommendation(selectedServices, detectedTriggers, draftEngagementType);
+                      console.log('Engagement recommendation result:', recommendation);
                       if (!recommendation) return null;
                       
                       const bgColor = recommendation.type === 'warning' 
