@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.2.1';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -616,15 +616,15 @@ const SERVICE_TRIGGERS = [
     description: 'Build or rebuild digital platforms',
     engagementType: 'fixed_fee',
     services: [
-      'Website Strategy & Planning',
-      'Website Design & UX',
-      'Website Development',
-      'CMS Implementation',
-      'E-commerce Development',
-      'Mobile App Development',
-      'Landing Page Development',
-      'Website Migration',
-      'Performance Optimization'
+      { name: 'Website Strategy & Planning', recommend: 'always', condition: 'when website is mentioned' },
+      { name: 'Website Design & UX', recommend: 'always', condition: 'when website is mentioned' },
+      { name: 'Website Development', recommend: 'always', condition: 'when website is mentioned' },
+      { name: 'CMS Implementation', recommend: 'always', condition: 'when website is mentioned' },
+      { name: 'E-commerce Development', recommend: 'conditional', condition: 'only if ecommerce mentioned specifically' },
+      { name: 'Mobile App Development', recommend: 'conditional', condition: 'only if standalone app is requested' },
+      { name: 'Landing Page Development', recommend: 'conditional', condition: 'only if landing or holding page is referenced' },
+      { name: 'Website Migration', recommend: 'conditional', condition: 'only if content migration is referenced as requirement' },
+      { name: 'Performance Optimization', recommend: 'conditional', condition: 'only if website reporting and tracking is referenced as requirement' }
     ],
     triggerPatterns: {
       direct: ['need a new website', 'website redesign', 'site looks outdated', 'rebuild our site', 'new landing page', 'mobile-friendly'],
@@ -640,16 +640,12 @@ const SERVICE_TRIGGERS = [
     description: 'Develop cohesive marketing plans',
     engagementType: 'fixed_fee',
     services: [
-      'Marketing Strategy Development',
-      'Channel Planning & Media Mix',
-      'Customer Journey Mapping',
-      'Marketing Audit & Assessment (Compass)',
-      'Budget Allocation Strategy',
-      'Campaign Planning',
-      'Marketing Roadmap',
-      'Competitive Analysis',
-      'Market Research',
-      'Audience Research & Segmentation'
+      { name: 'Marketing Strategy Development', recommend: 'conditional', condition: 'when client has specific marketing goals (awareness, reputation, credibility, visibility, perception, audience inspiration)' },
+      { name: 'Channel Planning & Media Mix', recommend: 'conditional', condition: 'when paid and social media are discussed as requirements' },
+      { name: 'Customer Journey Mapping', recommend: 'conditional', condition: 'when website conversion is a goal or audience segmentation issues identified' },
+      { name: 'Marketing Audit & Assessment (Compass)', recommend: 'conditional', condition: 'when client does not know what problem to solve or has broad goals (awareness, reputation, credibility, visibility, perception)' },
+      { name: 'Market & Competitive Research', recommend: 'conditional', condition: 'when client does not know competitors or requests differentiation' },
+      { name: 'Audience Research & Segmentation', recommend: 'conditional', condition: 'when client does not know their audience, what inspires them, or how to reach them' }
     ],
     triggerPatterns: {
       direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
@@ -665,23 +661,23 @@ const SERVICE_TRIGGERS = [
     description: 'Define or refresh your brand foundation',
     engagementType: 'fixed_fee',
     services: [
-      // Strategy
-      'Brand Research',
-      'Stakeholder Interviews (IDIs)',
-      'Rapid Discovery (Landscape & Audience)',
-      'Brand Positioning',
-      'Brand House Development',
-      'Brand Workshop',
-      'Authentic Foundation (Why, What, How)',
-      // Expression
-      'Tone of Voice',
-      'Manifesto',
-      'Visual Identity System',
-      'Logo/Wordmark Development',
-      // Assets
-      'Brand Deck',
-      'Social Lock-ups',
-      'Brand Guidelines'
+      // Strategy - always recommend for brand projects
+      { name: 'Brand Research (Compass)', recommend: 'always', condition: 'for all brand refresh projects' },
+      { name: 'Stakeholder Interviews (IDIs)', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Rapid Discovery (Landscape & Audience)', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Brand Positioning', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Brand House Development', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Brand Workshop', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Authentic Foundation (Why, What, How)', recommend: 'always', condition: 'for all brand projects' },
+      // Expression - always recommend for brand projects
+      { name: 'Tone of Voice', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects' },
+      { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects' },
+      // Assets - only if requested
+      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested' }
     ],
     triggerPatterns: {
       direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
@@ -697,18 +693,18 @@ const SERVICE_TRIGGERS = [
     description: 'Design, video, animation, and content creation',
     engagementType: 'tm',
     services: [
-      'Graphic Design',
-      'Video Production',
-      'Animation & Motion Graphics',
-      'Photography',
-      'Copywriting',
-      'Sales Collateral',
-      'Presentation Design',
-      'Social Media Content',
-      'Campaign Asset Creation',
-      'Brand Asset Library',
-      'Content Ideation',
-      'Transcreation (Multi-language)'
+      { name: 'Graphic Design', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Video Production', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Animation & Motion Graphics', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Photography', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Copywriting', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Sales Collateral', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Presentation Design', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Social Media Content', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Campaign Asset Creation', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Brand Asset Library', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Content Ideation', recommend: 'conditional', condition: 'only if requested' },
+      { name: 'Transcreation (Multi-language)', recommend: 'conditional', condition: 'only if requested or translation/multi-language is mentioned' }
     ],
     triggerPatterns: {
       direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
@@ -724,14 +720,11 @@ const SERVICE_TRIGGERS = [
     description: 'Leverage creator partnerships',
     engagementType: 'retainer',
     services: [
-      'Influencer Strategy',
-      'Creator Identification & Vetting',
-      'Influencer Campaign Management',
-      'Content Collaboration',
-      'Ambassador Programs',
-      'Influencer Relations',
-      'Performance Tracking',
-      'UGC Programs'
+      { name: 'Influencer Strategy', recommend: 'always', condition: 'when influencer marketing is discussed' },
+      { name: 'Creator Identification & Vetting', recommend: 'always', condition: 'when influencer marketing is discussed' },
+      { name: 'Influencer Campaign Management', recommend: 'always', condition: 'when influencer marketing is discussed' },
+      { name: 'Ambassador Programs', recommend: 'conditional', condition: 'only if long-term creator partnerships are requested' },
+      { name: 'UGC Programs', recommend: 'conditional', condition: 'only if user-generated content is requested' }
     ],
     triggerPatterns: {
       direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\'t work'],
@@ -747,17 +740,9 @@ const SERVICE_TRIGGERS = [
     description: 'Develop breakthrough campaign concepts',
     engagementType: 'fixed_fee',
     services: [
-      'Creative Platform Development',
-      'Campaign Concept Development',
-      'Big Idea Generation',
-      'Integrated Campaign Planning',
-      'Storytelling Framework',
-      'Brand Anthem Development',
-      'Experiential Concepts',
-      'Cultural Moments Strategy',
-      'Creative Strategy',
-      'Visual & Design Innovation',
-      'Experiential Design'
+      { name: 'Creative Platform Development', recommend: 'conditional', condition: 'when there is a request for a campaign or content series for owned, earned, paid, and/or social' },
+      { name: 'Big Idea Generation', recommend: 'conditional', condition: 'when client wants to make a splash, generate awareness, inspire media attention, or connect with audience' },
+      { name: 'Experiential Concepts', recommend: 'conditional', condition: 'when big idea development, media stunt, or event production are being recommended or requested' }
     ],
     triggerPatterns: {
       direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'need a creative platform', 'marketing lacks unifying concept', 'marketing is uninspiring', 'breakthrough ideas'],
@@ -773,22 +758,13 @@ const SERVICE_TRIGGERS = [
     description: 'Media relations, press coverage, and ongoing media engagement',
     engagementType: 'retainer',
     services: [
-      'Media Relations',
-      'Press Release Development',
-      'Media Pitching',
-      'Press Kit Development',
-      'Media Training',
-      'Crisis Communications',
-      'Announcement Strategy',
-      'Media Monitoring',
-      'Journalist Relationship Building',
-      'Proactive Media Pitching',
-      'Rapid Response Program',
-      'Newsjacking Strategy',
-      'Commentary & Quotes',
-      'Media List Development',
-      'Industry Trend Monitoring',
-      'Spokesperson Preparation'
+      { name: 'Media Relations', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation' },
+      { name: 'Press Kit Development', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation' },
+      { name: 'Media Training', recommend: 'conditional', condition: 'when client mentions reputation, credibility, executive visibility, or requests directly' },
+      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis or urgent PR support' },
+      { name: 'Media Monitoring', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, reputation, or share of voice' },
+      { name: 'Newsjacking Strategy', recommend: 'conditional', condition: 'only if requested or transcript mentions intercepting another news story' },
+      { name: 'Industry Domain Consultancy', recommend: 'conditional', condition: 'when client needs industry expertise and trend analysis' }
     ],
     triggerPatterns: {
       direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency', 'want to be seen as a source', 'need rapid response'],
@@ -804,19 +780,13 @@ const SERVICE_TRIGGERS = [
     description: 'Elevate leadership profiles and establish authority',
     engagementType: 'retainer',
     services: [
-      'Executive Positioning Strategy',
-      'Thought Leadership Content',
-      'Byline & Op-Ed Development',
-      'Speaking Opportunity Development',
-      'Executive Social Media',
-      'Media Training',
-      'Awards Strategy',
-      'LinkedIn Optimization',
-      'Podcast Strategy',
-      'Media Relations',
-      'Analyst Relations',
-      'Messaging Architecture',
-      'Crisis Preparedness'
+      { name: 'Executive Positioning Strategy', recommend: 'always', condition: 'for all executive visibility projects' },
+      { name: 'Thought Leadership Content', recommend: 'always', condition: 'for all executive visibility projects' },
+      { name: 'Byline & Op-Ed Development', recommend: 'conditional', condition: 'when written thought leadership is requested' },
+      { name: 'Speaking Opportunity Development', recommend: 'conditional', condition: 'when speaking engagements are requested' },
+      { name: 'Executive Social Media', recommend: 'conditional', condition: 'when LinkedIn or social presence is requested' },
+      { name: 'Awards Strategy', recommend: 'conditional', condition: 'when recognition programs are requested' },
+      { name: 'Analyst Relations', recommend: 'conditional', condition: 'when B2B or industry analyst engagement is needed' }
     ],
     triggerPatterns: {
       direct: ['CEO needs to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile', 'leadership is invisible', 'ceo profile'],
@@ -832,14 +802,12 @@ const SERVICE_TRIGGERS = [
     description: 'Social advertising campaigns',
     engagementType: 'retainer',
     services: [
-      'Paid Social Strategy',
-      'Campaign Setup & Management',
-      'Audience Development & Targeting',
-      'Ad Creative Development',
-      'A/B Testing & Optimization',
-      'Retargeting Campaigns',
-      'Reporting & Analytics',
-      'Platform-Specific Campaigns'
+      { name: 'Paid Social Strategy', recommend: 'always', condition: 'when paid social is discussed' },
+      { name: 'Campaign Setup & Management', recommend: 'always', condition: 'when paid social is discussed' },
+      { name: 'Audience Development & Targeting', recommend: 'always', condition: 'when paid social is discussed' },
+      { name: 'Ad Creative Development', recommend: 'conditional', condition: 'when creative support is needed' },
+      { name: 'Retargeting Campaigns', recommend: 'conditional', condition: 'when retargeting or remarketing is mentioned' },
+      { name: 'Paid Social Reporting', recommend: 'always', condition: 'when paid social is discussed' }
     ],
     triggerPatterns: {
       direct: ['need social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\'t working'],
@@ -855,16 +823,13 @@ const SERVICE_TRIGGERS = [
     description: 'Improve organic search visibility',
     engagementType: 'retainer',
     services: [
-      'SEO Audit & Strategy',
-      'Technical SEO Audit',
-      'Technical SEO',
-      'On-Page Optimization',
-      'Content SEO Strategy',
-      'Link Building',
-      'Local SEO',
-      'SEO Reporting',
-      'Keyword Research',
-      'Competitive SEO Analysis'
+      { name: 'SEO Strategy & Audit', recommend: 'always', condition: 'for all SEO engagements' },
+      { name: 'Technical SEO', recommend: 'always', condition: 'for all SEO engagements' },
+      { name: 'On-Page Optimization', recommend: 'always', condition: 'for all SEO engagements' },
+      { name: 'Content SEO Strategy', recommend: 'conditional', condition: 'when content marketing is included' },
+      { name: 'Link Building', recommend: 'conditional', condition: 'when off-page SEO is requested' },
+      { name: 'Local SEO', recommend: 'conditional', condition: 'when local/geographic targeting is needed' },
+      { name: 'SEO Reporting', recommend: 'always', condition: 'for all SEO engagements' }
     ],
     triggerPatterns: {
       direct: ['don\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
@@ -880,12 +845,10 @@ const SERVICE_TRIGGERS = [
     description: 'Optimize for AI-powered search',
     engagementType: 'retainer',
     services: [
-      'GEO Strategy & Audit',
-      'AI Search Optimization',
-      'Structured Data Implementation',
-      'Content Optimization for AI',
-      'Citation Building',
-      'Knowledge Panel Optimization'
+      { name: 'GEO Strategy & Audit', recommend: 'always', condition: 'for all GEO engagements' },
+      { name: 'AI Search Optimization', recommend: 'always', condition: 'for all GEO engagements' },
+      { name: 'Structured Data Implementation', recommend: 'conditional', condition: 'when technical implementation is needed' },
+      { name: 'Content Optimization for AI', recommend: 'always', condition: 'for all GEO engagements' }
     ],
     triggerPatterns: {
       direct: ['need to show up in AI search', 'want to be cited by ChatGPT', 'optimize for AI answers'],
@@ -901,14 +864,12 @@ const SERVICE_TRIGGERS = [
     description: 'Track and prove marketing ROI',
     engagementType: 'fixed_fee',
     services: [
-      'Analytics Strategy',
-      'Dashboard Development',
-      'Attribution Modeling',
-      'Marketing ROI Framework',
-      'KPI Development',
-      'Data Integration',
-      'Reporting Automation',
-      'Marketing Technology Audit'
+      { name: 'Analytics Strategy', recommend: 'always', condition: 'for all measurement engagements' },
+      { name: 'Dashboard Development', recommend: 'conditional', condition: 'when reporting visualization is requested' },
+      { name: 'Attribution Modeling', recommend: 'conditional', condition: 'when multi-channel attribution is needed' },
+      { name: 'Marketing ROI Framework', recommend: 'always', condition: 'for all measurement engagements' },
+      { name: 'KPI Development', recommend: 'always', condition: 'for all measurement engagements' },
+      { name: 'Data Integration', recommend: 'conditional', condition: 'when multiple data sources need connecting' }
     ],
     triggerPatterns: {
       direct: ['don\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\'t prove ROI'],
@@ -924,14 +885,11 @@ const SERVICE_TRIGGERS = [
     description: 'Launch products and enter markets',
     engagementType: 'fixed_fee',
     services: [
-      'Go-to-Market Strategy',
-      'Launch Planning',
-      'Market Entry Strategy',
-      'Positioning & Messaging',
-      'Channel Strategy',
-      'Sales Enablement',
-      'Launch Campaign Planning',
-      'Competitive Positioning'
+      { name: 'Go-to-Market Strategy', recommend: 'always', condition: 'for all GTM projects' },
+      { name: 'Launch Planning', recommend: 'always', condition: 'for all GTM projects' },
+      { name: 'Market Entry Strategy', recommend: 'conditional', condition: 'when entering new markets' },
+      { name: 'Channel Strategy', recommend: 'conditional', condition: 'when distribution channels need defining' },
+      { name: 'Sales Enablement', recommend: 'conditional', condition: 'when sales team support is needed' }
     ],
     triggerPatterns: {
       direct: ['launching a new product', 'need a GTM strategy', 'need to bring this to market', 'entering a new market'],
@@ -947,14 +905,12 @@ const SERVICE_TRIGGERS = [
     description: 'Plan and execute events',
     engagementType: 'fixed_fee',
     services: [
-      'Event Strategy',
-      'Conference Planning',
-      'Event Production',
-      'Virtual Event Production',
-      'Trade Show Management',
-      'Speaker Management',
-      'Event Marketing',
-      'Event Logistics'
+      { name: 'Event Strategy', recommend: 'always', condition: 'for all event projects' },
+      { name: 'Event Production', recommend: 'always', condition: 'for all event projects' },
+      { name: 'Virtual Event Production', recommend: 'conditional', condition: 'when virtual or hybrid events are needed' },
+      { name: 'Trade Show Management', recommend: 'conditional', condition: 'when trade show participation is involved' },
+      { name: 'Speaker Management', recommend: 'conditional', condition: 'when speakers need coordination' },
+      { name: 'Event Marketing', recommend: 'conditional', condition: 'when event promotion is needed' }
     ],
     triggerPatterns: {
       direct: ['have an event coming up', 'need to plan a conference', 'need event support'],
@@ -970,12 +926,10 @@ const SERVICE_TRIGGERS = [
     description: 'Media and communications training',
     engagementType: 'fixed_fee',
     services: [
-      'Media Training',
-      'Spokesperson Training',
-      'Presentation Training',
-      'Crisis Communications Training',
-      'Brand Training',
-      'Marketing Skills Training'
+      { name: 'Media & Spokesperson Training', recommend: 'always', condition: 'for all communications training' },
+      { name: 'Presentation Training', recommend: 'conditional', condition: 'when presentation skills are needed' },
+      { name: 'Crisis Communications Training', recommend: 'conditional', condition: 'when crisis preparedness is needed' },
+      { name: 'Brand Training', recommend: 'conditional', condition: 'when brand alignment training is needed' }
     ],
     triggerPatterns: {
       direct: ['team needs media training', 'need communications training', 'executives need spokesperson prep', 'want internal training'],
@@ -991,18 +945,12 @@ const SERVICE_TRIGGERS = [
     description: 'Sustainability, impact, and purpose communications',
     engagementType: 'fixed_fee',
     services: [
-      'Impact Report Writing',
-      'Impact Report Design',
-      'Sustainability Communications',
-      'ESG Reporting',
-      'CSR Communications',
-      'Stakeholder Reports',
-      'Impact Communications Training',
-      'Purpose Discovery Workshop',
-      'Vision Development',
-      'Theory of Change',
-      'Impact Measurement Framework',
-      'Manifesto Writing'
+      { name: 'Impact Report Writing & Design', recommend: 'always', condition: 'when impact/sustainability report is needed' },
+      { name: 'Sustainability Communications', recommend: 'conditional', condition: 'when sustainability messaging is needed' },
+      { name: 'ESG Reporting', recommend: 'conditional', condition: 'when ESG requirements exist' },
+      { name: 'CSR Communications', recommend: 'conditional', condition: 'when corporate responsibility messaging is needed' },
+      { name: 'Purpose Discovery Workshop', recommend: 'conditional', condition: 'when purpose definition is needed' },
+      { name: 'Theory of Change', recommend: 'conditional', condition: 'when impact framework is needed' }
     ],
     triggerPatterns: {
       direct: ['need an annual report', 'need an impact report', 'need help with CSR report', 'want to showcase our impact', 'impact story', 'sustainability story', 'esg communications', 'purpose driven'],
@@ -1018,16 +966,14 @@ const SERVICE_TRIGGERS = [
     description: 'Content strategy and creation',
     engagementType: 'tm',
     services: [
-      'Content Strategy',
-      'Content Calendar Development',
-      'Blog & Article Writing',
-      'Podcast Production',
-      'Video Content Series',
-      'Social Content Creation',
-      'Thought Leadership Content',
-      'Lead Magnet Development',
-      'Reactive Content',
-      'Proactive Content'
+      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced' },
+      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time' },
+      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
+      { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
+      { name: 'Video Content Series', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
+      { name: 'Social Content Creation', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
+      { name: 'Thought Leadership Content', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
+      { name: 'Social Content Creation (Reactive)', recommend: 'conditional', condition: 'only if requested or social media management needed' }
     ],
     triggerPatterns: {
       direct: ['need more content', 'need a content strategy', 'run out of ideas', 'need help producing content'],
@@ -1043,17 +989,12 @@ const SERVICE_TRIGGERS = [
     description: 'Optimize for conversions and efficiency',
     engagementType: 'retainer',
     services: [
-      'Conversion Rate Optimization',
-      'A/B Testing Program',
-      'Landing Page Optimization',
-      'Funnel Optimization',
-      'Performance Analytics',
-      'Campaign Optimization',
-      'Marketing Automation',
-      'Measurement & Reporting (Owned)',
-      'Measurement & Reporting (Earned)',
-      'Measurement & Reporting (Paid)',
-      'Measurement & Reporting (Social)'
+      { name: 'Conversion Rate Optimization', recommend: 'always', condition: 'for all performance marketing' },
+      { name: 'A/B Testing Program', recommend: 'always', condition: 'for all performance marketing' },
+      { name: 'Landing Page Optimization', recommend: 'conditional', condition: 'when landing pages need improvement' },
+      { name: 'Funnel Optimization', recommend: 'conditional', condition: 'when conversion funnel needs improvement' },
+      { name: 'Marketing Automation', recommend: 'conditional', condition: 'when automation is requested' },
+      { name: 'Performance Reporting (Owned/Earned/Paid/Social)', recommend: 'always', condition: 'for all performance marketing' }
     ],
     triggerPatterns: {
       direct: ['need to optimize campaigns', 'want to A/B test', 'conversion rates need improvement', 'need CRO help'],
@@ -1069,12 +1010,10 @@ const SERVICE_TRIGGERS = [
     description: 'Coordinate complex marketing initiatives',
     engagementType: 'any',
     services: [
-      'Project Management',
-      'Marketing Operations',
-      'Agency Coordination',
-      'Campaign Management',
-      'Resource Planning',
-      'Process Development'
+      { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested' },
+      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when operational support is needed' },
+      { name: 'Agency Coordination', recommend: 'conditional', condition: 'when multiple agencies need coordination' },
+      { name: 'Resource Planning', recommend: 'conditional', condition: 'when resource allocation is needed' }
     ],
     triggerPatterns: {
       direct: ['need help managing projects', 'overwhelmed with coordination', 'need a PM'],
@@ -1085,6 +1024,16 @@ const SERVICE_TRIGGERS = [
     }
   }
 ];
+
+// Helper function to extract service name from service object or string
+const getServiceName = (service) => {
+  return typeof service === 'object' ? service.name : service;
+};
+
+// Helper function to get all service names from a trigger
+const getServiceNames = (trigger) => {
+  return trigger.services.map(getServiceName);
+};
 
 // ============================================================================
 // ENGAGEMENT TYPES FOR DRAFTING
@@ -1140,7 +1089,8 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
   // Count services by their parent category
   const categoryCount = {};
   SERVICE_TRIGGERS.forEach(trigger => {
-    const matchingServices = trigger.services.filter(s => selectedServices.includes(s));
+    const serviceNames = getServiceNames(trigger);
+    const matchingServices = serviceNames.filter(s => selectedServices.includes(s));
     if (matchingServices.length > 0) {
       categoryCount[trigger.id] = matchingServices.length;
     }
@@ -2317,7 +2267,8 @@ function ApiKeyInput({ apiKey, setApiKey }) {
 // Service Selection Card
 function ServiceCard({ trigger, isSelected, selectedServices, onToggleService }) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const selectedCount = trigger.services.filter(s => selectedServices.includes(s)).length;
+  const serviceNames = getServiceNames(trigger);
+  const selectedCount = serviceNames.filter(s => selectedServices.includes(s)).length;
   
   return (
     <div className={`border-2 rounded-xl overflow-hidden transition-all ${isSelected ? 'border-gray-900 bg-gray-50' : 'border-gray-200'}`}>
@@ -2341,17 +2292,26 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService })
       {isExpanded && (
         <div className="px-5 pb-4 border-t border-gray-100 pt-3">
           <div className="space-y-2">
-            {trigger.services.map((service) => (
-              <label key={service} className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={selectedServices.includes(service)}
-                  onChange={() => onToggleService(service)}
-                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                />
-                <span className="text-sm text-gray-700 group-hover:text-gray-900">{service}</span>
-              </label>
-            ))}
+            {trigger.services.map((service) => {
+              const serviceName = getServiceName(service);
+              const serviceCondition = typeof service === 'object' ? service.condition : null;
+              return (
+                <label key={serviceName} className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={selectedServices.includes(serviceName)}
+                    onChange={() => onToggleService(serviceName)}
+                    className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                  />
+                  <div>
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900">{serviceName}</span>
+                    {serviceCondition && (
+                      <p className="text-xs text-gray-400 mt-0.5">{serviceCondition}</p>
+                    )}
+                  </div>
+                </label>
+              );
+            })}
           </div>
         </div>
       )}
@@ -3571,7 +3531,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             <ServiceCard
                               key={trigger.id}
                               trigger={trigger}
-                              isSelected={trigger.services.some(s => selectedServices.includes(s))}
+                              isSelected={getServiceNames(trigger).some(s => selectedServices.includes(s))}
                               selectedServices={selectedServices}
                               onToggleService={toggleService}
                             />
@@ -3594,7 +3554,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                   <ServiceCard
                                     key={trigger.id}
                                     trigger={trigger}
-                                    isSelected={trigger.services.some(s => selectedServices.includes(s))}
+                                    isSelected={getServiceNames(trigger).some(s => selectedServices.includes(s))}
                                     selectedServices={selectedServices}
                                     onToggleService={toggleService}
                                   />
@@ -3654,7 +3614,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             <ServiceCard
                               key={trigger.id}
                               trigger={trigger}
-                              isSelected={trigger.services.some(s => selectedServices.includes(s))}
+                              isSelected={getServiceNames(trigger).some(s => selectedServices.includes(s))}
                               selectedServices={selectedServices}
                               onToggleService={toggleService}
                             />

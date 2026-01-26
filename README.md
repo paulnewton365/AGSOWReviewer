@@ -192,7 +192,33 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.2.0 (Current)
+### v2.2.1 (Current)
+- **Comprehensive service consolidation** across all 19 categories
+- All services now have recommendation logic with conditions for when to recommend
+- **Removed duplicate services** across categories:
+  - Media Training consolidated (removed from Exec Visibility, kept in PR & Training)
+  - Media Relations consolidated (removed from Exec Visibility, kept in PR)
+  - Crisis Preparedness merged with Crisis Communications in PR
+  - Manifesto Writing removed from Impact (already in Brand)
+  - Technical SEO items merged
+- **Service categories streamlined:**
+  - Influencer: 8 → 5 services
+  - Executive Visibility: 13 → 7 services
+  - Paid Social: 8 → 6 services
+  - SEO: 10 → 7 services
+  - GEO: 6 → 4 services
+  - Measurement: 8 → 6 services
+  - GTM: 8 → 5 services
+  - Events: 8 → 6 services
+  - Training: 6 → 4 services
+  - Impact: 12 → 6 services
+  - Performance Marketing: 11 → 6 services
+  - Project Management: 6 → 4 services
+- **Each service now has:**
+  - `recommend`: 'always' or 'conditional'
+  - `condition`: guidance text for when to recommend
+
+### v2.2.0
 - **Major streamlining of service categories** from 31 to 19 categories
 - Each category now has explicit `engagementType` property for clearer recommendations
 - Categories merged/consolidated:
