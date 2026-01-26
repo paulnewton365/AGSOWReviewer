@@ -192,7 +192,15 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.6 (Current)
+### v2.1.7 (Current)
+- Added guidance for deposit-based minimum commitment retainers vs traditional hourly allocation retainers
+- AI now correctly understands that "minimum commitment held as deposit" is a FLOOR, not a ceiling
+- AI will not incorrectly suggest "up to" language for deposit amounts
+- AI will not incorrectly suggest rollover policies for deposit-based retainers
+- Updated Creative Retainers and Retainer Contracts sections in assessment framework
+- Added explicit rule in review prompt to handle deposit-based retainer language correctly
+
+### v2.1.6
 - Word documents now use proper Word numbering instead of text-based numbers
 - Multi-level decimal numbering (1., 1.1, 1.1.1, etc.) uses native Word list styles
 - Numbering is editable in Word - add/remove items and numbers update automatically

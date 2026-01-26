@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.6';
+const APP_VERSION = '2.1.7';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1708,30 +1708,54 @@ HIGH RISK INDICATORS:
 ✗ Cap includes pass-through costs agency cannot control
 
 ### 4.4 Retainer Contracts
-REQUIRED ELEMENTS:
+
+IMPORTANT: Retainers can be structured two ways - understand the difference:
+
+**Deposit-Based Minimum Commitment Model:**
+- Client pays minimum commitment upfront as deposit
+- Work is drawn down against deposit with approval process
+- Client can exceed deposit and pay additional T&M
+- This is a FLOOR (minimum spend), NOT a ceiling
+- DO NOT flag deposit language as needing "up to" caps
+- DO NOT suggest rollover policies for deposit models - they work differently
+
+**Traditional Hourly/Monthly Allocation Model:**
+- Client gets fixed allocation per period
+- Unused time may or may not roll over
+- Overages billed at specified rates
+
+REQUIRED ELEMENTS (all retainer types):
 □ Minimum term specified
-□ Monthly fee clearly stated
+□ Fee structure clearly stated (deposit vs monthly)
 □ Early termination provisions and fees
 □ Services included clearly enumerated
-□ Deliverables or hours quantified
 □ Services explicitly excluded
-□ Monthly allocation specified
-□ Rollover policy clearly stated (recommend: limited or no rollover)
 □ Overage handling defined (rate, notification, pre-approval)
-□ Utilization tracking and reporting
 □ Notice period for non-renewal
 
-ROLLOVER POLICY OPTIONS:
+ADDITIONAL FOR TRADITIONAL ALLOCATION MODEL:
+□ Monthly allocation specified
+□ Rollover policy clearly stated (recommend: limited or no rollover)
+□ Utilization tracking and reporting
+
+ADDITIONAL FOR DEPOSIT-BASED MODEL:
+□ Minimum commitment amount stated
+□ Deposit payment terms
+□ Drawdown approval process
+□ Request parameters (min/max per request)
+□ Service level commitments
+
+ROLLOVER POLICY OPTIONS (Traditional Model Only):
 - Option A (Recommended): No rollover - unused allocation forfeited
 - Option B: Limited rollover to immediately following month only, with cap
 - Option C: No monthly rollover with quarterly true-up review
 
 RISK INDICATORS:
 ✗ No minimum term commitment
-✗ Unlimited rollover
+✗ Unlimited rollover (traditional model)
 ✗ Vague scope definition
 ✗ No overage mechanism
-✗ No utilization reporting
+✗ No utilization reporting (traditional model)
 ✗ No early termination protection
 ✗ Discount without corresponding commitment
 
@@ -1771,8 +1795,32 @@ RISK INDICATORS:
 □ Crisis communications (typically excluded unless explicit)
 
 ### 5.4 Creative Retainers
+
+IMPORTANT: Creative retainers can follow two models. DO NOT confuse them:
+
+**Model A: Deposit-Based Minimum Commitment (e.g., Integrated Creative & Strategic Support Retainer)**
+- Client pays a MINIMUM annual commitment upfront as a deposit
+- Deposit is drawn down against approved work throughout the term
+- Client CAN SPEND MORE than the deposit on a T&M basis
+- This is NOT a cap - it's a FLOOR
+- DO NOT suggest "up to" language for deposit amounts - the deposit IS the minimum, not the maximum
+- DO NOT suggest "unused budget does not roll over" - deposits are meant to be used
+- Key language pattern: "minimum annual commitment of $X... held as a deposit and drawn down"
+
+Required elements for deposit-based retainers:
+□ Minimum commitment amount clearly stated
+□ Deposit payment terms specified
+□ Drawdown/approval process for individual requests
+□ T&M rates for work exceeding deposit
+□ Request parameters (minimum charge, maximum per request before separate SOW)
+□ Service hours and availability
+□ Service level commitments (response times, delivery windows)
+□ Expedited turnaround process
+□ Services included and excluded
+
+**Model B: Traditional Hourly Allocation Retainer**
 □ Monthly hour allocation clearly stated
-□ Rollover policy defined
+□ Rollover policy defined (recommend: limited or no rollover)
 □ Utilization reporting specified
 □ Rate card for overage included
 □ Request parameters (lead times, formats)
@@ -2922,6 +2970,7 @@ Why: [one sentence explaining the risk]
 3. Every issue MUST have either "Current/Recommended" OR "Missing/Add" format
 4. If something is GOOD (like having an exclusions section), don't list it as a critical issue
 5. Only flag actual problems that need fixing
+6. CREATIVE/DEPOSIT RETAINERS: If you see language like "minimum commitment... held as deposit and drawn down" this is NOT an "up to" cap - it's a FLOOR. The client pays the minimum upfront and CAN spend MORE on T&M. Do NOT recommend adding rollover policies or "up to" language to deposit amounts.
 
 ## Response Structure
 
