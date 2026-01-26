@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '2.2.2';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -2294,21 +2294,15 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService })
           <div className="space-y-2">
             {trigger.services.map((service) => {
               const serviceName = getServiceName(service);
-              const serviceCondition = typeof service === 'object' ? service.condition : null;
               return (
-                <label key={serviceName} className="flex items-start gap-3 cursor-pointer group">
+                <label key={serviceName} className="flex items-center gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={selectedServices.includes(serviceName)}
                     onChange={() => onToggleService(serviceName)}
-                    className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                   />
-                  <div>
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900">{serviceName}</span>
-                    {serviceCondition && (
-                      <p className="text-xs text-gray-400 mt-0.5">{serviceCondition}</p>
-                    )}
-                  </div>
+                  <span className="text-sm text-gray-700 group-hover:text-gray-900">{serviceName}</span>
                 </label>
               );
             })}
@@ -2567,8 +2561,12 @@ ${transcript}`
       
       setDetectedTriggers(detected);
       
-      // Auto-select all services from detected triggers
-      const autoSelectedServices = detected.flatMap(t => t.services);
+      // Auto-select services marked as 'always' recommend from detected triggers
+      const autoSelectedServices = detected.flatMap(trigger => 
+        trigger.services
+          .filter(service => typeof service === 'object' && service.recommend === 'always')
+          .map(service => service.name)
+      );
       setSelectedServices([...new Set(autoSelectedServices)]);
       
       // Remove the RECOMMENDED_CATEGORIES section from the displayed analysis
