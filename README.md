@@ -192,7 +192,17 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.7 (Current)
+### v2.1.8 (Current)
+- AI no longer invents budget numbers in recommendations
+- Uses "$xxxx.xx" placeholder for unspecified amounts
+- Known Antenna Group minimums are used when applicable:
+  - Branding Strategy & Expression: $50,000 minimum
+  - Creative T&M retainer deposit: $24,000 minimum  
+  - Brand assessment: $4,000
+  - Minimum retainers: $15,000
+- If SOW contains specific values, those are used in recommendations
+
+### v2.1.7
 - Added guidance for deposit-based minimum commitment retainers vs traditional hourly allocation retainers
 - AI now correctly understands that "minimum commitment held as deposit" is a FLOOR, not a ceiling
 - AI will not incorrectly suggest "up to" language for deposit amounts

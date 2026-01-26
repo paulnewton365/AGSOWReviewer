@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.7';
+const APP_VERSION = '2.1.8';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1339,6 +1339,15 @@ A Statement of Work serves as both a legal document and project management tool.
 - Integrated: DER Coalition SOW (R9278)
 - Creative Retainers: Integrated Creative & Strategic Support Retainer
 - PR/Comms: TerraPower UK PR Support SOW
+
+## Antenna Group Pricing Minimums
+When recommending budget language, DO NOT invent numbers. Use "$xxxx.xx" as placeholder UNLESS:
+- The SOW already contains specific budget values (use those)
+- It's one of these known minimums:
+  • Branding Strategy & Expression projects: $50,000 minimum
+  • Creative T&M retainer deposit: $24,000 minimum
+  • Brand assessment: $4,000
+  • Minimum retainers: $15,000
 
 ---
 
@@ -2971,6 +2980,13 @@ Why: [one sentence explaining the risk]
 4. If something is GOOD (like having an exclusions section), don't list it as a critical issue
 5. Only flag actual problems that need fixing
 6. CREATIVE/DEPOSIT RETAINERS: If you see language like "minimum commitment... held as deposit and drawn down" this is NOT an "up to" cap - it's a FLOOR. The client pays the minimum upfront and CAN spend MORE on T&M. Do NOT recommend adding rollover policies or "up to" language to deposit amounts.
+7. BUDGET NUMBERS: Do NOT invent budget numbers in recommendations. Use "$xxxx.xx" as a placeholder unless:
+   - The SOW already specifies a budget value (use that value)
+   - It's one of these known Antenna Group minimums:
+     • Branding Strategy & Expression projects: $50,000 minimum
+     • Creative T&M retainer deposit: $24,000 minimum
+     • Brand assessment: $4,000
+     • Minimum retainers: $15,000
 
 ## Response Structure
 
