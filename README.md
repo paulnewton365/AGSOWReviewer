@@ -192,7 +192,15 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.1.5 (Current)
+### v2.1.6 (Current)
+- Word documents now use proper Word numbering instead of text-based numbers
+- Multi-level decimal numbering (1., 1.1, 1.1.1, etc.) uses native Word list styles
+- Numbering is editable in Word - add/remove items and numbers update automatically
+- Bullet lists also use native Word bullet styles
+- Improved SOW content parsing to detect numbering levels accurately
+- [REVISED] and [NEW] markers styled as italic gray annotations
+
+### v2.1.5
 - Added checkboxes to each recommendation (Critical, Recommended, Red Flags)
 - All recommendations selected by default (opt-out model)
 - Added "Select All / Deselect All" toggle for each section

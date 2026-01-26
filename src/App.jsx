@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.1.5';
+const APP_VERSION = '2.1.6';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -60,17 +60,40 @@ const createFooter = () => {
   });
 };
 
-// Parse SOW text into structured sections
+// Parse SOW text into structured sections with proper level detection
 const parseSOWContent = (sowText) => {
   const lines = sowText.split('\n');
   const sections = [];
   let currentSection = null;
   
+  // Helper to detect numbering level from text like "1.", "1.1", "1.1.1", "1.1.1.1"
+  const getNumberingLevel = (text) => {
+    // Match patterns like "1.", "1.1", "1.1.1", "A.", "a.", etc.
+    const decimalMatch = text.match(/^(\d+(?:\.\d+)*)\.\s/);
+    if (decimalMatch) {
+      const parts = decimalMatch[1].split('.');
+      return { level: parts.length - 1, number: decimalMatch[0], text: text.replace(decimalMatch[0], '').trim() };
+    }
+    const simpleMatch = text.match(/^(\d+)\.\s/);
+    if (simpleMatch) {
+      return { level: 0, number: simpleMatch[0], text: text.replace(simpleMatch[0], '').trim() };
+    }
+    const letterMatch = text.match(/^([a-zA-Z])\.\s/);
+    if (letterMatch) {
+      return { level: 3, number: letterMatch[0], text: text.replace(letterMatch[0], '').trim() };
+    }
+    const romanMatch = text.match(/^(i{1,3}|iv|vi{0,3}|ix|x)\.\s/i);
+    if (romanMatch) {
+      return { level: 4, number: romanMatch[0], text: text.replace(romanMatch[0], '').trim() };
+    }
+    return null;
+  };
+  
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
     
-    // Check for main headings (# or ##)
+    // Check for markdown headings (# or ##)
     if (trimmed.startsWith('# ')) {
       if (currentSection) sections.push(currentSection);
       currentSection = { type: 'h1', text: trimmed.replace(/^#+\s*/, ''), children: [] };
@@ -80,30 +103,63 @@ const parseSOWContent = (sowText) => {
     } else if (trimmed.startsWith('### ')) {
       if (currentSection) sections.push(currentSection);
       currentSection = { type: 'h3', text: trimmed.replace(/^#+\s*/, ''), children: [] };
-    } else if (/^\d+\.\s/.test(trimmed)) {
-      // Numbered section (e.g., "1. Services Description")
-      if (currentSection) sections.push(currentSection);
-      currentSection = { type: 'numbered', text: trimmed, children: [] };
-    } else if (/^\d+\.\d+/.test(trimmed)) {
-      // Sub-numbered (e.g., "1.1. Something")
-      if (currentSection) {
-        currentSection.children.push({ type: 'sub', text: trimmed });
-      } else {
-        sections.push({ type: 'para', text: trimmed, children: [] });
-      }
-    } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-      // Bullet point
-      if (currentSection) {
-        currentSection.children.push({ type: 'bullet', text: trimmed.replace(/^[-•]\s*/, '') });
-      } else {
-        sections.push({ type: 'bullet', text: trimmed.replace(/^[-•]\s*/, ''), children: [] });
-      }
     } else {
-      // Regular paragraph
-      if (currentSection) {
-        currentSection.children.push({ type: 'para', text: trimmed });
+      // Check for decimal numbering
+      const numbering = getNumberingLevel(trimmed);
+      if (numbering) {
+        if (numbering.level === 0) {
+          // Top level (1., 2., etc.) - new section
+          if (currentSection) sections.push(currentSection);
+          currentSection = { 
+            type: 'numbered', 
+            level: 0, 
+            numberText: numbering.number,
+            text: numbering.text, 
+            fullText: trimmed,
+            children: [] 
+          };
+        } else {
+          // Sub-levels (1.1, 1.1.1, etc.)
+          if (currentSection) {
+            currentSection.children.push({ 
+              type: 'numbered', 
+              level: numbering.level,
+              numberText: numbering.number,
+              text: numbering.text,
+              fullText: trimmed
+            });
+          } else {
+            sections.push({ 
+              type: 'numbered', 
+              level: numbering.level,
+              numberText: numbering.number,
+              text: numbering.text, 
+              fullText: trimmed,
+              children: [] 
+            });
+          }
+        }
+      } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+        // Bullet point
+        if (currentSection) {
+          currentSection.children.push({ type: 'bullet', text: trimmed.replace(/^[-•]\s*/, '') });
+        } else {
+          sections.push({ type: 'bullet', text: trimmed.replace(/^[-•]\s*/, ''), children: [] });
+        }
+      } else if (trimmed.startsWith('[REVISED]') || trimmed.startsWith('[NEW]')) {
+        // Revision markers - treat as annotation
+        if (currentSection) {
+          currentSection.children.push({ type: 'marker', text: trimmed });
+        } else {
+          sections.push({ type: 'marker', text: trimmed, children: [] });
+        }
       } else {
-        sections.push({ type: 'para', text: trimmed, children: [] });
+        // Regular paragraph
+        if (currentSection) {
+          currentSection.children.push({ type: 'para', text: trimmed });
+        } else {
+          sections.push({ type: 'para', text: trimmed, children: [] });
+        }
       }
     }
   }
@@ -112,7 +168,7 @@ const parseSOWContent = (sowText) => {
   return sections;
 };
 
-// Generate Word document from SOW content
+// Generate Word document from SOW content with proper numbering
 const generateSOWDocument = async (sowText, projectInfo = {}) => {
   const sections = parseSOWContent(sowText);
   const children = [];
@@ -187,9 +243,22 @@ const generateSOWDocument = async (sowText, projectInfo = {}) => {
     })
   );
   
+  // Helper to get indent for numbering level
+  const getIndentForLevel = (level) => {
+    const baseIndent = 360; // 0.25 inch in twips
+    return { left: baseIndent * (level + 1), hanging: 360 };
+  };
+  
+  // Helper to get font size for level
+  const getFontSizeForLevel = (level) => {
+    if (level === 0) return 26; // 13pt
+    if (level === 1) return 24; // 12pt
+    return 22; // 11pt
+  };
+  
   // Process each section
   for (const section of sections) {
-    if (section.type === 'h1' || section.type === 'numbered') {
+    if (section.type === 'h1') {
       children.push(
         new Paragraph({
           heading: HeadingLevel.HEADING_1,
@@ -234,6 +303,42 @@ const generateSOWDocument = async (sowText, projectInfo = {}) => {
           spacing: { before: 200, after: 100 },
         })
       );
+    } else if (section.type === 'numbered') {
+      // Use Word's numbering for top-level numbered items
+      const level = section.level || 0;
+      children.push(
+        new Paragraph({
+          numbering: {
+            reference: "sow-numbering",
+            level: level,
+          },
+          children: [
+            new TextRun({
+              text: section.text,
+              bold: level === 0,
+              size: getFontSizeForLevel(level),
+              font: "Arial",
+            }),
+          ],
+          spacing: { before: level === 0 ? 300 : 150, after: 150 },
+        })
+      );
+    } else if (section.type === 'marker') {
+      // [REVISED] or [NEW] markers
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: section.text,
+              italics: true,
+              size: 20,
+              font: "Arial",
+              color: "666666",
+            }),
+          ],
+          spacing: { after: 100 },
+        })
+      );
     } else if (section.type === 'para') {
       children.push(
         new Paragraph({
@@ -251,40 +356,65 @@ const generateSOWDocument = async (sowText, projectInfo = {}) => {
     
     // Process children
     for (const child of section.children || []) {
-      if (child.type === 'sub') {
+      if (child.type === 'numbered') {
+        // Sub-numbered items use Word's multi-level numbering
+        const level = child.level || 1;
         children.push(
           new Paragraph({
+            numbering: {
+              reference: "sow-numbering",
+              level: level,
+            },
+            children: [
+              new TextRun({
+                text: child.text,
+                bold: level <= 1,
+                size: getFontSizeForLevel(level),
+                font: "Arial",
+              }),
+            ],
+            spacing: { before: 100, after: 100 },
+          })
+        );
+      } else if (child.type === 'bullet') {
+        children.push(
+          new Paragraph({
+            numbering: {
+              reference: "bullet-list",
+              level: 0,
+            },
             children: [
               new TextRun({
                 text: child.text,
                 size: 22,
                 font: "Arial",
+              }),
+            ],
+            spacing: { after: 80 },
+          })
+        );
+      } else if (child.type === 'marker') {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: child.text,
+                italics: true,
+                size: 20,
+                font: "Arial",
+                color: "666666",
               }),
             ],
             indent: { left: 360 },
             spacing: { after: 100 },
           })
         );
-      } else if (child.type === 'bullet') {
+      } else if (child.type === 'para' || child.type === 'sub') {
         children.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: "• " + child.text,
-                size: 22,
-                font: "Arial",
-              }),
-            ],
-            indent: { left: 720 },
-            spacing: { after: 80 },
-          })
-        );
-      } else if (child.type === 'para') {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: child.text,
+                text: child.text || child.fullText,
                 size: 22,
                 font: "Arial",
               }),
@@ -297,8 +427,104 @@ const generateSOWDocument = async (sowText, projectInfo = {}) => {
     }
   }
   
-  // Create document
+  // Create document with proper numbering definitions
   const doc = new Document({
+    numbering: {
+      config: [
+        {
+          reference: "sow-numbering",
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.DECIMAL,
+              text: "%1.",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 360, hanging: 360 },
+                },
+                run: { bold: true, size: 26 },
+              },
+            },
+            {
+              level: 1,
+              format: LevelFormat.DECIMAL,
+              text: "%1.%2",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 720, hanging: 360 },
+                },
+                run: { bold: true, size: 24 },
+              },
+            },
+            {
+              level: 2,
+              format: LevelFormat.DECIMAL,
+              text: "%1.%2.%3",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 1080, hanging: 540 },
+                },
+                run: { size: 22 },
+              },
+            },
+            {
+              level: 3,
+              format: LevelFormat.LOWER_LETTER,
+              text: "%4.",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 1440, hanging: 360 },
+                },
+                run: { size: 22 },
+              },
+            },
+            {
+              level: 4,
+              format: LevelFormat.LOWER_ROMAN,
+              text: "%5.",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 1800, hanging: 360 },
+                },
+                run: { size: 22 },
+              },
+            },
+          ],
+        },
+        {
+          reference: "bullet-list",
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: "•",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 720, hanging: 360 },
+                },
+              },
+            },
+            {
+              level: 1,
+              format: LevelFormat.BULLET,
+              text: "○",
+              alignment: AlignmentType.START,
+              style: {
+                paragraph: {
+                  indent: { left: 1080, hanging: 360 },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    },
     styles: {
       default: {
         document: {
