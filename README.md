@@ -1,6 +1,43 @@
-# SOW Workbench v2.0.0
+# SOW Workbench v2.3.1
 
 A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
+
+## What's New in v2.3.1
+
+### Guide Pricing Integration
+All services now include pricing guidance visible when selected:
+- **Term estimates**: Duration in weeks for project-based work
+- **Budget ranges**: Low-high pricing guidance 
+- **Bundle indicators**: Shows when services are bundled together
+- **Special notes**: Context like "Annual retainer" or "Excludes venue costs"
+
+### Service Bundles
+Services that are typically sold together are now visually grouped:
+- Standard Website Offering (Strategy, Design, Development, CMS)
+- Brand Strategy bundle (Research, IDIs, Discovery, Positioning, etc.)
+- Creative Retainer (all creative production services)
+- Standard PR (Media Relations + Press Kit)
+- And many more...
+
+### Project Management Guidance
+- Shows "~10% of project" pricing
+- Notes that PM is not required on PR/Earned-only engagements
+
+## What's New in v2.3.0
+
+### Integrated Engagement Type
+New engagement type for complex multi-phase engagements:
+- Automatically detects when multiple billing models are needed
+- Structures SOW with distinct sections (Fixed Fee, Retainer, T&M)
+- Provides section-specific terms and fee structures
+- Smart recommendation system suggests Integrated when appropriate
+
+### Billing Model Analysis
+System now analyzes selected services to determine optimal engagement structure:
+- Fixed Fee preferred: Website, Brand, Events, GTM, Training, Impact, Measurement
+- Retainer preferred: PR, Executive Visibility, Paid Social, SEO, GEO, Performance Marketing
+- Time & Materials preferred: Creative Production, Content Production
+- Automatically recommends Integrated when services span multiple models
 
 ## What's New in v2.0.0
 
@@ -192,7 +229,27 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.2.1 (Current)
+### v2.3.0 (Current)
+- **Integrated Engagement Type** - New billing model for multi-phase engagements that span Fixed Fee, Retainer, and T&M services
+- **Auto-detection of billing models** - System analyzes selected services and recommends Integrated when multiple billing models are needed
+- **Multi-section SOW generation** - Integrated SOWs automatically structure into separate sections:
+  - Section A: Fixed Fee (Brand, Website, Events, Strategy, Campaigns, GTM, Training, Impact, Measurement)
+  - Section B: Retainer (PR, Executive Visibility, Paid Social, SEO, GEO, Performance Marketing, Influencer)
+  - Section C: Time & Materials (Creative Production, Content Production)
+- **Smart engagement type selection** - Engagement type auto-sets based on detected services, including Integrated when needed
+- **Reorganized engagement type buttons** - Now ordered: Fixed Fee, Retainer, T&M, Integrated, T&M with Cap
+
+### v2.2.3
+- Fixed service auto-selection after transcript analysis
+- Added more robust category extraction from AI responses
+- Added debugging console logs for troubleshooting
+- Auto-set engagement type now works correctly
+
+### v2.2.2
+- Removed condition hints from UI (cleaner display)
+- Fixed auto-selection to only pre-check 'always' recommend services
+
+### v2.2.1
 - **Comprehensive service consolidation** across all 19 categories
 - All services now have recommendation logic with conditions for when to recommend
 - **Removed duplicate services** across categories:

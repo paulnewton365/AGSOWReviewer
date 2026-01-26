@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.2.3';
+const APP_VERSION = '2.3.0';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -616,15 +616,17 @@ const SERVICE_TRIGGERS = [
     description: 'Build or rebuild digital platforms',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Website Strategy & Planning', recommend: 'always', condition: 'when website is mentioned' },
-      { name: 'Website Design & UX', recommend: 'always', condition: 'when website is mentioned' },
-      { name: 'Website Development', recommend: 'always', condition: 'when website is mentioned' },
-      { name: 'CMS Implementation', recommend: 'always', condition: 'when website is mentioned' },
-      { name: 'E-commerce Development', recommend: 'conditional', condition: 'only if ecommerce mentioned specifically' },
-      { name: 'Mobile App Development', recommend: 'conditional', condition: 'only if standalone app is requested' },
-      { name: 'Landing Page Development', recommend: 'conditional', condition: 'only if landing or holding page is referenced' },
-      { name: 'Website Migration', recommend: 'conditional', condition: 'only if content migration is referenced as requirement' },
-      { name: 'Performance Optimization', recommend: 'conditional', condition: 'only if website reporting and tracking is referenced as requirement' }
+      // Standard Website Offering bundle
+      { name: 'Website Strategy & Planning', recommend: 'always', condition: 'when website is mentioned', pricing: { termLow: 8, termHigh: 16, budgetLow: 50000, budgetHigh: 140000, bundle: 'Standard Website Offering' } },
+      { name: 'Website Design & UX', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
+      { name: 'Website Development', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
+      { name: 'CMS Implementation', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
+      // Individual services
+      { name: 'E-commerce Development', recommend: 'conditional', condition: 'only if ecommerce mentioned specifically', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 30000 } },
+      { name: 'Mobile App Development', recommend: 'conditional', condition: 'only if standalone app is requested', pricing: { termLow: 3, termHigh: 10, budgetLow: 10000, budgetHigh: 60000 } },
+      { name: 'Landing Page Development', recommend: 'conditional', condition: 'only if landing or holding page is referenced', pricing: { termLow: 1, termHigh: 3, budgetLow: 15000, budgetHigh: 25000 } },
+      { name: 'Website Migration', recommend: 'conditional', condition: 'only if content migration is referenced as requirement', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Performance Optimization', recommend: 'conditional', condition: 'only if website reporting and tracking is referenced as requirement', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 30000, note: 'Annual retainer' } }
     ],
     triggerPatterns: {
       direct: ['need a new website', 'website redesign', 'site looks outdated', 'rebuild our site', 'new landing page', 'mobile-friendly'],
@@ -640,12 +642,12 @@ const SERVICE_TRIGGERS = [
     description: 'Develop cohesive marketing plans',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Marketing Strategy Development', recommend: 'conditional', condition: 'when client has specific marketing goals (awareness, reputation, credibility, visibility, perception, audience inspiration)' },
-      { name: 'Channel Planning & Media Mix', recommend: 'conditional', condition: 'when paid and social media are discussed as requirements' },
-      { name: 'Customer Journey Mapping', recommend: 'conditional', condition: 'when website conversion is a goal or audience segmentation issues identified' },
-      { name: 'Marketing Audit & Assessment (Compass)', recommend: 'conditional', condition: 'when client does not know what problem to solve or has broad goals (awareness, reputation, credibility, visibility, perception)' },
-      { name: 'Market & Competitive Research', recommend: 'conditional', condition: 'when client does not know competitors or requests differentiation' },
-      { name: 'Audience Research & Segmentation', recommend: 'conditional', condition: 'when client does not know their audience, what inspires them, or how to reach them' }
+      { name: 'Marketing Strategy Development', recommend: 'conditional', condition: 'when client has specific marketing goals (awareness, reputation, credibility, visibility, perception, audience inspiration)', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 25000 } },
+      { name: 'Channel Planning & Media Mix', recommend: 'conditional', condition: 'when paid and social media are discussed as requirements', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Customer Journey Mapping', recommend: 'conditional', condition: 'when website conversion is a goal or audience segmentation issues identified', pricing: { termLow: 1, termHigh: 2, budgetLow: 7000, budgetHigh: 15000 } },
+      { name: 'Marketing Audit & Assessment (Compass)', recommend: 'conditional', condition: 'when client does not know what problem to solve or has broad goals (awareness, reputation, credibility, visibility, perception)', pricing: { termLow: 1, termHigh: 2, budgetLow: 3000, budgetHigh: 4000 } },
+      { name: 'Market & Competitive Research', recommend: 'conditional', condition: 'when client does not know competitors or requests differentiation', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } },
+      { name: 'Audience Research & Segmentation', recommend: 'conditional', condition: 'when client does not know their audience, what inspires them, or how to reach them', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } }
     ],
     triggerPatterns: {
       direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
@@ -661,23 +663,23 @@ const SERVICE_TRIGGERS = [
     description: 'Define or refresh your brand foundation',
     engagementType: 'fixed_fee',
     services: [
-      // Strategy - always recommend for brand projects
-      { name: 'Brand Research (Compass)', recommend: 'always', condition: 'for all brand refresh projects' },
-      { name: 'Stakeholder Interviews (IDIs)', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Rapid Discovery (Landscape & Audience)', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Brand Positioning', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Brand House Development', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Brand Workshop', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Authentic Foundation (Why, What, How)', recommend: 'always', condition: 'for all brand projects' },
-      // Expression - always recommend for brand projects
-      { name: 'Tone of Voice', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects' },
-      { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects' },
-      // Assets - only if requested
-      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested' }
+      // Brand Strategy bundle
+      { name: 'Brand Research (Compass)', recommend: 'always', condition: 'for all brand refresh projects', pricing: { termLow: 1, termHigh: 2, budgetLow: 3000, budgetHigh: 3000, bundle: 'Brand Strategy' } },
+      { name: 'Stakeholder Interviews (IDIs)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
+      { name: 'Rapid Discovery (Landscape & Audience)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
+      { name: 'Brand Positioning', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
+      { name: 'Brand House Development', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
+      { name: 'Brand Workshop', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
+      { name: 'Authentic Foundation (Why, What, How)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
+      // Brand Expression - individual services
+      { name: 'Tone of Voice', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 1, termHigh: 1, budgetLow: 2000, budgetHigh: 4000 } },
+      { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 3000 } },
+      { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 2, termHigh: 4, budgetLow: 8000, budgetHigh: 18000 } },
+      // Brand Assets
+      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 6000 } },
+      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 6000 } },
+      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 2, termHigh: 3, budgetLow: 8000, budgetHigh: 10000 } }
     ],
     triggerPatterns: {
       direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
@@ -693,18 +695,19 @@ const SERVICE_TRIGGERS = [
     description: 'Design, video, animation, and content creation',
     engagementType: 'tm',
     services: [
-      { name: 'Graphic Design', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Video Production', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Animation & Motion Graphics', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Photography', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Copywriting', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Sales Collateral', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Presentation Design', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Social Media Content', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Campaign Asset Creation', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Brand Asset Library', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Content Ideation', recommend: 'conditional', condition: 'only if requested' },
-      { name: 'Transcreation (Multi-language)', recommend: 'conditional', condition: 'only if requested or translation/multi-language is mentioned' }
+      // Creative Retainer bundle - all services priced together
+      { name: 'Graphic Design', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 80000, bundle: 'Creative Retainer', note: 'Annual minimum commitment' } },
+      { name: 'Video Production', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Animation & Motion Graphics', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Photography', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Copywriting', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Sales Collateral', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Presentation Design', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Social Media Content', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Campaign Asset Creation', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Brand Asset Library', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Content Ideation', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
+      { name: 'Transcreation (Multi-language)', recommend: 'conditional', condition: 'only if requested or translation/multi-language is mentioned', pricing: { bundle: 'Creative Retainer' } }
     ],
     triggerPatterns: {
       direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
@@ -720,11 +723,12 @@ const SERVICE_TRIGGERS = [
     description: 'Leverage creator partnerships',
     engagementType: 'retainer',
     services: [
-      { name: 'Influencer Strategy', recommend: 'always', condition: 'when influencer marketing is discussed' },
-      { name: 'Creator Identification & Vetting', recommend: 'always', condition: 'when influencer marketing is discussed' },
-      { name: 'Influencer Campaign Management', recommend: 'always', condition: 'when influencer marketing is discussed' },
-      { name: 'Ambassador Programs', recommend: 'conditional', condition: 'only if long-term creator partnerships are requested' },
-      { name: 'UGC Programs', recommend: 'conditional', condition: 'only if user-generated content is requested' }
+      // Influencer Retainer bundle
+      { name: 'Influencer Strategy', recommend: 'always', condition: 'when influencer marketing is discussed', pricing: { termLow: 52, termHigh: 52, budgetLow: 30000, budgetHigh: 100000, bundle: 'Influencer Retainer', note: 'Annual retainer, excludes creator fees' } },
+      { name: 'Creator Identification & Vetting', recommend: 'always', condition: 'when influencer marketing is discussed', pricing: { bundle: 'Influencer Retainer' } },
+      { name: 'Influencer Campaign Management', recommend: 'always', condition: 'when influencer marketing is discussed', pricing: { bundle: 'Influencer Retainer' } },
+      { name: 'Ambassador Programs', recommend: 'conditional', condition: 'only if long-term creator partnerships are requested', pricing: { bundle: 'Influencer Retainer' } },
+      { name: 'UGC Programs', recommend: 'conditional', condition: 'only if user-generated content is requested', pricing: { bundle: 'Influencer Retainer' } }
     ],
     triggerPatterns: {
       direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\'t work'],
@@ -740,9 +744,10 @@ const SERVICE_TRIGGERS = [
     description: 'Develop breakthrough campaign concepts',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Creative Platform Development', recommend: 'conditional', condition: 'when there is a request for a campaign or content series for owned, earned, paid, and/or social' },
-      { name: 'Big Idea Generation', recommend: 'conditional', condition: 'when client wants to make a splash, generate awareness, inspire media attention, or connect with audience' },
-      { name: 'Experiential Concepts', recommend: 'conditional', condition: 'when big idea development, media stunt, or event production are being recommended or requested' }
+      // Creative Campaigns bundle
+      { name: 'Creative Platform Development', recommend: 'conditional', condition: 'when there is a request for a campaign or content series for owned, earned, paid, and/or social', pricing: { termLow: 2, termHigh: 7, budgetLow: 18000, budgetHigh: 30000, bundle: 'Creative Campaigns' } },
+      { name: 'Big Idea Generation', recommend: 'conditional', condition: 'when client wants to make a splash, generate awareness, inspire media attention, or connect with audience', pricing: { bundle: 'Creative Campaigns' } },
+      { name: 'Experiential Concepts', recommend: 'conditional', condition: 'when big idea development, media stunt, or event production are being recommended or requested', pricing: { bundle: 'Creative Campaigns' } }
     ],
     triggerPatterns: {
       direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'need a creative platform', 'marketing lacks unifying concept', 'marketing is uninspiring', 'breakthrough ideas'],
@@ -758,13 +763,15 @@ const SERVICE_TRIGGERS = [
     description: 'Media relations, press coverage, and ongoing media engagement',
     engagementType: 'retainer',
     services: [
-      { name: 'Media Relations', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation' },
-      { name: 'Press Kit Development', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation' },
-      { name: 'Media Training', recommend: 'conditional', condition: 'when client mentions reputation, credibility, executive visibility, or requests directly' },
-      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis or urgent PR support' },
-      { name: 'Media Monitoring', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, reputation, or share of voice' },
-      { name: 'Newsjacking Strategy', recommend: 'conditional', condition: 'only if requested or transcript mentions intercepting another news story' },
-      { name: 'Industry Domain Consultancy', recommend: 'conditional', condition: 'when client needs industry expertise and trend analysis' }
+      // Standard PR bundle
+      { name: 'Media Relations', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation', pricing: { termLow: 52, termHigh: 52, budgetLow: 180000, budgetHigh: 360000, bundle: 'Standard PR', note: 'Annual retainer ($15K-$30K/month)' } },
+      { name: 'Press Kit Development', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation', pricing: { bundle: 'Standard PR' } },
+      // Individual services
+      { name: 'Media Training', recommend: 'conditional', condition: 'when client mentions reputation, credibility, executive visibility, or requests directly', pricing: { termLow: 52, termHigh: 52, budgetLow: 20000, budgetHigh: 60000, note: 'Annual or per session' } },
+      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis or urgent PR support', pricing: { termLow: 1, termHigh: 4, budgetLow: 40000, budgetHigh: 200000, note: 'T&M based on severity' } },
+      { name: 'Media Monitoring', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, reputation, or share of voice', pricing: { termLow: 52, termHigh: 52, budgetLow: 12000, budgetHigh: 40000, note: 'Annual, excludes tool costs' } },
+      { name: 'Newsjacking Strategy', recommend: 'conditional', condition: 'only if requested or transcript mentions intercepting another news story', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 60000, note: 'T&M per opportunity' } },
+      { name: 'Industry Domain Consultancy', recommend: 'conditional', condition: 'when client needs industry expertise and trend analysis', pricing: { termLow: 52, termHigh: 52, budgetLow: 52000, budgetHigh: 100000, note: 'Annual retainer' } }
     ],
     triggerPatterns: {
       direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency', 'want to be seen as a source', 'need rapid response'],
@@ -780,13 +787,14 @@ const SERVICE_TRIGGERS = [
     description: 'Elevate leadership profiles and establish authority',
     engagementType: 'retainer',
     services: [
-      { name: 'Executive Positioning Strategy', recommend: 'always', condition: 'for all executive visibility projects' },
-      { name: 'Thought Leadership Content', recommend: 'always', condition: 'for all executive visibility projects' },
-      { name: 'Byline & Op-Ed Development', recommend: 'conditional', condition: 'when written thought leadership is requested' },
-      { name: 'Speaking Opportunity Development', recommend: 'conditional', condition: 'when speaking engagements are requested' },
-      { name: 'Executive Social Media', recommend: 'conditional', condition: 'when LinkedIn or social presence is requested' },
-      { name: 'Awards Strategy', recommend: 'conditional', condition: 'when recognition programs are requested' },
-      { name: 'Analyst Relations', recommend: 'conditional', condition: 'when B2B or industry analyst engagement is needed' }
+      // Executive Visibility bundle
+      { name: 'Executive Positioning Strategy', recommend: 'always', condition: 'for all executive visibility projects', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Executive Visibility', note: 'Annual retainer ($5K-$15K/month per executive)' } },
+      { name: 'Thought Leadership Content', recommend: 'always', condition: 'for all executive visibility projects', pricing: { bundle: 'Executive Visibility' } },
+      { name: 'Byline & Op-Ed Development', recommend: 'conditional', condition: 'when written thought leadership is requested', pricing: { bundle: 'Executive Visibility' } },
+      { name: 'Speaking Opportunity Development', recommend: 'conditional', condition: 'when speaking engagements are requested', pricing: { bundle: 'Executive Visibility' } },
+      { name: 'Executive Social Media', recommend: 'conditional', condition: 'when LinkedIn or social presence is requested', pricing: { bundle: 'Executive Visibility' } },
+      { name: 'Awards Strategy', recommend: 'conditional', condition: 'when recognition programs are requested', pricing: { bundle: 'Executive Visibility' } },
+      { name: 'Podcast Guest Strategy', recommend: 'conditional', condition: 'when podcast appearances are requested', pricing: { bundle: 'Executive Visibility' } }
     ],
     triggerPatterns: {
       direct: ['CEO needs to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile', 'leadership is invisible', 'ceo profile'],
@@ -802,12 +810,13 @@ const SERVICE_TRIGGERS = [
     description: 'Social advertising campaigns',
     engagementType: 'retainer',
     services: [
-      { name: 'Paid Social Strategy', recommend: 'always', condition: 'when paid social is discussed' },
-      { name: 'Campaign Setup & Management', recommend: 'always', condition: 'when paid social is discussed' },
-      { name: 'Audience Development & Targeting', recommend: 'always', condition: 'when paid social is discussed' },
-      { name: 'Ad Creative Development', recommend: 'conditional', condition: 'when creative support is needed' },
-      { name: 'Retargeting Campaigns', recommend: 'conditional', condition: 'when retargeting or remarketing is mentioned' },
-      { name: 'Paid Social Reporting', recommend: 'always', condition: 'when paid social is discussed' }
+      // Paid Social bundle
+      { name: 'Paid Social Strategy', recommend: 'always', condition: 'when paid social is discussed', pricing: { termLow: 52, termHigh: 52, budgetLow: 80000, budgetHigh: 200000, bundle: 'Paid Social', note: 'Annual retainer, excludes media spend' } },
+      { name: 'Campaign Setup & Management', recommend: 'always', condition: 'when paid social is discussed', pricing: { bundle: 'Paid Social' } },
+      { name: 'Audience Development & Targeting', recommend: 'always', condition: 'when paid social is discussed', pricing: { bundle: 'Paid Social' } },
+      { name: 'Ad Creative Development', recommend: 'conditional', condition: 'when creative support is needed', pricing: { bundle: 'Paid Social' } },
+      { name: 'Retargeting Campaigns', recommend: 'conditional', condition: 'when retargeting or remarketing is mentioned', pricing: { bundle: 'Paid Social' } },
+      { name: 'Paid Social Reporting', recommend: 'always', condition: 'when paid social is discussed', pricing: { bundle: 'Paid Social' } }
     ],
     triggerPatterns: {
       direct: ['need social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\'t working'],
@@ -823,13 +832,14 @@ const SERVICE_TRIGGERS = [
     description: 'Improve organic search visibility',
     engagementType: 'retainer',
     services: [
-      { name: 'SEO Strategy & Audit', recommend: 'always', condition: 'for all SEO engagements' },
-      { name: 'Technical SEO', recommend: 'always', condition: 'for all SEO engagements' },
-      { name: 'On-Page Optimization', recommend: 'always', condition: 'for all SEO engagements' },
-      { name: 'Content SEO Strategy', recommend: 'conditional', condition: 'when content marketing is included' },
-      { name: 'Link Building', recommend: 'conditional', condition: 'when off-page SEO is requested' },
-      { name: 'Local SEO', recommend: 'conditional', condition: 'when local/geographic targeting is needed' },
-      { name: 'SEO Reporting', recommend: 'always', condition: 'for all SEO engagements' }
+      // SEO bundle
+      { name: 'SEO Strategy & Audit', recommend: 'always', condition: 'for all SEO engagements', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000, bundle: 'SEO Retainer', note: 'Annual retainer ($5K-$10K/month), 6-month minimum' } },
+      { name: 'Technical SEO', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Retainer' } },
+      { name: 'On-Page Optimization', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Retainer' } },
+      { name: 'Content SEO Strategy', recommend: 'conditional', condition: 'when content marketing is included', pricing: { bundle: 'SEO Retainer' } },
+      { name: 'Link Building', recommend: 'conditional', condition: 'when off-page SEO is requested', pricing: { bundle: 'SEO Retainer' } },
+      { name: 'Local SEO', recommend: 'conditional', condition: 'when local/geographic targeting is needed', pricing: { bundle: 'SEO Retainer' } },
+      { name: 'SEO Reporting', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Retainer' } }
     ],
     triggerPatterns: {
       direct: ['don\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
@@ -845,10 +855,11 @@ const SERVICE_TRIGGERS = [
     description: 'Optimize for AI-powered search',
     engagementType: 'retainer',
     services: [
-      { name: 'GEO Strategy & Audit', recommend: 'always', condition: 'for all GEO engagements' },
-      { name: 'AI Search Optimization', recommend: 'always', condition: 'for all GEO engagements' },
-      { name: 'Structured Data Implementation', recommend: 'conditional', condition: 'when technical implementation is needed' },
-      { name: 'Content Optimization for AI', recommend: 'always', condition: 'for all GEO engagements' }
+      // GEO bundle
+      { name: 'GEO Strategy & Audit', recommend: 'always', condition: 'for all GEO engagements', pricing: { termLow: 52, termHigh: 52, budgetLow: 50000, budgetHigh: 80000, bundle: 'GEO Retainer', note: 'Annual retainer, often bundled with SEO' } },
+      { name: 'AI Search Optimization', recommend: 'always', condition: 'for all GEO engagements', pricing: { bundle: 'GEO Retainer' } },
+      { name: 'Structured Data Implementation', recommend: 'conditional', condition: 'when technical implementation is needed', pricing: { bundle: 'GEO Retainer' } },
+      { name: 'Content Optimization for AI', recommend: 'always', condition: 'for all GEO engagements', pricing: { bundle: 'GEO Retainer' } }
     ],
     triggerPatterns: {
       direct: ['need to show up in AI search', 'want to be cited by ChatGPT', 'optimize for AI answers'],
@@ -864,12 +875,12 @@ const SERVICE_TRIGGERS = [
     description: 'Track and prove marketing ROI',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Analytics Strategy', recommend: 'always', condition: 'for all measurement engagements' },
-      { name: 'Dashboard Development', recommend: 'conditional', condition: 'when reporting visualization is requested' },
-      { name: 'Attribution Modeling', recommend: 'conditional', condition: 'when multi-channel attribution is needed' },
-      { name: 'Marketing ROI Framework', recommend: 'always', condition: 'for all measurement engagements' },
-      { name: 'KPI Development', recommend: 'always', condition: 'for all measurement engagements' },
-      { name: 'Data Integration', recommend: 'conditional', condition: 'when multiple data sources need connecting' }
+      { name: 'Analytics Strategy', recommend: 'always', condition: 'for all measurement engagements', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Dashboard Development', recommend: 'conditional', condition: 'when reporting visualization is requested', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Attribution Modeling', recommend: 'conditional', condition: 'when multi-channel attribution is needed', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Marketing ROI Framework', recommend: 'always', condition: 'for all measurement engagements', pricing: { termLow: 2, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'KPI Development', recommend: 'always', condition: 'for all measurement engagements', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Data Integration', recommend: 'conditional', condition: 'when multiple data sources need connecting', pricing: { termLow: 2, termHigh: 4, budgetLow: 20000, budgetHigh: 30000 } }
     ],
     triggerPatterns: {
       direct: ['don\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\'t prove ROI'],
@@ -885,11 +896,11 @@ const SERVICE_TRIGGERS = [
     description: 'Launch products and enter markets',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Go-to-Market Strategy', recommend: 'always', condition: 'for all GTM projects' },
-      { name: 'Launch Planning', recommend: 'always', condition: 'for all GTM projects' },
-      { name: 'Market Entry Strategy', recommend: 'conditional', condition: 'when entering new markets' },
-      { name: 'Channel Strategy', recommend: 'conditional', condition: 'when distribution channels need defining' },
-      { name: 'Sales Enablement', recommend: 'conditional', condition: 'when sales team support is needed' }
+      { name: 'Go-to-Market Strategy', recommend: 'always', condition: 'for all GTM projects', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 30000, bundle: 'GTM Strategy' } },
+      { name: 'Launch Planning', recommend: 'always', condition: 'for all GTM projects', pricing: { bundle: 'GTM Strategy' } },
+      { name: 'Market Entry Strategy', recommend: 'conditional', condition: 'when entering new markets', pricing: { bundle: 'GTM Strategy' } },
+      { name: 'Channel Strategy', recommend: 'conditional', condition: 'when distribution channels need defining', pricing: { bundle: 'GTM Strategy' } },
+      { name: 'Sales Enablement', recommend: 'conditional', condition: 'when sales team support is needed', pricing: { bundle: 'GTM Strategy' } }
     ],
     triggerPatterns: {
       direct: ['launching a new product', 'need a GTM strategy', 'need to bring this to market', 'entering a new market'],
@@ -905,12 +916,13 @@ const SERVICE_TRIGGERS = [
     description: 'Plan and execute events',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Event Strategy', recommend: 'always', condition: 'for all event projects' },
-      { name: 'Event Production', recommend: 'always', condition: 'for all event projects' },
-      { name: 'Virtual Event Production', recommend: 'conditional', condition: 'when virtual or hybrid events are needed' },
-      { name: 'Trade Show Management', recommend: 'conditional', condition: 'when trade show participation is involved' },
-      { name: 'Speaker Management', recommend: 'conditional', condition: 'when speakers need coordination' },
-      { name: 'Event Marketing', recommend: 'conditional', condition: 'when event promotion is needed' }
+      // Events bundle
+      { name: 'Event Strategy', recommend: 'always', condition: 'for all event projects', pricing: { termLow: 4, termHigh: 16, budgetLow: 50000, budgetHigh: 180000, bundle: 'Event Production', note: 'Excludes venue and vendor costs' } },
+      { name: 'Event Production', recommend: 'always', condition: 'for all event projects', pricing: { bundle: 'Event Production' } },
+      { name: 'Virtual Event Production', recommend: 'conditional', condition: 'when virtual or hybrid events are needed', pricing: { bundle: 'Event Production' } },
+      { name: 'Trade Show Management', recommend: 'conditional', condition: 'when trade show participation is involved', pricing: { bundle: 'Event Production' } },
+      { name: 'Speaker Management', recommend: 'conditional', condition: 'when speakers need coordination', pricing: { bundle: 'Event Production' } },
+      { name: 'Event Marketing', recommend: 'conditional', condition: 'when event promotion is needed', pricing: { bundle: 'Event Production' } }
     ],
     triggerPatterns: {
       direct: ['have an event coming up', 'need to plan a conference', 'need event support'],
@@ -926,10 +938,11 @@ const SERVICE_TRIGGERS = [
     description: 'Media and communications training',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Media & Spokesperson Training', recommend: 'always', condition: 'for all communications training' },
-      { name: 'Presentation Training', recommend: 'conditional', condition: 'when presentation skills are needed' },
-      { name: 'Crisis Communications Training', recommend: 'conditional', condition: 'when crisis preparedness is needed' },
-      { name: 'Brand Training', recommend: 'conditional', condition: 'when brand alignment training is needed' }
+      // Training bundle
+      { name: 'Media & Spokesperson Training', recommend: 'always', condition: 'for all communications training', pricing: { termLow: 2, termHigh: 4, budgetLow: 20000, budgetHigh: 50000, bundle: 'Communications Training', note: 'Per session or program' } },
+      { name: 'Presentation Training', recommend: 'conditional', condition: 'when presentation skills are needed', pricing: { bundle: 'Communications Training' } },
+      { name: 'Crisis Communications Training', recommend: 'conditional', condition: 'when crisis preparedness is needed', pricing: { bundle: 'Communications Training' } },
+      { name: 'Brand Training', recommend: 'conditional', condition: 'when brand alignment training is needed', pricing: { bundle: 'Communications Training' } }
     ],
     triggerPatterns: {
       direct: ['team needs media training', 'need communications training', 'executives need spokesperson prep', 'want internal training'],
@@ -945,12 +958,13 @@ const SERVICE_TRIGGERS = [
     description: 'Sustainability, impact, and purpose communications',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Impact Report Writing & Design', recommend: 'always', condition: 'when impact/sustainability report is needed' },
-      { name: 'Sustainability Communications', recommend: 'conditional', condition: 'when sustainability messaging is needed' },
-      { name: 'ESG Reporting', recommend: 'conditional', condition: 'when ESG requirements exist' },
-      { name: 'CSR Communications', recommend: 'conditional', condition: 'when corporate responsibility messaging is needed' },
-      { name: 'Purpose Discovery Workshop', recommend: 'conditional', condition: 'when purpose definition is needed' },
-      { name: 'Theory of Change', recommend: 'conditional', condition: 'when impact framework is needed' }
+      // Impact bundle
+      { name: 'Impact Report Writing & Design', recommend: 'always', condition: 'when impact/sustainability report is needed', pricing: { termLow: 4, termHigh: 10, budgetLow: 60000, budgetHigh: 150000, bundle: 'Impact Communications' } },
+      { name: 'Sustainability Communications', recommend: 'conditional', condition: 'when sustainability messaging is needed', pricing: { bundle: 'Impact Communications' } },
+      { name: 'ESG Reporting', recommend: 'conditional', condition: 'when ESG requirements exist', pricing: { bundle: 'Impact Communications' } },
+      { name: 'CSR Communications', recommend: 'conditional', condition: 'when corporate responsibility messaging is needed', pricing: { bundle: 'Impact Communications' } },
+      { name: 'Purpose Discovery Workshop', recommend: 'conditional', condition: 'when purpose definition is needed', pricing: { bundle: 'Impact Communications' } },
+      { name: 'Theory of Change', recommend: 'conditional', condition: 'when impact framework is needed', pricing: { bundle: 'Impact Communications' } }
     ],
     triggerPatterns: {
       direct: ['need an annual report', 'need an impact report', 'need help with CSR report', 'want to showcase our impact', 'impact story', 'sustainability story', 'esg communications', 'purpose driven'],
@@ -966,14 +980,15 @@ const SERVICE_TRIGGERS = [
     description: 'Content strategy and creation',
     engagementType: 'tm',
     services: [
-      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced' },
-      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time' },
-      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
-      { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
-      { name: 'Video Content Series', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
-      { name: 'Social Content Creation', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
-      { name: 'Thought Leadership Content', recommend: 'conditional', condition: 'only if requested or included in Additional Notes' },
-      { name: 'Social Content Creation (Reactive)', recommend: 'conditional', condition: 'only if requested or social media management needed' }
+      // Content Production bundle
+      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced', pricing: { termLow: 12, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Content Production', note: 'Quarterly to annual commitment' } },
+      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time', pricing: { bundle: 'Content Production' } },
+      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
+      { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
+      { name: 'Video Content Series', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
+      { name: 'Social Content Creation', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
+      { name: 'Thought Leadership Content', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
+      { name: 'Social Content Creation (Reactive)', recommend: 'conditional', condition: 'only if requested or social media management needed', pricing: { bundle: 'Content Production' } }
     ],
     triggerPatterns: {
       direct: ['need more content', 'need a content strategy', 'run out of ideas', 'need help producing content'],
@@ -989,12 +1004,13 @@ const SERVICE_TRIGGERS = [
     description: 'Optimize for conversions and efficiency',
     engagementType: 'retainer',
     services: [
-      { name: 'Conversion Rate Optimization', recommend: 'always', condition: 'for all performance marketing' },
-      { name: 'A/B Testing Program', recommend: 'always', condition: 'for all performance marketing' },
-      { name: 'Landing Page Optimization', recommend: 'conditional', condition: 'when landing pages need improvement' },
-      { name: 'Funnel Optimization', recommend: 'conditional', condition: 'when conversion funnel needs improvement' },
-      { name: 'Marketing Automation', recommend: 'conditional', condition: 'when automation is requested' },
-      { name: 'Performance Reporting (Owned/Earned/Paid/Social)', recommend: 'always', condition: 'for all performance marketing' }
+      // Performance Marketing bundle
+      { name: 'Conversion Rate Optimization', recommend: 'always', condition: 'for all performance marketing', pricing: { termLow: 52, termHigh: 52, budgetLow: 120000, budgetHigh: 200000, bundle: 'Performance Marketing', note: 'Annual retainer ($10K-$17K/month)' } },
+      { name: 'A/B Testing Program', recommend: 'always', condition: 'for all performance marketing', pricing: { bundle: 'Performance Marketing' } },
+      { name: 'Landing Page Optimization', recommend: 'conditional', condition: 'when landing pages need improvement', pricing: { bundle: 'Performance Marketing' } },
+      { name: 'Funnel Optimization', recommend: 'conditional', condition: 'when conversion funnel needs improvement', pricing: { bundle: 'Performance Marketing' } },
+      { name: 'Marketing Automation', recommend: 'conditional', condition: 'when automation is requested', pricing: { bundle: 'Performance Marketing' } },
+      { name: 'Performance Reporting (Owned/Earned/Paid/Social)', recommend: 'always', condition: 'for all performance marketing', pricing: { bundle: 'Performance Marketing' } }
     ],
     triggerPatterns: {
       direct: ['need to optimize campaigns', 'want to A/B test', 'conversion rates need improvement', 'need CRO help'],
@@ -1010,10 +1026,11 @@ const SERVICE_TRIGGERS = [
     description: 'Coordinate complex marketing initiatives',
     engagementType: 'any',
     services: [
-      { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested' },
-      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when operational support is needed' },
-      { name: 'Agency Coordination', recommend: 'conditional', condition: 'when multiple agencies need coordination' },
-      { name: 'Resource Planning', recommend: 'conditional', condition: 'when resource allocation is needed' }
+      // Project Management - percentage based
+      { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested', pricing: { percentageOfProject: 10, note: 'Approximately 10% of total project fee. Not required on PR/Earned-only engagements.' } },
+      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when operational support is needed', pricing: { percentageOfProject: 10 } },
+      { name: 'Agency Coordination', recommend: 'conditional', condition: 'when multiple agencies need coordination', pricing: { percentageOfProject: 10 } },
+      { name: 'Resource Planning', recommend: 'conditional', condition: 'when resource allocation is needed', pricing: { percentageOfProject: 10 } }
     ],
     triggerPatterns: {
       direct: ['need help managing projects', 'overwhelmed with coordination', 'need a PM'],
@@ -1040,9 +1057,10 @@ const getServiceNames = (trigger) => {
 // ============================================================================
 const DRAFT_ENGAGEMENT_TYPES = [
   { value: 'fixed_fee', label: 'Fixed Fee', description: 'Set price for defined deliverables' },
-  { value: 'tm_cap', label: 'Time & Materials with Cap', description: 'Hourly billing with maximum budget' },
-  { value: 'tm', label: 'Time & Materials', description: 'Hourly billing without cap' },
-  { value: 'retainer', label: 'Retainer', description: 'Ongoing monthly engagement' }
+  { value: 'retainer', label: 'Retainer', description: 'Ongoing monthly engagement' },
+  { value: 'tm', label: 'Time & Materials', description: 'Hourly billing with minimum commitment' },
+  { value: 'integrated', label: 'Integrated', description: 'Multi-phase with mixed billing models' },
+  { value: 'tm_cap', label: 'T&M with Cap', description: 'Hourly with maximum (client request only)' }
 ];
 
 // Engagement type recommendations based on service categories
@@ -1082,9 +1100,59 @@ const ENGAGEMENT_TYPE_RECOMMENDATIONS = {
   ]
 };
 
+// Helper to determine billing model for a category
+const getCategoryBillingModel = (categoryId) => {
+  if (ENGAGEMENT_TYPE_RECOMMENDATIONS.fixed_fee_preferred.includes(categoryId)) return 'fixed_fee';
+  if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(categoryId)) return 'tm';
+  if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.includes(categoryId)) return 'retainer';
+  if (ENGAGEMENT_TYPE_RECOMMENDATIONS.any_preferred.includes(categoryId)) return 'any';
+  return 'fixed_fee'; // default
+};
+
+// Helper to analyze selected services and determine if integrated billing is needed
+const analyzeServiceBillingModels = (selectedServices) => {
+  const categoryBillingModels = {};
+  const billingModelCategories = { fixed_fee: [], tm: [], retainer: [] };
+  
+  SERVICE_TRIGGERS.forEach(trigger => {
+    const serviceNames = getServiceNames(trigger);
+    const matchingServices = serviceNames.filter(s => selectedServices.includes(s));
+    if (matchingServices.length > 0 && trigger.id !== 'project_management') {
+      const billingModel = getCategoryBillingModel(trigger.id);
+      if (billingModel !== 'any') {
+        categoryBillingModels[trigger.id] = {
+          category: trigger.category,
+          billingModel: billingModel,
+          services: matchingServices
+        };
+        billingModelCategories[billingModel].push({
+          id: trigger.id,
+          category: trigger.category,
+          services: matchingServices
+        });
+      }
+    }
+  });
+  
+  // Count distinct billing models needed
+  const activeBillingModels = Object.keys(billingModelCategories).filter(
+    model => billingModelCategories[model].length > 0
+  );
+  
+  return {
+    categoryBillingModels,
+    billingModelCategories,
+    activeBillingModels,
+    needsIntegrated: activeBillingModels.length > 1
+  };
+};
+
 // Get engagement type recommendation based on selected services
 const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, currentEngagementType) => {
   if (!selectedServices || selectedServices.length === 0) return null;
+  
+  // Analyze billing models needed
+  const billingAnalysis = analyzeServiceBillingModels(selectedServices);
   
   // Count services by their parent category
   const categoryCount = {};
@@ -1106,6 +1174,48 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
   // Project management can be applied to any engagement type - skip recommendation
   if (dominantCategory === 'project_management' && categories.length === 1) {
     return null;
+  }
+  
+  // CHECK FOR INTEGRATED ENGAGEMENT FIRST
+  if (billingAnalysis.needsIntegrated) {
+    const modelSummary = billingAnalysis.activeBillingModels.map(model => {
+      const cats = billingAnalysis.billingModelCategories[model];
+      const modelLabel = model === 'fixed_fee' ? 'Fixed Fee' : model === 'tm' ? 'Time & Materials' : 'Retainer';
+      return `${modelLabel}: ${cats.map(c => c.category).join(', ')}`;
+    }).join(' | ');
+    
+    // If integrated is already selected, confirm it's good
+    if (currentEngagementType === 'integrated') {
+      return {
+        type: 'confirmation',
+        title: 'Integrated Engagement Recommended',
+        message: `Your selected services span multiple billing models. The SOW will be structured with separate sections: ${modelSummary}`,
+        recommendedType: 'integrated',
+        budgetGuidance: 'Present fees by section: Fixed Fee phases with milestone payments, Retainer services as monthly fees, and T&M work with minimum commitments and hourly rates.',
+        billingAnalysis: billingAnalysis
+      };
+    }
+    
+    // Suggest switching to integrated
+    return {
+      type: 'suggestion',
+      title: 'Consider Integrated Engagement',
+      message: `Your selected services span multiple billing models (${billingAnalysis.activeBillingModels.join(', ')}). An Integrated engagement will structure the SOW with appropriate sections for each: ${modelSummary}`,
+      recommendedType: 'integrated',
+      budgetGuidance: 'Present fees by section: Fixed Fee phases with milestone payments, Retainer services as monthly fees, and T&M work with minimum commitments and hourly rates.',
+      billingAnalysis: billingAnalysis
+    };
+  }
+  
+  // If T&M with Cap is selected, provide specific guidance
+  if (currentEngagementType === 'tm_cap') {
+    return {
+      type: 'warning',
+      title: 'T&M with Cap: Client Request Only',
+      message: 'Time & Materials with Cap should only be used when specifically requested by the client. It shifts risk to the agency. Consider if Fixed Fee or standard T&M would be more appropriate.',
+      recommendedType: null,
+      budgetGuidance: 'If proceeding with T&M Cap: Present cap amount with clear scope boundaries, notification thresholds at 75% consumption, and explicit language that work stops when cap is reached unless client authorizes additional budget.'
+    };
   }
   
   // Check what engagement type is recommended for these services
@@ -1179,19 +1289,8 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
     }
   }
   
-  // If T&M with Cap is selected, provide specific guidance
-  if (currentEngagementType === 'tm_cap') {
-    return {
-      type: 'warning',
-      title: 'T&M with Cap: Client Request Only',
-      message: 'Time & Materials with Cap should only be used when specifically requested by the client. It shifts risk to the agency. Consider if Fixed Fee or standard T&M would be more appropriate.',
-      recommendedType: recommendedType,
-      budgetGuidance: 'If proceeding with T&M Cap: Present cap amount with clear scope boundaries, notification thresholds at 75% consumption, and explicit language that work stops when cap is reached unless client authorizes additional budget.'
-    };
-  }
-  
   // If current selection doesn't match recommendation
-  if (recommendedType && currentEngagementType && currentEngagementType !== recommendedType) {
+  if (recommendedType && currentEngagementType && currentEngagementType !== recommendedType && currentEngagementType !== 'integrated') {
     return {
       type: 'suggestion',
       title: 'Consider a Different Engagement Type',
@@ -2265,6 +2364,64 @@ function ApiKeyInput({ apiKey, setApiKey }) {
 }
 
 // Service Selection Card
+// Helper function to format pricing guidance
+const formatPricingGuidance = (service) => {
+  if (!service.pricing) return null;
+  
+  const pricing = service.pricing;
+  
+  // Handle percentage-based pricing (Project Management)
+  if (pricing.percentageOfProject) {
+    return {
+      term: null,
+      budget: `~${pricing.percentageOfProject}% of project`,
+      note: pricing.note,
+      bundle: null
+    };
+  }
+  
+  // Handle bundled services (only first in bundle shows pricing)
+  if (pricing.bundle && !pricing.termLow) {
+    return {
+      term: null,
+      budget: null,
+      note: null,
+      bundle: pricing.bundle
+    };
+  }
+  
+  // Format term
+  let term = null;
+  if (pricing.termLow && pricing.termHigh) {
+    if (pricing.termLow === pricing.termHigh) {
+      term = pricing.termLow === 52 ? 'Annual' : `${pricing.termLow} weeks`;
+    } else {
+      term = `${pricing.termLow}-${pricing.termHigh} weeks`;
+    }
+  }
+  
+  // Format budget
+  let budget = null;
+  if (pricing.budgetLow && pricing.budgetHigh) {
+    const formatCurrency = (num) => {
+      if (num >= 1000) return `$${(num/1000).toFixed(0)}K`;
+      return `$${num}`;
+    };
+    if (pricing.budgetLow === pricing.budgetHigh) {
+      budget = formatCurrency(pricing.budgetLow);
+    } else {
+      budget = `${formatCurrency(pricing.budgetLow)}-${formatCurrency(pricing.budgetHigh)}`;
+    }
+  }
+  
+  return {
+    term,
+    budget,
+    note: pricing.note,
+    bundle: pricing.bundle
+  };
+};
+
 function ServiceCard({ trigger, isSelected, selectedServices, onToggleService }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const serviceNames = getServiceNames(trigger);
@@ -2291,19 +2448,57 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService })
       </button>
       {isExpanded && (
         <div className="px-5 pb-4 border-t border-gray-100 pt-3">
-          <div className="space-y-2">
+          <div className="space-y-3">
             {trigger.services.map((service) => {
               const serviceName = getServiceName(service);
+              const pricingInfo = typeof service === 'object' ? formatPricingGuidance(service) : null;
+              const isChecked = selectedServices.includes(serviceName);
+              
               return (
-                <label key={serviceName} className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={selectedServices.includes(serviceName)}
-                    onChange={() => onToggleService(serviceName)}
-                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                  />
-                  <span className="text-sm text-gray-700 group-hover:text-gray-900">{serviceName}</span>
-                </label>
+                <div key={serviceName} className="group">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => onToggleService(serviceName)}
+                      className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{serviceName}</span>
+                      {pricingInfo && isChecked && (pricingInfo.term || pricingInfo.budget || pricingInfo.note) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          {pricingInfo.bundle && (
+                            <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                              {pricingInfo.bundle}
+                            </span>
+                          )}
+                          {pricingInfo.term && (
+                            <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                              ⏱ {pricingInfo.term}
+                            </span>
+                          )}
+                          {pricingInfo.budget && (
+                            <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                              💰 {pricingInfo.budget}
+                            </span>
+                          )}
+                          {pricingInfo.note && (
+                            <span className="text-xs text-gray-500 italic">
+                              {pricingInfo.note}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {pricingInfo && isChecked && pricingInfo.bundle && !pricingInfo.term && !pricingInfo.budget && (
+                        <div className="mt-1">
+                          <span className="text-xs text-gray-400 italic">
+                            Bundled with {pricingInfo.bundle}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
               );
             })}
           </div>
@@ -2590,17 +2785,27 @@ ${transcript}`
       
       console.log('Auto-selected services:', autoSelectedServices);
       
-      setSelectedServices([...new Set(autoSelectedServices)]);
+      const selectedServicesList = [...new Set(autoSelectedServices)];
+      setSelectedServices(selectedServicesList);
       
-      // Auto-set engagement type based on dominant category
-      if (detected.length > 0) {
-        const dominantCategory = detected[0].id;
-        if (ENGAGEMENT_TYPE_RECOMMENDATIONS.fixed_fee_preferred.includes(dominantCategory)) {
-          setDraftEngagementType('fixed_fee');
-        } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(dominantCategory)) {
-          setDraftEngagementType('tm');
-        } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.includes(dominantCategory)) {
-          setDraftEngagementType('retainer');
+      // Auto-set engagement type based on billing model analysis
+      if (selectedServicesList.length > 0) {
+        const billingAnalysis = analyzeServiceBillingModels(selectedServicesList);
+        console.log('Billing analysis:', billingAnalysis);
+        
+        if (billingAnalysis.needsIntegrated) {
+          // Multiple billing models needed - use integrated
+          setDraftEngagementType('integrated');
+        } else if (detected.length > 0) {
+          // Single billing model - use the appropriate type
+          const dominantCategory = detected[0].id;
+          if (ENGAGEMENT_TYPE_RECOMMENDATIONS.fixed_fee_preferred.includes(dominantCategory)) {
+            setDraftEngagementType('fixed_fee');
+          } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(dominantCategory)) {
+            setDraftEngagementType('tm');
+          } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.includes(dominantCategory)) {
+            setDraftEngagementType('retainer');
+          }
         }
       }
       
@@ -2726,7 +2931,62 @@ BUDGET & BILLING STRUCTURE FOR RETAINER:
 - Rollover: "Unused hours [do not roll over / may roll over up to X hours to the immediately following month only]"
 - Overage: "Work exceeding monthly allocation will be billed at $[RATE]/hour with Client pre-approval required for overages exceeding [X] hours"
 - Minimum term: "Initial term of [6/12] months. Either party may terminate with [60] days written notice after initial term."
-- Include utilization reporting: "Agency will provide monthly utilization reports showing hours/activities consumed against allocation."`
+- Include utilization reporting: "Agency will provide monthly utilization reports showing hours/activities consumed against allocation."`,
+
+        integrated: `INTEGRATED ENGAGEMENT REQUIREMENTS:
+This engagement combines multiple billing models based on the nature of different service lines. Structure the SOW with clearly separated sections for each billing model.
+
+STRUCTURE:
+The SOW should have distinct sections for each billing type, with clear separation:
+
+SECTION A - FIXED FEE WORK (Project-Based):
+For defined deliverables like branding, strategy, website builds, campaigns, events:
+- Exhaustively defined scope with all deliverables specified
+- Quantities and revision limits stated
+- Milestone-based payments
+- Clear completion criteria for each phase
+- Change order process for scope changes
+
+SECTION B - RETAINER SERVICES (Ongoing Professional Services):
+For PR, media relations, thought leadership, paid social, SEO:
+- Monthly fee clearly stated
+- Included activities/hours per month specified
+- Rollover policy (recommend: limited or none)
+- Overage handling defined
+- Minimum term and termination provisions
+
+SECTION C - TIME & MATERIALS (Creative/Content Retainer):
+For creative production, content creation where deliverables evolve:
+- Minimum commitment (floor, not cap)
+- Rate card by role
+- Monthly planning and prioritization process
+- Billing in arrears based on actual time
+
+BUDGET & BILLING STRUCTURE FOR INTEGRATED:
+Present fees in clearly separated sections matching the structure above.
+
+Example format:
+"SECTION A - BRAND STRATEGY (Fixed Fee)
+Total Project Fee: $[XX,XXX]
+- 50% ($[X,XXX]) due at project kickoff
+- 25% ($[X,XXX]) due upon Strategy approval
+- 25% ($[X,XXX]) due upon Expression delivery
+
+SECTION B - PUBLIC RELATIONS (Monthly Retainer)
+Monthly Retainer: $[XX,XXX]/month
+- Minimum term: [X] months
+- Includes: [defined scope]
+
+SECTION C - CREATIVE PRODUCTION (Time & Materials)
+Minimum Annual Commitment: $[XX,XXX]
+- Billed monthly in arrears at rates below
+- [Rate card]"
+
+IMPORTANT:
+- Each section operates independently with its own terms
+- Fixed Fee sections have defined completion; Retainer/T&M sections have terms
+- Cross-reference between sections where work depends on other sections
+- Include master assumptions and client responsibilities that apply to ALL sections`
       };
       
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2797,7 +3057,25 @@ ${ASSESSMENT_FRAMEWORK}`,
 
 ## ENGAGEMENT TYPE
 ${engagementLabel}
+${engagementType === 'integrated' ? `
+## BILLING MODEL BREAKDOWN
+${(() => {
+  const billingAnalysis = analyzeServiceBillingModels(selectedServices);
+  let breakdown = '';
+  if (billingAnalysis.billingModelCategories.fixed_fee.length > 0) {
+    breakdown += `\nFIXED FEE SECTION (Project-Based):\n${billingAnalysis.billingModelCategories.fixed_fee.map(c => `- ${c.category}: ${c.services.join(', ')}`).join('\n')}`;
+  }
+  if (billingAnalysis.billingModelCategories.retainer.length > 0) {
+    breakdown += `\nRETAINER SECTION (Ongoing Services):\n${billingAnalysis.billingModelCategories.retainer.map(c => `- ${c.category}: ${c.services.join(', ')}`).join('\n')}`;
+  }
+  if (billingAnalysis.billingModelCategories.tm.length > 0) {
+    breakdown += `\nTIME & MATERIALS SECTION (Creative/Content):\n${billingAnalysis.billingModelCategories.tm.map(c => `- ${c.category}: ${c.services.join(', ')}`).join('\n')}`;
+  }
+  return breakdown;
+})()}
 
+IMPORTANT: Structure the SOW with clearly separated sections for each billing model as shown above. Each section should have its own fee structure, terms, and deliverables appropriate to that billing model.
+` : ''}
 ## ADDITIONAL NOTES FROM ACCOUNT TEAM
 ${draftNotes || 'None provided'}
 
