@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.3.2';
+const APP_VERSION = '2.3.3';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -676,9 +676,9 @@ const SERVICE_TRIGGERS = [
       { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
       { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
       { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
-      // Brand Assets bundle
-      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 15000, bundle: 'Brand Assets' } },
-      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } },
+      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Expression' } },
+      // Brand Assets bundle - Social Lock-ups and Brand Guidelines only
+      { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 15000, bundle: 'Brand Assets' } },
       { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } }
     ],
     triggerPatterns: {
@@ -2551,6 +2551,90 @@ const formatPricingGuidance = (service) => {
   };
 };
 
+// Helper function to calculate total pricing range for selected services
+const calculatePricingTotal = (selectedServices) => {
+  let totalLow = 0;
+  let totalHigh = 0;
+  const countedBundles = new Set();
+  let hasPMPercentage = false;
+  let hasUncountable = false;
+
+  for (const trigger of SERVICE_TRIGGERS) {
+    for (const service of trigger.services) {
+      const name = typeof service === 'object' ? service.name : service;
+      if (!selectedServices.includes(name)) continue;
+      if (!service.pricing) continue;
+
+      const pricing = service.pricing;
+
+      // Project Management is percentage-based, flag it separately
+      if (pricing.percentageOfProject) {
+        hasPMPercentage = true;
+        continue;
+      }
+
+      // Bundled service without its own pricing (included in bundle lead)
+      if (pricing.bundle && !pricing.budgetLow) {
+        // Only flag uncountable if the bundle lead is NOT already selected/counted
+        if (!countedBundles.has(pricing.bundle)) {
+          // Check if the lead service for this bundle is selected
+          // If not, we can't price this service
+          hasUncountable = true;
+        }
+        continue;
+      }
+
+      // Bundle lead service or standalone service with pricing
+      if (pricing.bundle) {
+        if (countedBundles.has(pricing.bundle)) continue; // Already counted this bundle
+        countedBundles.add(pricing.bundle);
+      }
+
+      if (pricing.budgetLow) totalLow += pricing.budgetLow;
+      if (pricing.budgetHigh) totalHigh += pricing.budgetHigh;
+    }
+  }
+
+  if (totalLow === 0 && totalHigh === 0) return null;
+
+  const formatCurrency = (num) => {
+    if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `$${(num / 1000).toFixed(0)}K`;
+    return `$${num}`;
+  };
+
+  return {
+    low: totalLow,
+    high: totalHigh,
+    lowFormatted: formatCurrency(totalLow),
+    highFormatted: formatCurrency(totalHigh),
+    hasPMPercentage,
+    hasUncountable
+  };
+};
+
+// Pricing total summary bar component
+function PricingTotalBar({ selectedServices }) {
+  const pricingTotal = calculatePricingTotal(selectedServices);
+  if (!pricingTotal) return null;
+  return (
+    <div className="mb-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-600">Estimated Range</span>
+        <span className="text-lg font-bold text-gray-900">
+          {pricingTotal.lowFormatted} – {pricingTotal.highFormatted}
+        </span>
+      </div>
+      {(pricingTotal.hasPMPercentage || pricingTotal.hasUncountable) && (
+        <p className="text-xs text-gray-500 mt-1">
+          {pricingTotal.hasPMPercentage ? 'Plus ~10% for Project Management. ' : ''}
+          {pricingTotal.hasUncountable ? 'Some services require scoping for pricing.' : ''}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function ServiceCard({ trigger, isSelected, selectedServices, onToggleService }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const serviceNames = getServiceNames(trigger);
@@ -4025,7 +4109,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                         
                         {selectedServices.length > 0 && (
                           <div className="mt-6 pt-6 border-t border-gray-200">
-                            <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center justify-between mb-2">
                               <p className="text-sm font-semibold text-gray-900">
                                 {selectedServices.length} services selected
                               </p>
@@ -4036,6 +4120,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 Clear all
                               </button>
                             </div>
+                            <PricingTotalBar selectedServices={selectedServices} />
                             <AntennaButton
                               onClick={generateSOW}
                               disabled={!draftEngagementType}
@@ -4082,7 +4167,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                         
                         {selectedServices.length > 0 && (
                           <div className="mt-6 pt-6 border-t border-gray-200">
-                            <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center justify-between mb-2">
                               <p className="text-sm font-semibold text-gray-900">
                                 {selectedServices.length} services selected
                               </p>
@@ -4093,6 +4178,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 Clear all
                               </button>
                             </div>
+                            <PricingTotalBar selectedServices={selectedServices} />
                             <AntennaButton
                               onClick={generateSOW}
                               disabled={!draftEngagementType}

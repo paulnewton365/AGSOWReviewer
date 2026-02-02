@@ -1,6 +1,16 @@
-# SOW Workbench v2.3.2
+# SOW Workbench v2.3.3
 
 A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
+
+## What's New in v2.3.3
+
+### Estimated Pricing Range Total
+A live total now appears above the Generate SOW button showing the combined budget range for all selected services:
+- Sums low and high ranges across all checked services
+- Handles bundled services correctly (counts bundle price once, not per service)
+- Notes when Project Management (~10%) would be additional
+- Flags when some services require custom scoping for pricing
+- Updates in real time as services are checked/unchecked
 
 ## What's New in v2.3.2
 
