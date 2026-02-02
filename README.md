@@ -1,6 +1,15 @@
-# SOW Workbench v2.3.3
+# SOW Workbench v2.3.4
 
 A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
+
+## What's New in v2.3.4
+
+### Bundle Selection UI
+Services that are sold together are now displayed as bundles with improved UX:
+- **Bundle as top-level checkbox** — Click the bundle name (e.g., "Standard Website Offering") to select/deselect all included services at once
+- **Indented member services** — When a bundle is selected, all included services appear indented with checkmarks showing what's included
+- **No individual selection** — Bundled services can only be selected as a complete package, preventing partial bundle pricing
+- **Bundle pricing visible** — Term estimates and budget ranges display on the bundle header when selected
 
 ## What's New in v2.3.3
 

@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.3.3';
+const APP_VERSION = '2.3.4';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -2635,10 +2635,77 @@ function PricingTotalBar({ selectedServices }) {
   );
 }
 
-function ServiceCard({ trigger, isSelected, selectedServices, onToggleService }) {
+function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, onToggleBundle }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const serviceNames = getServiceNames(trigger);
   const selectedCount = serviceNames.filter(s => selectedServices.includes(s)).length;
+  
+  // Organize services into bundles and standalone
+  const organizeServices = () => {
+    const bundles = {};
+    const standalone = [];
+    
+    for (const service of trigger.services) {
+      const name = typeof service === 'object' ? service.name : service;
+      const pricing = typeof service === 'object' ? service.pricing : null;
+      const bundleName = pricing?.bundle;
+      
+      if (bundleName) {
+        if (!bundles[bundleName]) {
+          bundles[bundleName] = {
+            name: bundleName,
+            services: [],
+            leadService: null, // The one with pricing details
+            pricing: null
+          };
+        }
+        bundles[bundleName].services.push({ name, service, pricing });
+        // Lead service has budgetLow
+        if (pricing?.budgetLow) {
+          bundles[bundleName].leadService = name;
+          bundles[bundleName].pricing = pricing;
+        }
+      } else {
+        standalone.push({ name, service, pricing });
+      }
+    }
+    
+    return { bundles: Object.values(bundles), standalone };
+  };
+  
+  const { bundles, standalone } = organizeServices();
+  
+  // Check if all services in a bundle are selected
+  const isBundleSelected = (bundle) => {
+    return bundle.services.every(s => selectedServices.includes(s.name));
+  };
+  
+  // Format pricing for display
+  const formatBundlePricing = (pricing) => {
+    if (!pricing) return null;
+    
+    let term = null;
+    if (pricing.termLow && pricing.termHigh) {
+      if (pricing.termLow === pricing.termHigh) {
+        term = pricing.termLow === 52 ? 'Annual' : `${pricing.termLow} weeks`;
+      } else {
+        term = `${pricing.termLow}-${pricing.termHigh} weeks`;
+      }
+    }
+    
+    let budget = null;
+    if (pricing.budgetLow && pricing.budgetHigh) {
+      const formatCurrency = (num) => {
+        if (num >= 1000) return `$${(num/1000).toFixed(0)}K`;
+        return `$${num}`;
+      };
+      budget = pricing.budgetLow === pricing.budgetHigh 
+        ? formatCurrency(pricing.budgetLow)
+        : `${formatCurrency(pricing.budgetLow)}-${formatCurrency(pricing.budgetHigh)}`;
+    }
+    
+    return { term, budget, note: pricing.note };
+  };
   
   return (
     <div className={`border-2 rounded-xl overflow-hidden transition-all ${isSelected ? 'border-gray-900 bg-gray-50' : 'border-gray-200'}`}>
@@ -2662,29 +2729,26 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService })
       {isExpanded && (
         <div className="px-5 pb-4 border-t border-gray-100 pt-3">
           <div className="space-y-3">
-            {trigger.services.map((service) => {
-              const serviceName = getServiceName(service);
-              const pricingInfo = typeof service === 'object' ? formatPricingGuidance(service) : null;
-              const isChecked = selectedServices.includes(serviceName);
+            {/* Render bundles first */}
+            {bundles.map((bundle) => {
+              const bundleSelected = isBundleSelected(bundle);
+              const pricingInfo = formatBundlePricing(bundle.pricing);
               
               return (
-                <div key={serviceName} className="group">
+                <div key={bundle.name} className="group">
+                  {/* Bundle header - clickable */}
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={isChecked}
-                      onChange={() => onToggleService(serviceName)}
+                      checked={bundleSelected}
+                      onChange={() => onToggleBundle(bundle.services.map(s => s.name), !bundleSelected)}
                       className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                     />
                     <div className="flex-1">
-                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{serviceName}</span>
-                      {pricingInfo && isChecked && (pricingInfo.term || pricingInfo.budget || pricingInfo.note) && (
+                      <span className="text-sm font-medium text-gray-900">{bundle.name}</span>
+                      <span className="text-xs text-gray-400 ml-2">({bundle.services.length} services)</span>
+                      {bundleSelected && pricingInfo && (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
-                          {pricingInfo.bundle && (
-                            <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
-                              {pricingInfo.bundle}
-                            </span>
-                          )}
                           {pricingInfo.term && (
                             <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
                               ⏱ {pricingInfo.term}
@@ -2702,11 +2766,57 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService })
                           )}
                         </div>
                       )}
-                      {pricingInfo && isChecked && pricingInfo.bundle && !pricingInfo.term && !pricingInfo.budget && (
-                        <div className="mt-1">
-                          <span className="text-xs text-gray-400 italic">
-                            Bundled with {pricingInfo.bundle}
-                          </span>
+                    </div>
+                  </label>
+                  
+                  {/* Bundle members - indented, shown when bundle is selected */}
+                  {bundleSelected && (
+                    <div className="ml-7 mt-2 pl-3 border-l-2 border-gray-200 space-y-1">
+                      {bundle.services.map((svc) => (
+                        <div key={svc.name} className="flex items-center gap-2 text-xs text-gray-500">
+                          <Check className="w-3 h-3 text-green-600" />
+                          <span>{svc.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            
+            {/* Render standalone services */}
+            {standalone.map((svc) => {
+              const isChecked = selectedServices.includes(svc.name);
+              const pricingInfo = svc.pricing ? formatPricingGuidance(svc.service) : null;
+              
+              return (
+                <div key={svc.name} className="group">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => onToggleService(svc.name)}
+                      className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{svc.name}</span>
+                      {pricingInfo && isChecked && (pricingInfo.term || pricingInfo.budget || pricingInfo.note) && (
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          {pricingInfo.term && (
+                            <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                              ⏱ {pricingInfo.term}
+                            </span>
+                          )}
+                          {pricingInfo.budget && (
+                            <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">
+                              💰 {pricingInfo.budget}
+                            </span>
+                          )}
+                          {pricingInfo.note && (
+                            <span className="text-xs text-gray-500 italic">
+                              {pricingInfo.note}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -3039,6 +3149,20 @@ ${transcript}`
         ? prev.filter(s => s !== service)
         : [...prev, service]
     );
+  };
+  
+  // Toggle all services in a bundle at once
+  const toggleBundle = (serviceNames, shouldSelect) => {
+    setSelectedServices(prev => {
+      if (shouldSelect) {
+        // Add all bundle services that aren't already selected
+        const newServices = serviceNames.filter(s => !prev.includes(s));
+        return [...prev, ...newServices];
+      } else {
+        // Remove all bundle services
+        return prev.filter(s => !serviceNames.includes(s));
+      }
+    });
   };
   
   const generateSOW = async () => {
@@ -4077,6 +4201,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               isSelected={getServiceNames(trigger).some(s => selectedServices.includes(s))}
                               selectedServices={selectedServices}
                               onToggleService={toggleService}
+                              onToggleBundle={toggleBundle}
                             />
                           ))}
                         </div>
@@ -4100,6 +4225,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                     isSelected={getServiceNames(trigger).some(s => selectedServices.includes(s))}
                                     selectedServices={selectedServices}
                                     onToggleService={toggleService}
+                                    onToggleBundle={toggleBundle}
                                   />
                                 ))}
                               </div>
@@ -4161,6 +4287,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               isSelected={getServiceNames(trigger).some(s => selectedServices.includes(s))}
                               selectedServices={selectedServices}
                               onToggleService={toggleService}
+                              onToggleBundle={toggleBundle}
                             />
                           ))}
                         </div>
