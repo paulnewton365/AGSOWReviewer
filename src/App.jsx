@@ -982,7 +982,7 @@ const SERVICE_TRIGGERS = [
     services: [
       // Content Strategy is Fixed Fee
       { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, note: 'Fixed Fee deliverable' } },
-      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time', pricing: { bundle: 'Content Production' } },
+      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Content Production', note: 'Annual T&M based on volume' } },
       // Ongoing content production is T&M
       { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production', note: 'T&M ongoing' } },
       { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
@@ -2556,7 +2556,7 @@ const calculatePricingTotal = (selectedServices) => {
   let totalLow = 0;
   let totalHigh = 0;
   const countedBundles = new Set();
-  let hasPMPercentage = false;
+  let pmPercentageCount = 0;
   let hasUncountable = false;
 
   for (const trigger of SERVICE_TRIGGERS) {
@@ -2567,18 +2567,15 @@ const calculatePricingTotal = (selectedServices) => {
 
       const pricing = service.pricing;
 
-      // Project Management is percentage-based, flag it separately
+      // Project Management is percentage-based, count selections
       if (pricing.percentageOfProject) {
-        hasPMPercentage = true;
+        pmPercentageCount++;
         continue;
       }
 
       // Bundled service without its own pricing (included in bundle lead)
       if (pricing.bundle && !pricing.budgetLow) {
-        // Only flag uncountable if the bundle lead is NOT already selected/counted
         if (!countedBundles.has(pricing.bundle)) {
-          // Check if the lead service for this bundle is selected
-          // If not, we can't price this service
           hasUncountable = true;
         }
         continue;
@@ -2586,7 +2583,7 @@ const calculatePricingTotal = (selectedServices) => {
 
       // Bundle lead service or standalone service with pricing
       if (pricing.bundle) {
-        if (countedBundles.has(pricing.bundle)) continue; // Already counted this bundle
+        if (countedBundles.has(pricing.bundle)) continue;
         countedBundles.add(pricing.bundle);
       }
 
@@ -2595,7 +2592,18 @@ const calculatePricingTotal = (selectedServices) => {
     }
   }
 
-  if (totalLow === 0 && totalHigh === 0) return null;
+  if (totalLow === 0 && totalHigh === 0 && pmPercentageCount === 0) return null;
+
+  // Calculate PM addition (10% applied once regardless of how many PM services selected)
+  let pmLow = 0;
+  let pmHigh = 0;
+  if (pmPercentageCount > 0 && totalLow > 0) {
+    pmLow = Math.round(totalLow * 0.10);
+    pmHigh = Math.round(totalHigh * 0.10);
+  }
+
+  const grandLow = totalLow + pmLow;
+  const grandHigh = totalHigh + pmHigh;
 
   const formatCurrency = (num) => {
     if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
@@ -2604,11 +2612,18 @@ const calculatePricingTotal = (selectedServices) => {
   };
 
   return {
-    low: totalLow,
-    high: totalHigh,
-    lowFormatted: formatCurrency(totalLow),
-    highFormatted: formatCurrency(totalHigh),
-    hasPMPercentage,
+    subtotalLow: totalLow,
+    subtotalHigh: totalHigh,
+    low: grandLow,
+    high: grandHigh,
+    lowFormatted: formatCurrency(grandLow),
+    highFormatted: formatCurrency(grandHigh),
+    subtotalLowFormatted: formatCurrency(totalLow),
+    subtotalHighFormatted: formatCurrency(totalHigh),
+    pmLowFormatted: formatCurrency(pmLow),
+    pmHighFormatted: formatCurrency(pmHigh),
+    hasPM: pmPercentageCount > 0 && totalLow > 0,
+    hasPMNoBase: pmPercentageCount > 0 && totalLow === 0,
     hasUncountable
   };
 };
@@ -2619,15 +2634,32 @@ function PricingTotalBar({ selectedServices }) {
   if (!pricingTotal) return null;
   return (
     <div className="mb-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+      {/* Subtotal line (only show if PM is adding to it) */}
+      {pricingTotal.hasPM && (
+        <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+          <span>Services</span>
+          <span>{pricingTotal.subtotalLowFormatted} – {pricingTotal.subtotalHighFormatted}</span>
+        </div>
+      )}
+      {pricingTotal.hasPM && (
+        <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+          <span>Project Management (~10%)</span>
+          <span>{pricingTotal.pmLowFormatted} – {pricingTotal.pmHighFormatted}</span>
+        </div>
+      )}
+      {pricingTotal.hasPM && (
+        <div className="border-t border-gray-300 my-1" />
+      )}
+      {/* Grand total */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-600">Estimated Range</span>
         <span className="text-lg font-bold text-gray-900">
           {pricingTotal.lowFormatted} – {pricingTotal.highFormatted}
         </span>
       </div>
-      {(pricingTotal.hasPMPercentage || pricingTotal.hasUncountable) && (
+      {(pricingTotal.hasPMNoBase || pricingTotal.hasUncountable) && (
         <p className="text-xs text-gray-500 mt-1">
-          {pricingTotal.hasPMPercentage ? 'Plus ~10% for Project Management. ' : ''}
+          {pricingTotal.hasPMNoBase ? 'PM (~10%) will be added once services are selected. ' : ''}
           {pricingTotal.hasUncountable ? 'Some services require scoping for pricing.' : ''}
         </p>
       )}
