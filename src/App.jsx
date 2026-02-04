@@ -3584,13 +3584,19 @@ Example: website, brand, pr, executive_visibility, content_production`
           .map(service => service.name)
       );
       
-      // Merge in archetype-boosted services
+      // Merge in archetype-boosted services (only from detected categories for auto-selection)
       const archetypeBoostedMap = getArchetypeBoostedServices(detected, selectedArchetypes);
       const archetypeBoosted = Object.keys(archetypeBoostedMap);
-      const mergedServices = [...new Set([...autoSelectedServices, ...archetypeBoosted])];
+      // Only auto-select boosted services that belong to detected trigger categories
+      const detectedServiceNames = new Set(
+        detected.flatMap(t => t.services.map(s => typeof s === 'object' ? s.name : s))
+      );
+      const archetypeBoostedForAutoSelect = archetypeBoosted.filter(name => detectedServiceNames.has(name));
+      const mergedServices = [...new Set([...autoSelectedServices, ...archetypeBoostedForAutoSelect])];
       
       console.log('Auto-selected services:', autoSelectedServices);
-      console.log('Archetype-boosted services:', archetypeBoosted);
+      console.log('Archetype-boosted services (all):', archetypeBoosted);
+      console.log('Archetype-boosted for auto-select (detected only):', archetypeBoostedForAutoSelect);
       
       const selectedServicesList = mergedServices.filter(name => 
         // Only include services that actually exist in SERVICE_TRIGGERS
@@ -3650,10 +3656,14 @@ Example: website, brand, pr, executive_visibility, content_production`
             .filter(service => typeof service === 'object' && service.recommend === 'always')
             .map(service => service.name)
         );
-        // Add archetype-boosted services with the NEW archetype selection
+        // Add archetype-boosted services with the NEW archetype selection (only from detected categories)
         const archetypeBoostedMap = getArchetypeBoostedServices(detectedTriggers, next);
         const archetypeBoosted = Object.keys(archetypeBoostedMap);
-        const merged = [...new Set([...baseServices, ...archetypeBoosted])].filter(name =>
+        const detectedServiceNames = new Set(
+          detectedTriggers.flatMap(t => t.services.map(s => typeof s === 'object' ? s.name : s))
+        );
+        const archetypeBoostedForAutoSelect = archetypeBoosted.filter(name => detectedServiceNames.has(name));
+        const merged = [...new Set([...baseServices, ...archetypeBoostedForAutoSelect])].filter(name =>
           SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
         );
         // Also keep any services the user manually added that aren't in base or boost
