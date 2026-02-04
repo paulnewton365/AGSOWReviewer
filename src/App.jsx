@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.4.4';
+const APP_VERSION = '2.4.5';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -3519,10 +3519,19 @@ Format your response EXACTLY as:
 ## TRIGGER INTENSITY
 [High/Medium/Low with brief explanation of why]
 
-## RECOMMENDED_CATEGORIES
-[List ONLY the category IDs that are relevant, comma-separated. Be generous - include any category that might be relevant based on the analysis above.]
+## PRIMARY_CATEGORIES
+[List ONLY the category IDs that are CORE to the client's stated needs — the services they are explicitly asking for or that are essential to deliver what they want. Comma-separated. Be selective — only include categories the client clearly needs.]
 
-Example: website, brand, pr, executive_visibility, content_production`
+## SECONDARY_CATEGORIES
+[List category IDs that are ADJACENT or COMPLEMENTARY — services the client didn't explicitly ask for but could benefit from. Comma-separated. These will be shown as recommendations but not pre-selected.]
+
+Example for a brand project:
+PRIMARY_CATEGORIES: brand, integrated_strategy
+SECONDARY_CATEGORIES: website, content_production, creative_production
+
+Example for a PR + executive visibility project:
+PRIMARY_CATEGORIES: pr, executive_visibility
+SECONDARY_CATEGORIES: content_production, measurement, training`
           }]
         })
       });
@@ -3598,7 +3607,7 @@ Example: website, brand, pr, executive_visibility, content_production`
       console.log('Archetype-boosted services (all):', archetypeBoosted);
       console.log('Archetype-boosted for auto-select (detected only):', archetypeBoostedForAutoSelect);
       
-      const selectedServicesList = mergedServices.filter(name => 
+      const selectedServicesList = completeBundles(mergedServices).filter(name => 
         // Only include services that actually exist in SERVICE_TRIGGERS
         SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
       );
@@ -3663,13 +3672,13 @@ Example: website, brand, pr, executive_visibility, content_production`
           detectedTriggers.flatMap(t => t.services.map(s => typeof s === 'object' ? s.name : s))
         );
         const archetypeBoostedForAutoSelect = archetypeBoosted.filter(name => detectedServiceNames.has(name));
-        const merged = [...new Set([...baseServices, ...archetypeBoostedForAutoSelect])].filter(name =>
+        const merged = completeBundles([...new Set([...baseServices, ...archetypeBoostedForAutoSelect])]).filter(name =>
           SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
         );
         // Also keep any services the user manually added that aren't in base or boost
         setSelectedServices(current => {
           const manuallyAdded = current.filter(s => !baseServices.includes(s));
-          return [...new Set([...merged, ...manuallyAdded])];
+          return completeBundles([...new Set([...merged, ...manuallyAdded])]);
         });
       }
       
@@ -3678,6 +3687,37 @@ Example: website, brand, pr, executive_visibility, content_production`
   };
 
   // Get archetype-boosted services to auto-select
+  // Helper: when a bundle lead is auto-selected, ensure all sub-services in that bundle are also selected
+  // so the bundle checkbox renders as checked. Sub-services have no independent pricing, so this is UI-only.
+  const completeBundles = (serviceNames) => {
+    const nameSet = new Set(serviceNames);
+    
+    // Build a map of bundleName → all service names in that bundle
+    const bundleMap = {}; // bundleName → [serviceName, ...]
+    for (const trigger of SERVICE_TRIGGERS) {
+      for (const service of trigger.services) {
+        if (typeof service !== 'object' || !service.pricing?.bundle) continue;
+        const bundleName = service.pricing.bundle;
+        if (!bundleMap[bundleName]) bundleMap[bundleName] = [];
+        bundleMap[bundleName].push(service.name);
+      }
+    }
+    
+    // For each selected service, if it's in a bundle, add all sibling services
+    const completed = new Set(nameSet);
+    for (const name of nameSet) {
+      for (const [bundleName, bundleServices] of Object.entries(bundleMap)) {
+        if (bundleServices.includes(name)) {
+          for (const sibling of bundleServices) {
+            completed.add(sibling);
+          }
+        }
+      }
+    }
+    
+    return [...completed];
+  };
+
   const getArchetypeBoostedServices = (detected, archetypes) => {
     if (!archetypes || archetypes.length === 0) return {};
     
