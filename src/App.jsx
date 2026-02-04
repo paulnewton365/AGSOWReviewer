@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.4.8';
+const APP_VERSION = '2.5.0';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -2976,7 +2976,65 @@ function PricingTotalBar({ selectedServices }) {
   );
 }
 
-// Extract the highest dollar figure mentioned in free text (notes or transcript)
+// Engagement type mismatch alert - shown in services area when selected services
+// don't align with the currently chosen engagement type
+function EngagementMismatchAlert({ selectedServices, draftEngagementType, onSwitchType }) {
+  if (!selectedServices || selectedServices.length === 0 || !draftEngagementType) return null;
+  
+  const billingAnalysis = analyzeServiceBillingModels(selectedServices);
+  
+  // Determine what engagement type the services actually need
+  let recommendedType = null;
+  let reason = '';
+  
+  if (billingAnalysis.needsIntegrated) {
+    recommendedType = 'integrated';
+    const modelSummary = billingAnalysis.activeBillingModels.map(model => {
+      const cats = billingAnalysis.billingModelCategories[model];
+      const label = model === 'fixed_fee' ? 'Fixed Fee' : model === 'tm' ? 'Time & Materials' : 'Retainer';
+      return `${label} (${cats.map(c => c.category).join(', ')})`;
+    }).join(', ');
+    reason = `Your selected services span multiple billing models: ${modelSummary}. An Integrated engagement is recommended.`;
+  } else if (billingAnalysis.activeBillingModels.length === 1) {
+    recommendedType = billingAnalysis.activeBillingModels[0];
+    const label = recommendedType === 'fixed_fee' ? 'Fixed Fee' : recommendedType === 'tm' ? 'Time & Materials' : 'Retainer';
+    reason = `Your selected services are best suited to a ${label} engagement.`;
+  }
+  
+  if (!recommendedType) return null;
+  
+  // T&M with Cap is a valid override — only warn, don't suggest switching away
+  const currentIsCompatible = draftEngagementType === recommendedType 
+    || (draftEngagementType === 'integrated' && billingAnalysis.activeBillingModels.length >= 1)
+    || (draftEngagementType === 'tm_cap' && recommendedType === 'tm');
+  
+  if (currentIsCompatible) return null;
+  
+  const currentLabel = DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label || draftEngagementType;
+  const recommendedLabel = DRAFT_ENGAGEMENT_TYPES.find(t => t.value === recommendedType)?.label || recommendedType;
+  
+  return (
+    <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-amber-800">
+            Engagement Type Mismatch
+          </p>
+          <p className="text-xs text-amber-700 mt-1">
+            You've selected <strong>{currentLabel}</strong>, but {reason.charAt(0).toLowerCase() + reason.slice(1)}
+          </p>
+          <button
+            onClick={() => onSwitchType(recommendedType)}
+            className="mt-2 text-xs font-medium text-amber-800 underline hover:no-underline"
+          >
+            Switch to {recommendedLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 const extractClientBudget = (text) => {
   if (!text || typeof text !== 'string') return null;
   const amounts = [];
@@ -3319,6 +3377,8 @@ export default function App() {
   const [showOtherServices, setShowOtherServices] = useState(false);
   const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
   const [generatedSOW, setGeneratedSOW] = useState(null);
+  const [generatedPreScope, setGeneratedPreScope] = useState(null);
+  const [isGeneratingPreScope, setIsGeneratingPreScope] = useState(false);
   const [draftError, setDraftError] = useState(null);
   
   // Review SOW state
@@ -3674,7 +3734,8 @@ SECONDARY_CATEGORIES: content_production, measurement, training`
       console.log('Final selected services after bundle completion:', selectedServicesList.length, selectedServicesList);
       setSelectedServices(selectedServicesList);
       
-      // Auto-set engagement type based on billing model analysis
+      // Auto-set engagement type based on selected services billing model analysis only
+      // (Not influenced by FIT archetype or trigger order)
       if (selectedServicesList.length > 0) {
         const billingAnalysis = analyzeServiceBillingModels(selectedServicesList);
         console.log('Billing analysis:', billingAnalysis);
@@ -3682,16 +3743,10 @@ SECONDARY_CATEGORIES: content_production, measurement, training`
         if (billingAnalysis.needsIntegrated) {
           // Multiple billing models needed - use integrated
           setDraftEngagementType('integrated');
-        } else if (detected.length > 0) {
-          // Single billing model - use the appropriate type
-          const dominantCategory = detected[0].id;
-          if (ENGAGEMENT_TYPE_RECOMMENDATIONS.fixed_fee_preferred.includes(dominantCategory)) {
-            setDraftEngagementType('fixed_fee');
-          } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.tm_preferred.includes(dominantCategory)) {
-            setDraftEngagementType('tm');
-          } else if (ENGAGEMENT_TYPE_RECOMMENDATIONS.retainer_preferred.includes(dominantCategory)) {
-            setDraftEngagementType('retainer');
-          }
+        } else if (billingAnalysis.activeBillingModels.length === 1) {
+          // Single billing model - use it directly
+          const model = billingAnalysis.activeBillingModels[0];
+          setDraftEngagementType(model);
         }
       }
       
@@ -4167,7 +4222,169 @@ The SOW should be ready for client presentation with minimal editing needed. Mak
     const filename = `SOW_Draft_${new Date().toISOString().split('T')[0]}.docx`;
     await downloadAsDocx(generatedSOW, filename, {
       title: 'Statement of Work (SOW)',
-      client: '', // Could extract from transcript analysis
+      client: '',
+    });
+  };
+  
+  // Helper to build selected services with pricing for pre-scope
+  const getSelectedServicesPricingSummary = () => {
+    const result = [];
+    const countedBundles = new Set();
+    const formatCurrency = (num) => {
+      if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+      if (num >= 1000) return `$${Math.round(num / 1000)}K`;
+      return `$${num}`;
+    };
+    
+    for (const trigger of SERVICE_TRIGGERS) {
+      const categoryServices = [];
+      for (const service of trigger.services) {
+        const name = typeof service === 'object' ? service.name : service;
+        if (!selectedServices.includes(name)) continue;
+        const pricing = service.pricing;
+        if (!pricing) { categoryServices.push({ name, range: 'Scoping required' }); continue; }
+        if (pricing.percentageOfProject || pricing.percentageOfPaidMedia) continue;
+        if (pricing.bundle && !pricing.budgetLow) continue;
+        if (pricing.bundle) { if (countedBundles.has(pricing.bundle)) continue; countedBundles.add(pricing.bundle); }
+        let range = '';
+        if (pricing.budgetLow && pricing.budgetHigh) {
+          range = `${formatCurrency(pricing.budgetLow)} – ${formatCurrency(pricing.budgetHigh)}`;
+        } else if (pricing.budgetLow) {
+          range = `From ${formatCurrency(pricing.budgetLow)}`;
+        }
+        if (pricing.note) range += ` (${pricing.note})`;
+        categoryServices.push({ name, range });
+      }
+      if (categoryServices.length > 0) {
+        result.push({ category: trigger.category, services: categoryServices });
+      }
+    }
+    return result;
+  };
+  
+  const generatePreScope = async () => {
+    if (!apiKey || selectedServices.length === 0) return;
+    
+    setIsGeneratingPreScope(true);
+    setDraftError(null);
+    
+    try {
+      // Build services + pricing context for the prompt
+      const servicesSummary = getSelectedServicesPricingSummary();
+      const servicesText = servicesSummary.map(cat =>
+        `${cat.category}:\n${cat.services.map(s => `  - ${s.name}${s.range ? ': ' + s.range : ''}`).join('\n')}`
+      ).join('\n\n');
+      
+      const pricingTotal = calculatePricingTotal(selectedServices);
+      let totalBudgetText = 'To be scoped';
+      if (pricingTotal) {
+        totalBudgetText = `${pricingTotal.lowFormatted} – ${pricingTotal.highFormatted}`;
+        if (pricingTotal.hasPM) totalBudgetText += ` (includes project management)`;
+      }
+      
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-5-20250929',
+          max_tokens: 6000,
+          system: `You are a senior strategist at Antenna Group, a marketing and communications agency, writing a client-facing Pre-Scope document. This document is warm, professional, confident, and concise. It should feel like a senior advisor laying out a clear recommendation — not a legal document. Avoid jargon and overly formal language. Write in a way that a CMO or CEO would find compelling and easy to act on.
+
+IMPORTANT FORMATTING RULES:
+- Use markdown formatting with ## headers for the main sections
+- Keep sections concise — this is a summary, not a detailed SOW
+- The tone should be collaborative and advisory
+- Do NOT include legal language, change order processes, or SOW-style protections
+- Do NOT use bullet points for the overview sections — write in flowing paragraphs
+- For the services section, a clean list format is appropriate
+- Do NOT invent specific dollar amounts or timelines — use only what is provided in the services data`,
+          messages: [{
+            role: 'user',
+            content: `Generate a Pre-Scope document using the information below.
+
+## DOCUMENT STRUCTURE
+
+The document MUST follow this exact structure:
+
+### 1. INTRODUCTION (use this text verbatim)
+"This document details each proposed deliverable and the outputs you can anticipate in a formal contract. It is intended to encourage conversation and be iterated until it represents the services and focus that you want to see. Once it is finalized, we will quickly move forward with an SOW and start work."
+
+### 2. OVERVIEW SECTIONS
+Generate the following sections based on the Project Summary below. Each should be 2-4 sentences maximum, written as flowing paragraphs:
+
+## EXECUTIVE SUMMARY
+A brief, compelling overview of what we're proposing and why — frame it as the strategic opportunity.
+
+## SUCCESS DEFINITION
+What will success look like for this engagement? Pull from the client's stated goals.
+
+## PROBLEM STATEMENT
+What challenges or gaps are we addressing? Be direct but diplomatic.
+
+## MANDATORIES
+Any non-negotiable requirements, constraints, or must-haves identified by the client.
+
+## TIMELINE
+High-level timing expectations or phasing (if mentioned). If no timeline was discussed, write a brief note that timeline will be established during scoping.
+
+### 3. RECOMMENDED SERVICES
+Use the header "## RECOMMENDED SERVICES" and then list each service category and its services exactly as provided below. Include the budget range for each service. Format as:
+
+**[Category Name]**
+- Service Name: Budget Range
+- Service Name: Budget Range
+
+### 4. ESTIMATED INVESTMENT
+Use the header "## ESTIMATED INVESTMENT" and state the total budget range provided below.
+
+### 5. NEXT STEPS
+Write a short, warm paragraph (2-3 sentences) encouraging the client to review this document, flag anything that needs adjusting, and confirming that once aligned, we'll move quickly into a detailed SOW.
+
+---
+
+## PROJECT SUMMARY
+${transcriptAnalysis || 'No project summary available'}
+
+## ADDITIONAL NOTES
+${draftNotes || 'None provided'}
+
+## SELECTED SERVICES WITH BUDGET RANGES
+${servicesText}
+
+## TOTAL ESTIMATED BUDGET RANGE
+${totalBudgetText}
+
+Generate the complete Pre-Scope document now.`
+          }]
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'API request failed');
+      }
+      
+      const data = await response.json();
+      setGeneratedPreScope(data.content[0].text);
+      
+    } catch (err) {
+      setDraftError(err.message);
+    } finally {
+      setIsGeneratingPreScope(false);
+    }
+  };
+  
+  const downloadGeneratedPreScope = async () => {
+    if (!generatedPreScope) return;
+    const filename = `Pre-Scope_${new Date().toISOString().split('T')[0]}.docx`;
+    await downloadAsDocx(generatedPreScope, filename, {
+      title: 'Pre-Scope Summary',
+      client: '',
     });
   };
   
@@ -4180,6 +4397,7 @@ The SOW should be ready for client presentation with minimal editing needed. Mak
     setSelectedServices([]);
     setShowOtherServices(false);
     setGeneratedSOW(null);
+    setGeneratedPreScope(null);
     setDraftError(null);
   };
 
@@ -4700,7 +4918,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
         {/* ================================================================== */}
         {/* DRAFT SOW VIEW */}
         {/* ================================================================== */}
-        {currentView === 'draft' && !generatedSOW && (
+        {currentView === 'draft' && !generatedSOW && !generatedPreScope && (
           <>
             <button
               onClick={() => setCurrentView('home')}
@@ -4982,20 +5200,35 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               </button>
                             </div>
                             <PricingTotalBar selectedServices={selectedServices} />
+                            <EngagementMismatchAlert selectedServices={selectedServices} draftEngagementType={draftEngagementType} onSwitchType={setDraftEngagementType} />
                             <BudgetWarningBar draftNotes={draftNotes} transcript={transcript} selectedServices={selectedServices} />
-                            <AntennaButton
-                              onClick={generateSOW}
-                              disabled={!draftEngagementType}
-                              loading={isGeneratingDraft}
-                              loadingText="Generating SOW..."
-                              icon={Sparkles}
-                              className="w-full"
-                              size="large"
-                            >
-                              Generate SOW Draft
-                            </AntennaButton>
-                            {!draftEngagementType && (
-                              <p className="text-sm text-amber-600 mt-2 text-center">Please select an engagement type first</p>
+                            <div className="flex gap-3">
+                              <AntennaButton
+                                onClick={generatePreScope}
+                                disabled={!transcriptAnalysis}
+                                loading={isGeneratingPreScope}
+                                loadingText="Generating..."
+                                icon={FileText}
+                                variant="secondary"
+                                className="flex-1"
+                                size="large"
+                              >
+                                Generate Pre-Scope
+                              </AntennaButton>
+                              <AntennaButton
+                                onClick={generateSOW}
+                                disabled={!draftEngagementType}
+                                loading={isGeneratingDraft}
+                                loadingText="Generating SOW..."
+                                icon={Sparkles}
+                                className="flex-1"
+                                size="large"
+                              >
+                                Generate SOW Draft
+                              </AntennaButton>
+                            </div>
+                            {!draftEngagementType && !isGeneratingPreScope && (
+                              <p className="text-sm text-amber-600 mt-2 text-center">Select an engagement type to generate a SOW Draft</p>
                             )}
                           </div>
                         )}
@@ -5043,20 +5276,35 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               </button>
                             </div>
                             <PricingTotalBar selectedServices={selectedServices} />
+                            <EngagementMismatchAlert selectedServices={selectedServices} draftEngagementType={draftEngagementType} onSwitchType={setDraftEngagementType} />
                             <BudgetWarningBar draftNotes={draftNotes} transcript={transcript} selectedServices={selectedServices} />
-                            <AntennaButton
-                              onClick={generateSOW}
-                              disabled={!draftEngagementType}
-                              loading={isGeneratingDraft}
-                              loadingText="Generating SOW..."
-                              icon={Sparkles}
-                              className="w-full"
-                              size="large"
-                            >
-                              Generate SOW Draft
-                            </AntennaButton>
-                            {!draftEngagementType && (
-                              <p className="text-sm text-amber-600 mt-2 text-center">Please select an engagement type first</p>
+                            <div className="flex gap-3">
+                              <AntennaButton
+                                onClick={generatePreScope}
+                                disabled={!transcriptAnalysis}
+                                loading={isGeneratingPreScope}
+                                loadingText="Generating..."
+                                icon={FileText}
+                                variant="secondary"
+                                className="flex-1"
+                                size="large"
+                              >
+                                Generate Pre-Scope
+                              </AntennaButton>
+                              <AntennaButton
+                                onClick={generateSOW}
+                                disabled={!draftEngagementType}
+                                loading={isGeneratingDraft}
+                                loadingText="Generating SOW..."
+                                icon={Sparkles}
+                                className="flex-1"
+                                size="large"
+                              >
+                                Generate SOW Draft
+                              </AntennaButton>
+                            </div>
+                            {!draftEngagementType && !isGeneratingPreScope && (
+                              <p className="text-sm text-amber-600 mt-2 text-center">Select an engagement type to generate a SOW Draft</p>
                             )}
                           </div>
                         )}
@@ -5079,24 +5327,38 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
           </>
         )}
 
-        {/* Generated SOW View */}
-        {currentView === 'draft' && generatedSOW && (
+        {/* Generated Document View (SOW and/or Pre-Scope) */}
+        {currentView === 'draft' && (generatedSOW || generatedPreScope) && (
           <>
             <div className="flex items-start justify-between mb-8">
               <div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-2">SOW Draft Generated</h1>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                  {generatedSOW && generatedPreScope ? 'Documents Generated' : generatedSOW ? 'SOW Draft Generated' : 'Pre-Scope Generated'}
+                </h1>
                 <p className="text-gray-500">
-                  {DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label} • {selectedServices.length} services included
+                  {draftEngagementType ? `${DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label} • ` : ''}{selectedServices.length} services included
                 </p>
               </div>
               <div className="flex gap-3">
-                <AntennaButton
-                  onClick={downloadGeneratedSOW}
-                  icon={Download}
-                  size="default"
-                >
-                  Download Word Doc
-                </AntennaButton>
+                {generatedPreScope && (
+                  <AntennaButton
+                    onClick={downloadGeneratedPreScope}
+                    icon={Download}
+                    variant="secondary"
+                    size="default"
+                  >
+                    Download Pre-Scope
+                  </AntennaButton>
+                )}
+                {generatedSOW && (
+                  <AntennaButton
+                    onClick={downloadGeneratedSOW}
+                    icon={Download}
+                    size="default"
+                  >
+                    Download SOW
+                  </AntennaButton>
+                )}
                 <AntennaButton
                   onClick={resetDraft}
                   variant="secondary"
@@ -5107,15 +5369,75 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
               </div>
             </div>
             
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <span className="font-semibold text-gray-900">Generated SOW</span>
-                <CopyButton text={generatedSOW} />
+            {/* Generate the other document if only one exists */}
+            {generatedPreScope && !generatedSOW && draftEngagementType && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-800">Ready to create the full SOW?</p>
+                  <p className="text-xs text-blue-600 mt-0.5">Generate a detailed Statement of Work from the same services and settings.</p>
+                </div>
+                <AntennaButton
+                  onClick={generateSOW}
+                  loading={isGeneratingDraft}
+                  loadingText="Generating..."
+                  icon={Sparkles}
+                  size="default"
+                >
+                  Generate SOW Draft
+                </AntennaButton>
               </div>
-              <div className="p-6 max-h-[70vh] overflow-auto">
-                <pre className="whitespace-pre-wrap text-sm text-gray-900 font-mono leading-relaxed">{generatedSOW}</pre>
+            )}
+            {generatedSOW && !generatedPreScope && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-800">Need a client-facing summary?</p>
+                  <p className="text-xs text-blue-600 mt-0.5">Generate a Pre-Scope document to share with the client before the full SOW.</p>
+                </div>
+                <AntennaButton
+                  onClick={generatePreScope}
+                  loading={isGeneratingPreScope}
+                  loadingText="Generating..."
+                  icon={FileText}
+                  size="default"
+                >
+                  Generate Pre-Scope
+                </AntennaButton>
               </div>
-            </div>
+            )}
+            
+            {/* Pre-Scope Document */}
+            {generatedPreScope && (
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                    <span className="font-semibold text-gray-900">Pre-Scope</span>
+                    <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Client-Facing</span>
+                  </div>
+                  <CopyButton text={generatedPreScope} />
+                </div>
+                <div className="p-6 max-h-[70vh] overflow-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-900 font-mono leading-relaxed">{generatedPreScope}</pre>
+                </div>
+              </div>
+            )}
+            
+            {/* SOW Document */}
+            {generatedSOW && (
+              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-gray-600" />
+                    <span className="font-semibold text-gray-900">Statement of Work</span>
+                    <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">Internal Draft</span>
+                  </div>
+                  <CopyButton text={generatedSOW} />
+                </div>
+                <div className="p-6 max-h-[70vh] overflow-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-900 font-mono leading-relaxed">{generatedSOW}</pre>
+                </div>
+              </div>
+            )}
           </>
         )}
 
