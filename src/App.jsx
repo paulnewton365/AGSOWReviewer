@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.3.4';
+const APP_VERSION = '2.4.1';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1064,6 +1064,243 @@ const DRAFT_ENGAGEMENT_TYPES = [
   { value: 'tm_cap', label: 'T&M with Cap', description: 'Hourly with maximum (client request only)' }
 ];
 
+// ============================================================================
+// FIT ARCHETYPES
+// ============================================================================
+const FIT_ARCHETYPES = {
+  architect: {
+    id: 'architect',
+    title: 'Architect',
+    emoji: '📐',
+    short: 'Strategic & Systematic',
+    description: 'Values systematic approaches, formal planning, and proven methodologies.',
+    // Categories to boost — conditional services in these become auto-selected
+    boostCategories: ['integrated_strategy', 'brand', 'executive_visibility', 'measurement', 'pr', 'training'],
+    // Specific services to auto-select if the category is detected
+    boostServices: [
+      'Marketing Strategy', 'Customer Journey Mapping', 'Marketing Audit',
+      'Brand Research (Compass)', 'Stakeholder Interviews (IDIs)', 'Brand Workshop',
+      'Analytics Strategy', 'KPI Development', 'ROI Framework',
+      'Executive Positioning Strategy', 'Brand Guidelines'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: ARCHITECT
+This client values strategic thinking and systematic approaches. The SOW should:
+- Emphasize strategic rationale and methodology behind each recommendation
+- Include detailed phasing with clear dependencies between workstreams
+- Present formal review and governance structures
+- Frame deliverables in terms of long-term brand and business impact
+- Use language that conveys thoughtful planning: "strategic framework", "phased approach", "stakeholder alignment"
+- Include robust reporting and measurement sections
+- Emphasize proven methodologies and industry best practices`,
+    waysOfWorking: `WAYS OF WORKING — ARCHITECT CLIENT
+Governance & Process:
+- Formal kickoff with comprehensive briefing and stakeholder alignment session
+- Structured governance model: Steering committee reviews at phase gates, working team reviews bi-weekly
+- All strategic recommendations presented in formal deck format with data rationale
+- Phased work plans with clear dependencies — each phase has defined entry/exit criteria before proceeding
+- Change requests require written submission and formal impact assessment before approval
+
+Communication Cadence:
+- Bi-weekly status reports with progress against milestones, budget tracking, and risk register
+- Monthly strategic review meetings with senior stakeholders
+- Quarterly business reviews assessing program-level impact against objectives
+- All deliverables accompanied by strategic rationale documentation
+
+Approval & Decision Flow:
+- Defined approval hierarchy: day-to-day decisions via designated point of contact, strategic decisions via steering committee
+- Client provides consolidated feedback representing unified organizational direction within agreed windows
+- Formal sign-off required at each phase gate before subsequent work commences
+
+Reporting & Documentation:
+- Comprehensive project documentation maintained throughout engagement
+- Post-phase retrospectives with lessons learned and optimization recommendations
+- Final engagement report summarizing outcomes against stated objectives`,
+    pricingGuidance: `PRICING APPROACH — ARCHITECT CLIENT
+- Frame fees as investment in strategic foundation and long-term brand building
+- Present comprehensive, all-inclusive phase pricing — Architects prefer clarity over modular á la carte
+- Emphasize the value of thorough upfront strategy to prevent costly rework downstream
+- Structure payments around phase gates and milestone approvals
+- Include detailed assumptions section — Architects want to understand what underlies the pricing
+- Where applicable, present multi-year or programmatic pricing that rewards sustained commitment
+- Include rate card for additional work but position it as exception, not expectation`
+  },
+  visionary: {
+    id: 'visionary',
+    title: 'Visionary',
+    emoji: '✨',
+    short: 'Creative & Bold',
+    description: 'Prioritizes authentic brand expression, breakthrough ideas, and bold creative risks.',
+    boostCategories: ['brand', 'creative_production', 'creative_campaigns', 'influencer', 'content_production'],
+    boostServices: [
+      'Creative Platform Development', 'Big Idea Generation', 'Experiential Concepts',
+      'Tone of Voice', 'Manifesto', 'Visual Identity System', 'Logo/Wordmark Development',
+      'Graphic Design', 'Video Production', 'Animation & Motion Graphics',
+      'Influencer Strategy', 'Content Strategy'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: VISIONARY
+This client values creative breakthrough and authentic expression. The SOW should:
+- Lead with creative ambition and the opportunity for breakthrough work
+- Frame services as collaborative creative partnerships, not just deliverables
+- Emphasize creative exploration phases and concept development
+- Lean toward creative retainers and retained creative services for ongoing inspiration
+- Use language that conveys creative ambition: "breakthrough concepts", "authentic expression", "creative exploration"
+- Include creative workshops and collaborative ideation sessions
+- Describe revision processes as "creative refinement" rather than correction cycles
+- Emphasize brand storytelling and cultural relevance`,
+    waysOfWorking: `WAYS OF WORKING — VISIONARY CLIENT
+Creative Partnership Model:
+- Immersive kickoff: Deep-dive brand immersion session including culture, mission, aesthetic references, and creative ambitions
+- Collaborative creative workshops at key moments — Agency brings provocative stimulus; Client brings brand truth
+- Creative exploration phase built into every engagement before execution begins — space to ideate without constraint
+- Concept presentations as storytelling moments: show the journey from insight to idea, not just final output
+- Creative refinement rounds (not "revisions") — iterative evolution toward breakthrough, not correction cycles
+
+Communication Cadence:
+- Regular creative check-ins: informal, visual, collaborative — share mood boards, references, work-in-progress
+- Status updates focused on creative narrative and brand journey, not just task completion
+- Quarterly inspiration sessions: Agency proactively brings cultural trends, competitive creative, and breakthrough opportunities
+- Open creative dialogue encouraged between sessions — this is a partnership, not a vendor relationship
+
+Approval & Decision Flow:
+- Creative direction established collaboratively at outset — shared vision document as ongoing reference
+- Client empowered to make bold creative decisions quickly — minimize approval layers that dilute ideas
+- Feedback framed as creative direction, not prescriptive edits: "we want it to feel more…" not "change the font to…"
+- Agency retains creative recommendation authority — Client trusts Agency to push boundaries while respecting brand truth
+
+Reporting & Documentation:
+- Portfolio-style creative reviews showcasing body of work and brand evolution
+- Impact measured through brand expression metrics: distinctiveness, cultural relevance, creative recognition
+- End-of-engagement creative retrospective: what we built, what we learned, where the brand goes next`,
+    pricingGuidance: `PRICING APPROACH — VISIONARY CLIENT
+- Frame fees as investment in creative partnership and brand differentiation
+- Lean toward creative retainers and T&M with minimum commitment — Visionaries need ongoing creative access, not one-off projects
+- Include dedicated creative exploration / concept development budgets as line items — this isn't overhead, it's the work
+- Structure retained creative services with monthly creative commitment rather than rigid deliverable counts
+- Position premium pricing confidently — breakthrough creative commands premium investment
+- For project work, include concept development phase pricing separately from production execution
+- Build in flexibility for inspiration-driven pivots without triggering change orders for every creative evolution`
+  },
+  accelerator: {
+    id: 'accelerator',
+    title: 'Accelerator',
+    emoji: '📊',
+    short: 'Performance & Data-Driven',
+    description: 'Demands measurable results, data-driven decisions, and performance optimization.',
+    boostCategories: ['performance_marketing', 'measurement', 'paid_social', 'seo', 'geo'],
+    boostServices: [
+      'CRO', 'A/B Testing', 'Landing Page Optimization', 'Funnel Optimization',
+      'Performance Reporting', 'Marketing Automation',
+      'Analytics Strategy', 'Dashboard Development', 'Attribution Modeling', 'ROI Framework', 'KPI Development',
+      'Paid Social Strategy', 'Campaign Performance Reporting',
+      'SEO Strategy & Audit', 'SEO Reporting & Insights'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: ACCELERATOR
+This client values measurable performance and data-driven optimization. The SOW should:
+- Lead with KPIs, success metrics, and measurable outcomes for every service
+- Include robust measurement frameworks and reporting cadences
+- Emphasize performance marketing, A/B testing, and optimization cycles
+- Include dashboard development and real-time performance visibility
+- Use language that conveys accountability: "measurable outcomes", "KPI targets", "data-driven optimization"
+- Frame creative work in terms of conversion impact and performance metrics
+- Include regular performance review cadences (weekly/monthly)
+- Define clear benchmarks and improvement targets within 90-day windows`,
+    waysOfWorking: `WAYS OF WORKING — ACCELERATOR CLIENT
+Performance-Driven Operations:
+- Data-first kickoff: Establish baseline metrics, define KPIs, agree on measurement framework and attribution model before work begins
+- 90-day goal cycles: All work structured around quarterly performance targets with mid-cycle optimization checkpoints
+- Test-measure-optimize loop built into every workstream — no creative or strategy ships without a hypothesis and success metric
+- Weekly optimization cadence: Agency reviews performance data and makes tactical adjustments within pre-approved parameters
+- Continuous A/B testing protocol: systematic testing calendar for creative, messaging, audiences, and channels
+
+Communication Cadence:
+- Real-time performance dashboards with Client access — no waiting for reports to see what's working
+- Weekly performance pulse: brief data-driven update on key metrics, wins, and optimization actions taken
+- Monthly deep-dive performance reviews with trend analysis, test results, and next optimization priorities
+- Quarterly strategic reviews connecting performance data to business outcomes and adjusting targets
+
+Approval & Decision Flow:
+- Pre-approved optimization parameters: Agency authorized to make tactical changes (bid adjustments, creative rotation, audience refinement) within defined boundaries without per-change approval
+- Strategic pivots (new channels, significant budget reallocation, messaging overhaul) require Client approval with data justification
+- Decisions backed by data — Agency presents options with projected performance impact; Client decides based on numbers
+- Rapid approval process: 24-48 hour turnaround on optimization recommendations to maintain momentum
+
+Reporting & Documentation:
+- Automated performance dashboards updated daily/weekly
+- Monthly performance reports with clear KPI tracking, trend analysis, and actionable recommendations
+- Test log documenting all experiments, hypotheses, results, and learnings
+- Quarterly business impact assessment connecting marketing performance to revenue and growth metrics`,
+    pricingGuidance: `PRICING APPROACH — ACCELERATOR CLIENT
+- Frame fees in terms of performance investment and measurable return
+- Include measurement and analytics setup as a foundational line item — not optional, essential
+- Structure ongoing services around optimization cycles with clear performance benchmarks
+- Consider performance review cadences as part of the service value, not administrative overhead
+- Present pricing with associated KPIs: "This investment targets [X] improvement in [metric] within [timeframe]"
+- Include dashboard development and reporting infrastructure in the initial scope — Accelerators need visibility from day one
+- For retainers, emphasize efficiency gains over time: optimization drives more value from the same investment
+- Budget for systematic A/B testing — position it as essential to performance improvement, not discretionary`
+  },
+  entrepreneur: {
+    id: 'entrepreneur',
+    title: 'Entrepreneur',
+    emoji: '🚀',
+    short: 'Fast & Action-Oriented',
+    description: 'Needs flexible, action-oriented partnerships with quick wins at entrepreneurial pace.',
+    boostCategories: ['gtm', 'paid_social', 'performance_marketing', 'creative_campaigns', 'content_production'],
+    boostServices: [
+      'GTM Strategy', 'Launch Planning', 'Channel Strategy',
+      'A/B Testing', 'Landing Page Optimization', 'CRO',
+      'Creative Platform Development', 'Campaign Asset Creation',
+      'Paid Social Strategy', 'Audience Development & Testing',
+      'Content Strategy', 'Social Content Creation'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: ENTREPRENEUR
+This client values speed, flexibility, and quick wins. The SOW should:
+- Emphasize fast starts with rapid hypothesis-driven strategy
+- Structure work in short sprints rather than long phases
+- Include A/B testing and test-and-learn approaches for creative platforms and paid media
+- Prioritize quick wins that demonstrate value early
+- Use language that conveys momentum: "rapid deployment", "test and learn", "sprint-based delivery"
+- Build in flexibility for pivoting based on early results
+- Include lightweight reporting focused on actionable insights over comprehensive analysis
+- Emphasize getting to market quickly with creative assets across paid media and social`,
+    waysOfWorking: `WAYS OF WORKING — ENTREPRENEUR CLIENT
+Sprint-Based Partnership:
+- Rapid-start kickoff: Abbreviated onboarding (1-2 sessions max) focused on immediate priorities and first sprint definition
+- Work structured in 2-4 week sprints with defined deliverables, hypotheses, and success criteria per sprint
+- Hypothesis-driven approach: "We believe [X] will achieve [Y] — let's test it" rather than months of upfront strategy
+- Built-in pivot points at sprint boundaries — shift priorities based on what's working without formal change orders
+- MVP-first mentality: Launch with good-enough creative, learn from real-world data, refine in subsequent sprints
+
+Communication Cadence:
+- Quick-touch check-ins: 15-30 minute weekly syncs focused on decisions, blockers, and next actions — no lengthy presentations
+- Real-time communication channel (Slack/Teams) for day-to-day questions and quick approvals
+- Sprint retrospectives: brief review of what shipped, what we learned, what's next
+- Monthly strategic pulse: lightweight assessment of overall direction and priorities (not a formal review)
+
+Approval & Decision Flow:
+- Streamlined approvals: single decision-maker with authority to approve on the spot
+- Async approval workflow for creative and content — share for review, approved unless feedback within 24-48 hours
+- Agency empowered to make execution decisions within sprint scope without per-item approval
+- Pivot decisions made quickly at sprint boundaries — no committee required
+- "Good enough to ship" standard for initial launches; perfection is the enemy of progress
+
+Reporting & Documentation:
+- Lightweight sprint reports: what shipped, key metrics, learnings, next sprint priorities (1-2 pages max)
+- Action-oriented dashboards showing what's working and what to do about it
+- Monthly summary connecting sprint outputs to business growth metrics
+- Documentation kept lean — enough to make decisions, not enough to slow things down`,
+    pricingGuidance: `PRICING APPROACH — ENTREPRENEUR CLIENT
+- Frame fees around speed-to-value and quick wins that demonstrate ROI early
+- Structure pricing in sprint-based phases: small initial commitment that scales based on results
+- Present a "Phase 1 Fast Start" with lower entry point, followed by expansion phases tied to early wins
+- Lean toward T&M or retainer models that flex with changing priorities — Entrepreneurs hate paying for scope they've outgrown
+- Include swap-in/swap-out provisions: trade equivalent deliverables without change orders as priorities shift
+- Keep proposal modular — let client add services as they grow rather than requiring large upfront commitment
+- Position pricing as investment in velocity: "Get to market in [X] weeks rather than [Y] months"
+- Budget for test-and-learn: allocate portion of investment explicitly for experimentation across creative and channels`
+  }
+};
+
 // Engagement type recommendations based on service categories
 const ENGAGEMENT_TYPE_RECOMMENDATIONS = {
   // Fixed Fee is best for these categories
@@ -1618,6 +1855,21 @@ FLAGS:
 ✗ No designated approver identified
 ✗ No consequences for client failure to meet responsibilities
 ✗ Feedback consolidation not addressed
+
+### 1.8.1 Engagement Operating Model / Ways of Working (RECOMMENDED)
+Defines how Agency and Client will work together operationally. Should include:
+- Governance structure: review cadences, steering meetings, reporting rhythm
+- Communication approach: status update frequency, format, and participants
+- Approval and decision-making workflow: who approves what, turnaround expectations
+- Meeting cadence: kickoff, working sessions, strategic reviews
+- This section should be tailored to the client relationship style, not boilerplate
+
+Note: Presence of this section is a quality indicator, not a hard requirement. However, SOWs that define ways of working upfront experience fewer process disputes.
+
+FLAGS:
+⚠ No governance or communication cadence defined
+⚠ Approval workflow unclear or undefined
+⚠ Meeting cadence not specified
 
 ### 1.9 Assumptions
 Document conditions expected to exist. Common assumptions include:
@@ -2667,7 +2919,7 @@ function PricingTotalBar({ selectedServices }) {
   );
 }
 
-function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, onToggleBundle }) {
+function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, onToggleBundle, boostedServices = [] }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const serviceNames = getServiceNames(trigger);
   const selectedCount = serviceNames.filter(s => selectedServices.includes(s)).length;
@@ -2779,6 +3031,9 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, o
                     <div className="flex-1">
                       <span className="text-sm font-medium text-gray-900">{bundle.name}</span>
                       <span className="text-xs text-gray-400 ml-2">({bundle.services.length} services)</span>
+                      {bundle.services.some(s => boostedServices.includes(s.name)) && (
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold align-middle">FIT</span>
+                      )}
                       {bundleSelected && pricingInfo && (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           {pricingInfo.term && (
@@ -2832,6 +3087,9 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, o
                     />
                     <div className="flex-1">
                       <span className="text-sm text-gray-700 group-hover:text-gray-900">{svc.name}</span>
+                      {boostedServices.includes(svc.name) && (
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold align-middle">FIT</span>
+                      )}
                       {pricingInfo && isChecked && (pricingInfo.term || pricingInfo.budget || pricingInfo.note) && (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           {pricingInfo.term && (
@@ -2876,6 +3134,7 @@ export default function App() {
   // Draft SOW state
   const [draftNotes, setDraftNotes] = useState('');
   const [draftEngagementType, setDraftEngagementType] = useState('');
+  const [selectedArchetypes, setSelectedArchetypes] = useState(['architect']);
   const [transcript, setTranscript] = useState('');
   const [isAnalyzingTranscript, setIsAnalyzingTranscript] = useState(false);
   const [transcriptAnalysis, setTranscriptAnalysis] = useState(null);
@@ -3138,9 +3397,17 @@ ${transcript}`
           .map(service => service.name)
       );
       
-      console.log('Auto-selected services:', autoSelectedServices);
+      // Merge in archetype-boosted services
+      const archetypeBoosted = getArchetypeBoostedServices(detected, selectedArchetypes);
+      const mergedServices = [...new Set([...autoSelectedServices, ...archetypeBoosted])];
       
-      const selectedServicesList = [...new Set(autoSelectedServices)];
+      console.log('Auto-selected services:', autoSelectedServices);
+      console.log('Archetype-boosted services:', archetypeBoosted);
+      
+      const selectedServicesList = mergedServices.filter(name => 
+        // Only include services that actually exist in SERVICE_TRIGGERS
+        SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
+      );
       setSelectedServices(selectedServicesList);
       
       // Auto-set engagement type based on billing model analysis
@@ -3175,6 +3442,82 @@ ${transcript}`
     }
   };
   
+  // Toggle FIT archetype selection (max 2) and re-evaluate services if analysis exists
+  const toggleArchetype = (archetypeId) => {
+    setSelectedArchetypes(prev => {
+      let next;
+      if (prev.includes(archetypeId)) {
+        next = prev.filter(a => a !== archetypeId);
+      } else if (prev.length >= 2) {
+        next = [prev[1], archetypeId];
+      } else {
+        next = [...prev, archetypeId];
+      }
+      
+      // If transcript has been analyzed, re-evaluate service selection
+      if (detectedTriggers.length > 0) {
+        // Recalculate base auto-selected from triggers
+        const baseServices = detectedTriggers.flatMap(trigger => 
+          trigger.services
+            .filter(service => typeof service === 'object' && service.recommend === 'always')
+            .map(service => service.name)
+        );
+        // Add archetype-boosted services with the NEW archetype selection
+        const archetypeBoosted = getArchetypeBoostedServices(detectedTriggers, next);
+        const merged = [...new Set([...baseServices, ...archetypeBoosted])].filter(name =>
+          SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
+        );
+        // Also keep any services the user manually added that aren't in base or boost
+        setSelectedServices(current => {
+          const manuallyAdded = current.filter(s => !baseServices.includes(s));
+          return [...new Set([...merged, ...manuallyAdded])];
+        });
+      }
+      
+      return next;
+    });
+  };
+
+  // Get archetype-boosted services to auto-select
+  const getArchetypeBoostedServices = (detected, archetypes) => {
+    if (!archetypes || archetypes.length === 0) return [];
+    
+    const boostedServices = [];
+    
+    for (const archetypeId of archetypes) {
+      const archetype = FIT_ARCHETYPES[archetypeId];
+      if (!archetype) continue;
+      
+      // Auto-select specific services from boosted categories that were detected
+      for (const trigger of SERVICE_TRIGGERS) {
+        const isDetected = detected.some(d => d.id === trigger.id);
+        const isBoosted = archetype.boostCategories.includes(trigger.id);
+        
+        if (isDetected || isBoosted) {
+          for (const service of trigger.services) {
+            const name = typeof service === 'object' ? service.name : service;
+            // For detected categories: select all conditional services in boosted categories
+            // For non-detected but boosted categories: select 'always' services
+            if (isDetected && isBoosted) {
+              // Both detected AND boosted: select everything
+              boostedServices.push(name);
+            } else if (isBoosted && typeof service === 'object' && service.recommend === 'always') {
+              // Boosted but not detected: select 'always' services
+              boostedServices.push(name);
+            }
+          }
+        }
+      }
+      
+      // Also add explicitly named boost services if their category exists in SERVICE_TRIGGERS
+      for (const serviceName of archetype.boostServices) {
+        boostedServices.push(serviceName);
+      }
+    }
+    
+    return [...new Set(boostedServices)];
+  };
+
   const toggleService = (service) => {
     setSelectedServices(prev => 
       prev.includes(service) 
@@ -3419,6 +3762,18 @@ Explicitly list what is NOT included. Consider:
 
 ${engagementGuidance[engagementType] || engagementGuidance.fixed_fee}
 
+${selectedArchetypes.length > 0 ? `## CLIENT FIT ARCHETYPE GUIDANCE
+${selectedArchetypes.map(id => FIT_ARCHETYPES[id].sowGuidance).join('\n\n')}
+
+## WAYS OF WORKING
+${selectedArchetypes.map(id => FIT_ARCHETYPES[id].waysOfWorking).join('\n\n')}
+IMPORTANT: Include a "Ways of Working" or "Engagement Operating Model" section in the SOW that reflects this archetype's preferred communication, governance, reporting, and approval approach. This section should appear after Client Responsibilities and before Assumptions. Adapt the language to feel natural within the SOW — do not copy verbatim, but ensure the operational style matches this client's archetype.
+
+## PRICING & FEE GUIDANCE (Archetype-Specific)
+${selectedArchetypes.map(id => FIT_ARCHETYPES[id].pricingGuidance).join('\n\n')}
+${selectedArchetypes.length === 2 ? `
+BLEND NOTE: This client is a ${selectedArchetypes.map(id => FIT_ARCHETYPES[id].title).join(' + ')} blend. Balance both archetype preferences throughout the SOW — weave together the priorities from each archetype rather than treating them as separate sections. The Ways of Working should reflect a natural synthesis of both styles.` : ''}` : ''}
+
 ${ASSESSMENT_FRAMEWORK}`,
           messages: [{
             role: 'user',
@@ -3426,6 +3781,13 @@ ${ASSESSMENT_FRAMEWORK}`,
 
 ## ENGAGEMENT TYPE
 ${engagementLabel}
+${selectedArchetypes.length > 0 ? `
+## CLIENT FIT ARCHETYPE
+${selectedArchetypes.map(id => `${FIT_ARCHETYPES[id].emoji} ${FIT_ARCHETYPES[id].title}: ${FIT_ARCHETYPES[id].description}`).join('\n')}
+${selectedArchetypes.length === 2 ? `\nThis is a BLENDED archetype — tailor the SOW to balance both profiles.` : ''}
+
+IMPORTANT: Include a dedicated "Engagement Operating Model" or "Ways of Working" section in the SOW that establishes governance, communication cadence, approval workflows, and reporting expectations tailored to this archetype. Also adapt the fee structure presentation to match this archetype's pricing preferences.
+` : ''}
 ${engagementType === 'integrated' ? `
 ## BILLING MODEL BREAKDOWN
 ${(() => {
@@ -3474,25 +3836,33 @@ Generate a complete, client-ready SOW that:
    - Input requirements with deadlines
    - Consequences for non-compliance
 
-4. **Master Assumptions**: Including:
+4. **Engagement Operating Model / Ways of Working**: A dedicated section that establishes:
+   - Governance structure and review cadences (adapted to the client's FIT archetype)
+   - Communication approach and reporting rhythm
+   - Approval and decision-making workflow
+   - Meeting and status update frequency and format
+   - This section should feel tailored to the client, not boilerplate — reference the FIT Archetype guidance
+
+5. **Master Assumptions**: Including:
    - Scope boundaries and exclusions
    - Revision limits
    - Response time expectations
    - Pause/termination provisions
 
-5. **Proper Formatting**:
+6. **Proper Formatting**:
    - Decimal numbering throughout (1.1, 1.1.1, etc.)
    - "Up to" language for all quantities and timeframes
    - Clear section headers
    - Professional tone
 
-6. **Fee Summary**: Appropriate for a ${engagementLabel} engagement with:
+7. **Fee Summary**: Appropriate for a ${engagementLabel} engagement with:
    - Clear fee structure
    - Payment schedule tied to milestones or phases
    - Rate card for additional work if applicable
    - Expense handling
+   - Fee presentation adapted to the client's FIT archetype pricing preferences
 
-7. **Scope Protection**: Clear exclusions and boundaries to prevent scope creep
+8. **Scope Protection**: Clear exclusions and boundaries to prevent scope creep
 
 The SOW should be ready for client presentation with minimal editing needed. Make it thorough but readable.`
           }]
@@ -3938,6 +4308,9 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
   // RENDER
   // ============================================================================
   
+  // Compute archetype-boosted services for FIT badges
+  const currentBoostedServices = getArchetypeBoostedServices(detectedTriggers, selectedArchetypes);
+  
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#E8E6E1' }}>
       {/* Header */}
@@ -4141,6 +4514,54 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     })()}
                   </div>
                   
+                  {/* FIT Archetype */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-900 mb-1">Select Client FIT Archetype</label>
+                    <p className="text-xs text-gray-500 mb-3">Tailors service recommendations, SOW language, ways of working, and pricing approach. Select up to 2 for a blend. Defaults to Architect.</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {Object.values(FIT_ARCHETYPES).map((archetype) => {
+                        const isSelected = selectedArchetypes.includes(archetype.id);
+                        return (
+                          <button
+                            key={archetype.id}
+                            onClick={() => toggleArchetype(archetype.id)}
+                            className={`p-3 rounded-xl border-2 text-left transition-all ${
+                              isSelected
+                                ? 'border-gray-900 bg-gray-50'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{archetype.emoji}</span>
+                              <p className="font-semibold text-gray-900 text-sm">{archetype.title}</p>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{archetype.short}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedArchetypes.length > 0 && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-semibold text-gray-700">
+                            {selectedArchetypes.length === 1 ? 'Selected:' : 'Blend:'}
+                          </span>
+                          {selectedArchetypes.map(id => (
+                            <span key={id} className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-white px-2 py-0.5 rounded border border-gray-200">
+                              {FIT_ARCHETYPES[id].emoji} {FIT_ARCHETYPES[id].title}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {selectedArchetypes.map(id => FIT_ARCHETYPES[id].description).join(' ')}
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-1.5 italic">
+                          Affects: service emphasis, SOW tone & control language, ways of working section, pricing approach
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
                   {/* Notes */}
                   <div className="mb-6">
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -4234,6 +4655,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               selectedServices={selectedServices}
                               onToggleService={toggleService}
                               onToggleBundle={toggleBundle}
+                              boostedServices={currentBoostedServices}
                             />
                           ))}
                         </div>
@@ -4258,6 +4680,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                     selectedServices={selectedServices}
                                     onToggleService={toggleService}
                                     onToggleBundle={toggleBundle}
+                                    boostedServices={currentBoostedServices}
                                   />
                                 ))}
                               </div>
@@ -4320,6 +4743,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               selectedServices={selectedServices}
                               onToggleService={toggleService}
                               onToggleBundle={toggleBundle}
+                              boostedServices={currentBoostedServices}
                             />
                           ))}
                         </div>

@@ -1,15 +1,18 @@
-# SOW Workbench v2.3.4
+# SOW Workbench v2.4.0
 
 A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
 
-## What's New in v2.3.4
+## What's New in v2.4.0
 
-### Bundle Selection UI
-Services that are sold together are now displayed as bundles with improved UX:
-- **Bundle as top-level checkbox** — Click the bundle name (e.g., "Standard Website Offering") to select/deselect all included services at once
-- **Indented member services** — When a bundle is selected, all included services appear indented with checkmarks showing what's included
-- **No individual selection** — Bundled services can only be selected as a complete package, preventing partial bundle pricing
-- **Bundle pricing visible** — Term estimates and budget ranges display on the bundle header when selected
+### Client FIT Archetype Integration
+The SOW Workbench now integrates with Antenna Group's FIT (Framework for Intelligent Tailoring) assessment to personalize service recommendations and SOW tone:
+
+- **Four archetypes**: Architect (📐 Strategic & Systematic), Visionary (✨ Creative & Bold), Accelerator (📊 Performance & Data-Driven), Entrepreneur (🚀 Fast & Action-Oriented)
+- **Blend support**: Select up to 2 archetypes per client for blended profiles
+- **Service boosting**: Archetype selection automatically recommends additional services aligned with the client's working style
+- **FIT badges**: Services boosted by archetype selection are marked with a "FIT" tag in the service list
+- **SOW tone guidance**: Selected archetypes inject specific language and framing guidance into SOW generation (e.g., Architects get strategic methodology language, Entrepreneurs get sprint-based delivery language)
+- **Dynamic re-evaluation**: Changing archetypes after transcript analysis automatically adds relevant services without removing manual selections
 
 ## What's New in v2.3.3
 
@@ -257,7 +260,17 @@ The tool flags and suggests replacements for:
 
 ## Version History
 
-### v2.3.0 (Current)
+### v2.4.0 (Current)
+- **Client FIT Archetype Integration** - Tailor service recommendations and SOW tone based on client's working style archetype (Architect, Visionary, Accelerator, Entrepreneur)
+- **Blend support** - Select up to 2 archetypes for blended client profiles
+- **Dynamic service boosting** - Archetype selection auto-recommends aligned services with "FIT" badges
+- **SOW generation guidance** - Archetype-specific language and framing injected into AI prompt
+
+### v2.3.4
+- **Bundle Selection UI** - Bundles appear as top-level checkboxes that auto-select all included services
+- **Live Pricing Total** - Real-time budget range with PM percentage breakdown
+- **Content Production pricing** - Added $60K–$180K annual range for content bundles
+- **PM line item** - Project Management now shows calculated 10% amount in pricing total
 - **Integrated Engagement Type** - New billing model for multi-phase engagements that span Fixed Fee, Retainer, and T&M services
 - **Auto-detection of billing models** - System analyzes selected services and recommends Integrated when multiple billing models are needed
 - **Multi-section SOW generation** - Integrated SOWs automatically structure into separate sections:
