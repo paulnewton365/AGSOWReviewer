@@ -1,12 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles, PenTool, Search, MessageSquare, Lightbulb, Target, Users, ChevronLeft, DollarSign } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles, PenTool, Search, MessageSquare, Lightbulb, Target, Users, ChevronLeft, DollarSign, Save, FolderOpen } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType, PageNumber, PageBreak, LevelFormat, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
 
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.5.1';
+const APP_VERSION = '2.5.2';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -4410,6 +4410,67 @@ Generate the complete Pre-Scope document now.`
     setDraftError(null);
   };
 
+  const saveDraftToJson = () => {
+    const draftState = {
+      _version: APP_VERSION,
+      _savedAt: new Date().toISOString(),
+      draftNotes,
+      draftEngagementType,
+      selectedArchetypes,
+      transcript,
+      transcriptAnalysis,
+      detectedTriggers: detectedTriggers.map(t => t.id),
+      selectedServices,
+      generatedSOW,
+      generatedPreScope,
+    };
+    const blob = new Blob([JSON.stringify(draftState, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const datePart = new Date().toISOString().split('T')[0];
+    const namePart = transcriptAnalysis ? transcriptAnalysis.slice(0, 40).replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '-') : 'draft';
+    a.href = url;
+    a.download = `SOW-Draft_${namePart}_${datePart}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const loadDraftFromJson = (event) => {
+    const uploadedFile = event.target.files[0];
+    if (!uploadedFile) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        // Restore state
+        if (data.draftNotes != null) setDraftNotes(data.draftNotes);
+        if (data.draftEngagementType != null) setDraftEngagementType(data.draftEngagementType);
+        if (data.selectedArchetypes != null) setSelectedArchetypes(data.selectedArchetypes);
+        if (data.transcript != null) setTranscript(data.transcript);
+        if (data.transcriptAnalysis != null) setTranscriptAnalysis(data.transcriptAnalysis);
+        if (data.selectedServices != null) setSelectedServices(data.selectedServices);
+        if (data.generatedSOW != null) setGeneratedSOW(data.generatedSOW);
+        if (data.generatedPreScope != null) setGeneratedPreScope(data.generatedPreScope);
+        // Restore detected triggers from IDs
+        if (data.detectedTriggers && Array.isArray(data.detectedTriggers)) {
+          const restored = data.detectedTriggers
+            .map(id => SERVICE_TRIGGERS.find(t => t.id === id))
+            .filter(Boolean);
+          setDetectedTriggers(restored);
+        }
+        setDraftError(null);
+        setCurrentView('draft');
+      } catch (err) {
+        setDraftError('Failed to load draft file: ' + err.message);
+      }
+    };
+    reader.readAsText(uploadedFile);
+    // Reset file input so same file can be loaded again
+    event.target.value = '';
+  };
+
   // ============================================================================
   // REVIEW SOW FUNCTIONS
   // ============================================================================
@@ -4917,6 +4978,15 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
               </button>
             </div>
             
+            {/* Resume Saved Draft */}
+            <div className="mt-8 text-center">
+              <label className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-gray-900 cursor-pointer transition-colors">
+                <FolderOpen className="w-4 h-4" />
+                Resume a saved draft
+                <input type="file" accept=".json" onChange={loadDraftFromJson} className="hidden" />
+              </label>
+            </div>
+            
             {/* Version number */}
             <div className="mt-16 text-right">
               <span className="text-xs text-gray-400 font-mono">v{APP_VERSION}</span>
@@ -4929,13 +4999,31 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
         {/* ================================================================== */}
         {currentView === 'draft' && !generatedSOW && !generatedPreScope && (
           <>
-            <button
-              onClick={() => setCurrentView('home')}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-900 mb-8 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back to home
-            </button>
+            <div className="flex items-center justify-between mb-8">
+              <button
+                onClick={() => setCurrentView('home')}
+                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to home
+              </button>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 transition-all">
+                  <FolderOpen className="w-4 h-4" />
+                  Load Draft
+                  <input type="file" accept=".json" onChange={loadDraftFromJson} className="hidden" />
+                </label>
+                {(transcript || selectedServices.length > 0 || draftNotes) && (
+                  <button
+                    onClick={saveDraftToJson}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all"
+                  >
+                    <Save className="w-4 h-4" />
+                    Save Draft
+                  </button>
+                )}
+              </div>
+            </div>
             
             <div className="mb-12">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">Draft a New SOW</h1>
@@ -5375,6 +5463,14 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   size="default"
                 >
                   Refine Services
+                </AntennaButton>
+                <AntennaButton
+                  onClick={saveDraftToJson}
+                  variant="secondary"
+                  icon={Save}
+                  size="default"
+                >
+                  Save Draft
                 </AntennaButton>
                 <AntennaButton
                   onClick={resetDraft}
