@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.4.5';
+const APP_VERSION = '2.4.6';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -3356,7 +3356,43 @@ export default function App() {
   // ============================================================================
   // DRAFT SOW FUNCTIONS
   // ============================================================================
-  
+
+  // Helper: when a bundle lead is auto-selected, ensure all sub-services in that bundle are also selected
+  // so the bundle checkbox renders as checked. Sub-services have no independent pricing, so this is UI-only.
+  // Only completes bundles within the SAME trigger category to prevent cross-category contamination.
+  const completeBundles = (serviceNames) => {
+    const nameSet = new Set(serviceNames);
+    
+    // Build a map of bundleName → all service names, scoped per trigger category
+    // Use "triggerId:bundleName" as key to prevent cross-category matching
+    const bundleMap = {}; // "triggerId:bundleName" → [serviceName, ...]
+    const serviceToBundleKeys = {}; // serviceName → ["triggerId:bundleName", ...]
+    for (const trigger of SERVICE_TRIGGERS) {
+      for (const service of trigger.services) {
+        if (typeof service !== 'object' || !service.pricing?.bundle) continue;
+        const bundleKey = `${trigger.id}:${service.pricing.bundle}`;
+        if (!bundleMap[bundleKey]) bundleMap[bundleKey] = [];
+        bundleMap[bundleKey].push(service.name);
+        if (!serviceToBundleKeys[service.name]) serviceToBundleKeys[service.name] = [];
+        serviceToBundleKeys[service.name].push(bundleKey);
+      }
+    }
+    
+    // For each selected service, complete its bundle(s) within the same category
+    const completed = new Set(nameSet);
+    for (const name of nameSet) {
+      const keys = serviceToBundleKeys[name];
+      if (!keys) continue;
+      for (const key of keys) {
+        for (const sibling of bundleMap[key]) {
+          completed.add(sibling);
+        }
+      }
+    }
+    
+    return [...completed];
+  };
+
   const analyzeTranscript = async () => {
     if (!apiKey || !transcript.trim()) return;
     
@@ -3611,6 +3647,7 @@ SECONDARY_CATEGORIES: content_production, measurement, training`
         // Only include services that actually exist in SERVICE_TRIGGERS
         SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
       );
+      console.log('Final selected services after bundle completion:', selectedServicesList.length, selectedServicesList);
       setSelectedServices(selectedServicesList);
       
       // Auto-set engagement type based on billing model analysis
@@ -3684,38 +3721,6 @@ SECONDARY_CATEGORIES: content_production, measurement, training`
       
       return next;
     });
-  };
-
-  // Get archetype-boosted services to auto-select
-  // Helper: when a bundle lead is auto-selected, ensure all sub-services in that bundle are also selected
-  // so the bundle checkbox renders as checked. Sub-services have no independent pricing, so this is UI-only.
-  const completeBundles = (serviceNames) => {
-    const nameSet = new Set(serviceNames);
-    
-    // Build a map of bundleName → all service names in that bundle
-    const bundleMap = {}; // bundleName → [serviceName, ...]
-    for (const trigger of SERVICE_TRIGGERS) {
-      for (const service of trigger.services) {
-        if (typeof service !== 'object' || !service.pricing?.bundle) continue;
-        const bundleName = service.pricing.bundle;
-        if (!bundleMap[bundleName]) bundleMap[bundleName] = [];
-        bundleMap[bundleName].push(service.name);
-      }
-    }
-    
-    // For each selected service, if it's in a bundle, add all sibling services
-    const completed = new Set(nameSet);
-    for (const name of nameSet) {
-      for (const [bundleName, bundleServices] of Object.entries(bundleMap)) {
-        if (bundleServices.includes(name)) {
-          for (const sibling of bundleServices) {
-            completed.add(sibling);
-          }
-        }
-      }
-    }
-    
-    return [...completed];
   };
 
   const getArchetypeBoostedServices = (detected, archetypes) => {
