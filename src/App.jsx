@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.5.1';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -2574,7 +2574,7 @@ function IssueCard({ issue, type, isSelected, onToggle }) {
           </label>
         )}
         <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${icon}`} />
-        <div className="flex-1">
+        <div className="w-full">
           {parsed.section && (
             <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-gray-500">
               Section {parsed.section}
@@ -2666,7 +2666,7 @@ function RedFlagCard({ flag, isSelected, onToggle }) {
             </label>
           )}
           <AlertTriangle className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
-          <div className="flex-1">
+          <div className="w-full">
             {parsed.section && (
               <span className="inline-block text-xs font-mono bg-white/60 px-2 py-0.5 rounded mb-2 text-gray-500">
                 Section {parsed.section}
@@ -3017,7 +3017,7 @@ function EngagementMismatchAlert({ selectedServices, draftEngagementType, onSwit
     <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
       <div className="flex items-start gap-2">
         <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600" />
-        <div className="flex-1">
+        <div className="w-full">
           <p className="text-sm font-medium text-amber-800">
             Engagement Type Mismatch
           </p>
@@ -3256,7 +3256,7 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, o
                       onChange={() => onToggleBundle(bundle.services.map(s => s.name), !bundleSelected)}
                       className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                     />
-                    <div className="flex-1">
+                    <div className="w-full">
                       <span className="text-sm font-medium text-gray-900">{bundle.name}</span>
                       <span className="text-xs text-gray-400 ml-2">({bundle.services.length} services)</span>
                       {bundle.services.some(s => boostedServices[s.name]) && getBundleFitBadges(bundle.services)}
@@ -3311,7 +3311,7 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, o
                       onChange={() => onToggleService(svc.name)}
                       className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                     />
-                    <div className="flex-1">
+                    <div className="w-full">
                       <span className="text-sm text-gray-700 group-hover:text-gray-900">{svc.name}</span>
                       {boostedServices[svc.name] && renderFitBadges(svc.name)}
                       {pricingInfo && isChecked && (pricingInfo.term || pricingInfo.budget || pricingInfo.note) && (
@@ -4339,10 +4339,13 @@ Use the header "## RECOMMENDED SERVICES" and then list each service category and
 - Service Name: Budget Range
 - Service Name: Budget Range
 
-### 4. ESTIMATED INVESTMENT
+### 4. HOW WE'LL WORK TOGETHER
+Use the header "## HOW WE'LL WORK TOGETHER" and write a short, pithy paragraph (3-5 sentences) describing the preferred working style for this engagement. This should feel warm and human — not a governance framework. It should convey what the day-to-day will feel like: how we communicate, how we make decisions together, and what the client can expect from the partnership. Base this on the FIT Archetype guidance provided below. If no archetype is specified, write a general collaborative working style.
+
+### 5. ESTIMATED INVESTMENT
 Use the header "## ESTIMATED INVESTMENT" and state the total budget range provided below.
 
-### 5. NEXT STEPS
+### 6. NEXT STEPS
 Write a short, warm paragraph (2-3 sentences) encouraging the client to review this document, flag anything that needs adjusting, and confirming that once aligned, we'll move quickly into a detailed SOW.
 
 ---
@@ -4358,6 +4361,12 @@ ${servicesText}
 
 ## TOTAL ESTIMATED BUDGET RANGE
 ${totalBudgetText}
+
+${selectedArchetypes.length > 0 ? `## FIT ARCHETYPE (for Ways of Working section)
+${selectedArchetypes.map(id => `${FIT_ARCHETYPES[id].emoji} ${FIT_ARCHETYPES[id].title}: ${FIT_ARCHETYPES[id].short}
+${FIT_ARCHETYPES[id].waysOfWorking}`).join('\n\n')}
+${selectedArchetypes.length === 2 ? `\nThis client is a ${selectedArchetypes.map(id => FIT_ARCHETYPES[id].title).join(' + ')} blend — synthesize both working styles naturally.` : ''}
+IMPORTANT: The "How We'll Work Together" section should distill this into a brief, client-friendly paragraph — NOT reproduce the full archetype framework. Think of it as a warm promise about the working relationship.` : ''}
 
 Generate the complete Pre-Scope document now.`
           }]
@@ -5202,7 +5211,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             <PricingTotalBar selectedServices={selectedServices} />
                             <EngagementMismatchAlert selectedServices={selectedServices} draftEngagementType={draftEngagementType} onSwitchType={setDraftEngagementType} />
                             <BudgetWarningBar draftNotes={draftNotes} transcript={transcript} selectedServices={selectedServices} />
-                            <div className="flex gap-3">
+                            <div className="space-y-3">
                               <AntennaButton
                                 onClick={generatePreScope}
                                 disabled={!transcriptAnalysis}
@@ -5210,7 +5219,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 loadingText="Generating..."
                                 icon={FileText}
                                 variant="secondary"
-                                className="flex-1"
+                                className="w-full"
                                 size="large"
                               >
                                 Generate Pre-Scope
@@ -5221,7 +5230,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 loading={isGeneratingDraft}
                                 loadingText="Generating SOW..."
                                 icon={Sparkles}
-                                className="flex-1"
+                                className="w-full"
                                 size="large"
                               >
                                 Generate SOW Draft
@@ -5278,7 +5287,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             <PricingTotalBar selectedServices={selectedServices} />
                             <EngagementMismatchAlert selectedServices={selectedServices} draftEngagementType={draftEngagementType} onSwitchType={setDraftEngagementType} />
                             <BudgetWarningBar draftNotes={draftNotes} transcript={transcript} selectedServices={selectedServices} />
-                            <div className="flex gap-3">
+                            <div className="space-y-3">
                               <AntennaButton
                                 onClick={generatePreScope}
                                 disabled={!transcriptAnalysis}
@@ -5286,7 +5295,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 loadingText="Generating..."
                                 icon={FileText}
                                 variant="secondary"
-                                className="flex-1"
+                                className="w-full"
                                 size="large"
                               >
                                 Generate Pre-Scope
@@ -5297,7 +5306,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                                 loading={isGeneratingDraft}
                                 loadingText="Generating SOW..."
                                 icon={Sparkles}
-                                className="flex-1"
+                                className="w-full"
                                 size="large"
                               >
                                 Generate SOW Draft
@@ -5339,7 +5348,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   {draftEngagementType ? `${DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label} • ` : ''}{selectedServices.length} services included
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 {generatedPreScope && (
                   <AntennaButton
                     onClick={downloadGeneratedPreScope}
@@ -5360,8 +5369,16 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   </AntennaButton>
                 )}
                 <AntennaButton
-                  onClick={resetDraft}
+                  onClick={() => { setGeneratedSOW(null); setGeneratedPreScope(null); }}
                   variant="secondary"
+                  icon={PenTool}
+                  size="default"
+                >
+                  Refine Services
+                </AntennaButton>
+                <AntennaButton
+                  onClick={resetDraft}
+                  variant="ghost"
                   size="default"
                 >
                   Start Over
@@ -5670,7 +5687,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                 <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-6 h-6 text-gray-900" />
                 </div>
-                <div className="flex-1">
+                <div className="w-full">
                   <h2 className="text-2xl font-bold text-white mb-2">Generate Revised SOW</h2>
                   <p className="text-gray-400 mb-4">
                     Create an updated draft incorporating your selected recommendations. Use the checkboxes above to include or exclude specific changes.
