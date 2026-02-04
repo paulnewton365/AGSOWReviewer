@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.4.2';
+const APP_VERSION = '2.4.4';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -1029,8 +1029,8 @@ const SERVICE_TRIGGERS = [
     services: [
       // Project Management - percentage based
       { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested', pricing: { percentageOfProject: 10, note: 'Approximately 10% of total project fee. Not required on PR/Earned-only engagements.' } },
-      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when operational support is needed', pricing: { percentageOfProject: 10 } },
-      { name: 'Agency Coordination', recommend: 'conditional', condition: 'when multiple agencies need coordination', pricing: { percentageOfProject: 10 } },
+      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when paid media is included and operational support is needed', pricing: { percentageOfPaidMedia: 10, note: '~10% of paid media management fees' } },
+      { name: 'Cross-agency Coordination', recommend: 'conditional', condition: 'when managing activities of other agencies, partners, or third parties for the client', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000, note: '$5K-$10K/month, for managing other agencies, partners and third parties' } },
       { name: 'Resource Planning', recommend: 'conditional', condition: 'when resource allocation is needed', pricing: { percentageOfProject: 10 } }
     ],
     triggerPatterns: {
@@ -1688,7 +1688,9 @@ Use this guide to validate pricing in SOWs. Flag fees that are significantly bel
 | Service | Budget Range |
 |---------|--------------|
 | Project Management | ~10% of total project fee |
-| Note: Not required on PR/Earned-only engagements |
+| Marketing Operations | ~10% of paid media management fees |
+| Cross-agency Coordination | $5,000 - $10,000/month (when managing other agencies, partners, or third parties) |
+| Note: PM not required on PR/Earned-only engagements |
 `;
 
 // ============================================================================
@@ -2761,6 +2763,16 @@ const formatPricingGuidance = (service) => {
     };
   }
   
+  // Handle percentage-of-paid-media pricing (Marketing Operations)
+  if (pricing.percentageOfPaidMedia) {
+    return {
+      term: null,
+      budget: `~${pricing.percentageOfPaidMedia}% of paid media fees`,
+      note: pricing.note,
+      bundle: null
+    };
+  }
+  
   // Handle bundled services (only first in bundle shows pricing)
   if (pricing.bundle && !pricing.termLow) {
     return {
@@ -2803,15 +2815,23 @@ const formatPricingGuidance = (service) => {
   };
 };
 
+// Categories whose fees count as "paid media" for Marketing Operations percentage calculation
+const PAID_MEDIA_CATEGORY_IDS = ['paid_social'];
+
 // Helper function to calculate total pricing range for selected services
 const calculatePricingTotal = (selectedServices) => {
   let totalLow = 0;
   let totalHigh = 0;
+  let paidMediaLow = 0;
+  let paidMediaHigh = 0;
   const countedBundles = new Set();
   let pmPercentageCount = 0;
+  let mktOpsPercentage = 0;
   let hasUncountable = false;
 
   for (const trigger of SERVICE_TRIGGERS) {
+    const isPaidMediaCategory = PAID_MEDIA_CATEGORY_IDS.includes(trigger.id);
+    
     for (const service of trigger.services) {
       const name = typeof service === 'object' ? service.name : service;
       if (!selectedServices.includes(name)) continue;
@@ -2822,6 +2842,12 @@ const calculatePricingTotal = (selectedServices) => {
       // Project Management is percentage-based, count selections
       if (pricing.percentageOfProject) {
         pmPercentageCount++;
+        continue;
+      }
+
+      // Marketing Operations is percentage-of-paid-media
+      if (pricing.percentageOfPaidMedia) {
+        mktOpsPercentage = pricing.percentageOfPaidMedia;
         continue;
       }
 
@@ -2841,10 +2867,16 @@ const calculatePricingTotal = (selectedServices) => {
 
       if (pricing.budgetLow) totalLow += pricing.budgetLow;
       if (pricing.budgetHigh) totalHigh += pricing.budgetHigh;
+      
+      // Track paid media subtotal separately
+      if (isPaidMediaCategory) {
+        if (pricing.budgetLow) paidMediaLow += pricing.budgetLow;
+        if (pricing.budgetHigh) paidMediaHigh += pricing.budgetHigh;
+      }
     }
   }
 
-  if (totalLow === 0 && totalHigh === 0 && pmPercentageCount === 0) return null;
+  if (totalLow === 0 && totalHigh === 0 && pmPercentageCount === 0 && mktOpsPercentage === 0) return null;
 
   // Calculate PM addition (10% applied once regardless of how many PM services selected)
   let pmLow = 0;
@@ -2854,8 +2886,16 @@ const calculatePricingTotal = (selectedServices) => {
     pmHigh = Math.round(totalHigh * 0.10);
   }
 
-  const grandLow = totalLow + pmLow;
-  const grandHigh = totalHigh + pmHigh;
+  // Calculate Marketing Operations addition (percentage of paid media fees)
+  let mktOpsLow = 0;
+  let mktOpsHigh = 0;
+  if (mktOpsPercentage > 0 && paidMediaLow > 0) {
+    mktOpsLow = Math.round(paidMediaLow * (mktOpsPercentage / 100));
+    mktOpsHigh = Math.round(paidMediaHigh * (mktOpsPercentage / 100));
+  }
+
+  const grandLow = totalLow + pmLow + mktOpsLow;
+  const grandHigh = totalHigh + pmHigh + mktOpsHigh;
 
   const formatCurrency = (num) => {
     if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
@@ -2872,10 +2912,17 @@ const calculatePricingTotal = (selectedServices) => {
     highFormatted: formatCurrency(grandHigh),
     subtotalLowFormatted: formatCurrency(totalLow),
     subtotalHighFormatted: formatCurrency(totalHigh),
+    pmLow, pmHigh,
     pmLowFormatted: formatCurrency(pmLow),
     pmHighFormatted: formatCurrency(pmHigh),
     hasPM: pmPercentageCount > 0 && totalLow > 0,
     hasPMNoBase: pmPercentageCount > 0 && totalLow === 0,
+    mktOpsLow, mktOpsHigh,
+    mktOpsLowFormatted: formatCurrency(mktOpsLow),
+    mktOpsHighFormatted: formatCurrency(mktOpsHigh),
+    hasMktOps: mktOpsPercentage > 0 && paidMediaLow > 0,
+    hasMktOpsNoPaidMedia: mktOpsPercentage > 0 && paidMediaLow === 0,
+    mktOpsPercentage,
     hasUncountable
   };
 };
@@ -2884,10 +2931,13 @@ const calculatePricingTotal = (selectedServices) => {
 function PricingTotalBar({ selectedServices }) {
   const pricingTotal = calculatePricingTotal(selectedServices);
   if (!pricingTotal) return null;
+  
+  const hasBreakdown = (pricingTotal.hasPM || pricingTotal.hasMktOps) && pricingTotal.subtotalLow > 0;
+  
   return (
     <div className="mb-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
-      {/* Subtotal line (only show if PM is adding to it) */}
-      {pricingTotal.hasPM && (
+      {/* Subtotal line (show if PM or MktOps adds to the total) */}
+      {hasBreakdown && (
         <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
           <span>Services</span>
           <span>{pricingTotal.subtotalLowFormatted} – {pricingTotal.subtotalHighFormatted}</span>
@@ -2899,7 +2949,13 @@ function PricingTotalBar({ selectedServices }) {
           <span>{pricingTotal.pmLowFormatted} – {pricingTotal.pmHighFormatted}</span>
         </div>
       )}
-      {pricingTotal.hasPM && (
+      {pricingTotal.hasMktOps && (
+        <div className="flex items-center justify-between text-sm text-gray-500 mb-1">
+          <span>Marketing Operations (~{pricingTotal.mktOpsPercentage}% of paid media)</span>
+          <span>{pricingTotal.mktOpsLowFormatted} – {pricingTotal.mktOpsHighFormatted}</span>
+        </div>
+      )}
+      {hasBreakdown && (
         <div className="border-t border-gray-300 my-1" />
       )}
       {/* Grand total */}
@@ -2909,9 +2965,10 @@ function PricingTotalBar({ selectedServices }) {
           {pricingTotal.lowFormatted} – {pricingTotal.highFormatted}
         </span>
       </div>
-      {(pricingTotal.hasPMNoBase || pricingTotal.hasUncountable) && (
+      {(pricingTotal.hasPMNoBase || pricingTotal.hasMktOpsNoPaidMedia || pricingTotal.hasUncountable) && (
         <p className="text-xs text-gray-500 mt-1">
           {pricingTotal.hasPMNoBase ? 'PM (~10%) will be added once services are selected. ' : ''}
+          {pricingTotal.hasMktOpsNoPaidMedia ? 'Marketing Ops (~10%) will be added once paid media services are selected. ' : ''}
           {pricingTotal.hasUncountable ? 'Some services require scoping for pricing.' : ''}
         </p>
       )}
@@ -2999,10 +3056,43 @@ function BudgetWarningBar({ draftNotes, transcript, selectedServices }) {
   );
 }
 
-function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, onToggleBundle, boostedServices = [] }) {
+function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, onToggleBundle, boostedServices = {} }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const serviceNames = getServiceNames(trigger);
   const selectedCount = serviceNames.filter(s => selectedServices.includes(s)).length;
+  
+  // Helper to render archetype badge(s) for a service name
+  const renderFitBadges = (serviceName) => {
+    const archetypeIds = boostedServices[serviceName];
+    if (!archetypeIds || archetypeIds.length === 0) return null;
+    return archetypeIds.map(id => {
+      const arch = FIT_ARCHETYPES[id];
+      if (!arch) return null;
+      return (
+        <span key={id} className="ml-1.5 text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold align-middle" title={`Recommended for ${arch.title} archetype`}>
+          {arch.emoji} {arch.title}
+        </span>
+      );
+    });
+  };
+  
+  // Helper to get combined archetype IDs for any services in a bundle
+  const getBundleFitBadges = (bundleServices) => {
+    const combined = {};
+    for (const svc of bundleServices) {
+      const ids = boostedServices[svc.name];
+      if (ids) {
+        for (const id of ids) {
+          if (!combined[id]) combined[id] = FIT_ARCHETYPES[id];
+        }
+      }
+    }
+    return Object.entries(combined).map(([id, arch]) => (
+      <span key={id} className="ml-1.5 text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold align-middle" title={`Recommended for ${arch.title} archetype`}>
+        {arch.emoji} {arch.title}
+      </span>
+    ));
+  };
   
   // Organize services into bundles and standalone
   const organizeServices = () => {
@@ -3111,9 +3201,7 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, o
                     <div className="flex-1">
                       <span className="text-sm font-medium text-gray-900">{bundle.name}</span>
                       <span className="text-xs text-gray-400 ml-2">({bundle.services.length} services)</span>
-                      {bundle.services.some(s => boostedServices.includes(s.name)) && (
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold align-middle">FIT</span>
-                      )}
+                      {bundle.services.some(s => boostedServices[s.name]) && getBundleFitBadges(bundle.services)}
                       {bundleSelected && pricingInfo && (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           {pricingInfo.term && (
@@ -3167,9 +3255,7 @@ function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, o
                     />
                     <div className="flex-1">
                       <span className="text-sm text-gray-700 group-hover:text-gray-900">{svc.name}</span>
-                      {boostedServices.includes(svc.name) && (
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-semibold align-middle">FIT</span>
-                      )}
+                      {boostedServices[svc.name] && renderFitBadges(svc.name)}
                       {pricingInfo && isChecked && (pricingInfo.term || pricingInfo.budget || pricingInfo.note) && (
                         <div className="mt-1 flex flex-wrap items-center gap-2">
                           {pricingInfo.term && (
@@ -3499,7 +3585,8 @@ Example: website, brand, pr, executive_visibility, content_production`
       );
       
       // Merge in archetype-boosted services
-      const archetypeBoosted = getArchetypeBoostedServices(detected, selectedArchetypes);
+      const archetypeBoostedMap = getArchetypeBoostedServices(detected, selectedArchetypes);
+      const archetypeBoosted = Object.keys(archetypeBoostedMap);
       const mergedServices = [...new Set([...autoSelectedServices, ...archetypeBoosted])];
       
       console.log('Auto-selected services:', autoSelectedServices);
@@ -3564,7 +3651,8 @@ Example: website, brand, pr, executive_visibility, content_production`
             .map(service => service.name)
         );
         // Add archetype-boosted services with the NEW archetype selection
-        const archetypeBoosted = getArchetypeBoostedServices(detectedTriggers, next);
+        const archetypeBoostedMap = getArchetypeBoostedServices(detectedTriggers, next);
+        const archetypeBoosted = Object.keys(archetypeBoostedMap);
         const merged = [...new Set([...baseServices, ...archetypeBoosted])].filter(name =>
           SERVICE_TRIGGERS.some(t => t.services.some(s => (typeof s === 'object' ? s.name : s) === name))
         );
@@ -3581,9 +3669,14 @@ Example: website, brand, pr, executive_visibility, content_production`
 
   // Get archetype-boosted services to auto-select
   const getArchetypeBoostedServices = (detected, archetypes) => {
-    if (!archetypes || archetypes.length === 0) return [];
+    if (!archetypes || archetypes.length === 0) return {};
     
-    const boostedServices = [];
+    const boostedMap = {}; // serviceName → Set of archetypeIds
+    
+    const addBoosted = (serviceName, archetypeId) => {
+      if (!boostedMap[serviceName]) boostedMap[serviceName] = new Set();
+      boostedMap[serviceName].add(archetypeId);
+    };
     
     for (const archetypeId of archetypes) {
       const archetype = FIT_ARCHETYPES[archetypeId];
@@ -3597,26 +3690,27 @@ Example: website, brand, pr, executive_visibility, content_production`
         if (isDetected || isBoosted) {
           for (const service of trigger.services) {
             const name = typeof service === 'object' ? service.name : service;
-            // For detected categories: select all conditional services in boosted categories
-            // For non-detected but boosted categories: select 'always' services
             if (isDetected && isBoosted) {
-              // Both detected AND boosted: select everything
-              boostedServices.push(name);
+              addBoosted(name, archetypeId);
             } else if (isBoosted && typeof service === 'object' && service.recommend === 'always') {
-              // Boosted but not detected: select 'always' services
-              boostedServices.push(name);
+              addBoosted(name, archetypeId);
             }
           }
         }
       }
       
-      // Also add explicitly named boost services if their category exists in SERVICE_TRIGGERS
+      // Also add explicitly named boost services
       for (const serviceName of archetype.boostServices) {
-        boostedServices.push(serviceName);
+        addBoosted(serviceName, archetypeId);
       }
     }
     
-    return [...new Set(boostedServices)];
+    // Convert Sets to arrays for easy consumption
+    const result = {};
+    for (const [name, ids] of Object.entries(boostedMap)) {
+      result[name] = [...ids];
+    }
+    return result;
   };
 
   const toggleService = (service) => {
@@ -4128,6 +4222,8 @@ For each service/deliverable with a fee mentioned in the SOW:
 - For retainers, convert to annual amounts for comparison (monthly × 12)
 - For bundled services, compare against bundle pricing, not individual service prices
 - Note if Project Management fee is missing on non-PR engagements (should be ~10% of project)
+- Note if Marketing Operations fee is missing when paid media services are included (should be ~10% of paid media management fees)
+- Note if Cross-agency Coordination is missing when scope involves managing other agencies, partners, or third parties ($5K-$10K/month)
 
 6. BUDGET VERIFICATION - Check fee table arithmetic, billing schedule alignment
 
@@ -4534,7 +4630,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
             <div className="mb-12">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">Draft a New SOW</h1>
               <p className="text-xl text-gray-500">
-                Paste a client call transcript and we'll analyze it to identify services and requirements.
+                Paste a client call transcript, add notes, and select a FIT archetype to produce a project summary and recommended services.
               </p>
             </div>
             
@@ -4743,7 +4839,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                           </div>
                           <div>
                             <h3 className="text-lg font-bold text-gray-900">Recommended Services</h3>
-                            <p className="text-sm text-gray-500">Based on client needs identified in the transcript</p>
+                            <p className="text-sm text-gray-500">Based on client needs identified in the project summary</p>
                           </div>
                         </div>
                         
