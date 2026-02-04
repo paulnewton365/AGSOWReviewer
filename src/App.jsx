@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.4.1';
+const APP_VERSION = '2.4.2';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -2919,6 +2919,86 @@ function PricingTotalBar({ selectedServices }) {
   );
 }
 
+// Extract the highest dollar figure mentioned in free text (notes or transcript)
+const extractClientBudget = (text) => {
+  if (!text || typeof text !== 'string') return null;
+  const amounts = [];
+
+  // $50K, $1.5M, $200k — dollar sign with K/M suffix
+  const reDollarSuffix = /\$\s*([\d,]+(?:\.\d+)?)\s*([kKmM])\b/g;
+  let match;
+  while ((match = reDollarSuffix.exec(text)) !== null) {
+    let val = parseFloat(match[1].replace(/,/g, ''));
+    const s = match[2].toLowerCase();
+    if (s === 'k') val *= 1000;
+    if (s === 'm') val *= 1000000;
+    if (val >= 1000) amounts.push(val);
+  }
+
+  // $50,000 or $150000 — dollar sign with plain number (no K/M)
+  const reDollarPlain = /\$\s*([\d,]+(?:\.\d+)?)(?!\s*[kKmM])\b/g;
+  while ((match = reDollarPlain.exec(text)) !== null) {
+    const val = parseFloat(match[1].replace(/,/g, ''));
+    if (val >= 1000) amounts.push(val);
+  }
+
+  // 50K, 200k, 1.5M — number with K/M suffix (no dollar sign, contextual)
+  const reSuffix = /\b([\d,]+(?:\.\d+)?)\s*([kKmM])\b/g;
+  while ((match = reSuffix.exec(text)) !== null) {
+    let val = parseFloat(match[1].replace(/,/g, ''));
+    const s = match[2].toLowerCase();
+    if (s === 'k') val *= 1000;
+    if (s === 'm') val *= 1000000;
+    if (val >= 1000) amounts.push(val);
+  }
+
+  if (amounts.length === 0) return null;
+  // Return the max — most likely the client's total budget figure
+  return Math.max(...amounts);
+};
+
+const formatBudgetCurrency = (num) => {
+  if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `$${(num / 1000).toFixed(0)}K`;
+  return `$${num}`;
+};
+
+function BudgetWarningBar({ draftNotes, transcript, selectedServices }) {
+  const clientBudget = Math.max(
+    extractClientBudget(draftNotes) || 0,
+    extractClientBudget(transcript) || 0
+  ) || null;
+
+  const pricingTotal = calculatePricingTotal(selectedServices);
+
+  // Only show if we detected a budget AND have a pricing total AND budget is below the low end
+  if (!clientBudget || !pricingTotal || clientBudget >= pricingTotal.low) return null;
+
+  const shortfall = pricingTotal.low - clientBudget;
+  const shortfallPct = Math.round((shortfall / pricingTotal.low) * 100);
+
+  return (
+    <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg">
+      <div className="flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+        <div>
+          <p className="text-sm font-semibold text-amber-800">
+            Client budget may be insufficient
+          </p>
+          <p className="text-xs text-amber-700 mt-1">
+            Detected budget of <span className="font-bold">{formatBudgetCurrency(clientBudget)}</span> is below
+            the estimated range low of <span className="font-bold">{pricingTotal.lowFormatted}</span>
+            {shortfallPct > 0 && <span> — a gap of approximately {formatBudgetCurrency(shortfall)} ({shortfallPct}%)</span>}.
+          </p>
+          <p className="text-xs text-amber-600 mt-1">
+            Consider reducing services or discussing budget expectations with the client.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ServiceCard({ trigger, isSelected, selectedServices, onToggleService, onToggleBundle, boostedServices = [] }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const serviceNames = getServiceNames(trigger);
@@ -3230,7 +3310,7 @@ export default function App() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 6000,
-          system: `You are an expert at analyzing client call transcripts to extract key information for Statement of Work development at a marketing and communications agency. Your job is to identify the core elements that will inform the SOW AND recommend relevant service categories based on the client's expressed needs.
+          system: `You are an expert at analyzing client inputs to produce a comprehensive Project Summary for Statement of Work development at a marketing and communications agency. Your inputs include a client call transcript, additional notes from the account team, the selected client FIT archetype, and the chosen engagement type. Your job is to synthesize ALL of these inputs into a coherent project summary that will inform the SOW AND recommend relevant service categories based on the client's expressed needs.
 
 ## CRITICAL: SEMANTIC TRIGGER DETECTION
 
@@ -3267,26 +3347,47 @@ Common combinations to look for:
 5. If unsure, include the category - the user can deselect services they don't need`,
           messages: [{
             role: 'user',
-            content: `Analyze this client call transcript and provide TWO things:
+            content: `Analyze ALL of the following inputs and produce a comprehensive Project Summary.
 
-PART 1: TRANSCRIPT ANALYSIS
-Extract the following information from the transcript:
+## INPUTS PROVIDED
 
-1. **SUCCESS DEFINITION** - What does success look like for this engagement? What specific outcomes is the client hoping to achieve? What would make them say "this was worth it"?
+### CLIENT CALL TRANSCRIPT:
+${transcript}
 
-2. **PROBLEM STATEMENT** - What specific problem(s) is the client trying to solve? What pain points did they express? What frustrations came through in the conversation?
+### ADDITIONAL NOTES FROM ACCOUNT TEAM:
+${draftNotes || 'None provided'}
 
-3. **MANDATORIES** - What explicit requirements or must-haves did the client mention? What are the non-negotiables?
+### CLIENT FIT ARCHETYPE:
+${selectedArchetypes.length > 0 ? selectedArchetypes.map(id => `${FIT_ARCHETYPES[id].emoji} ${FIT_ARCHETYPES[id].title}: ${FIT_ARCHETYPES[id].description}`).join('\n') : 'None selected'}
+${selectedArchetypes.length === 2 ? '(Blended archetype — this client exhibits traits from both profiles)' : ''}
 
-4. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent.
+### ENGAGEMENT TYPE:
+${draftEngagementType ? (DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label || draftEngagementType) : 'Not yet selected'}
 
-5. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned.
+---
 
-6. **KEY STAKEHOLDERS** - Who are the decision makers and key contacts? Who needs to be involved in approvals?
+Provide TWO things based on ALL inputs above:
 
-7. **CONTEXT** - Important background about the client's situation, industry, competitive landscape, or internal dynamics that should inform the SOW.
+PART 1: PROJECT SUMMARY
+Synthesize the transcript, additional notes, archetype profile, and engagement type into a unified project summary. Extract the following:
 
-8. **TRIGGER INTENSITY** - How urgent is this need? (High/Medium/Low based on language used)
+1. **EXECUTIVE SUMMARY** - A concise 2-3 sentence overview of the project: who the client is, what they need, and the recommended approach. Reference the FIT archetype and engagement type to frame the engagement style.
+
+2. **SUCCESS DEFINITION** - What does success look like for this engagement? What specific outcomes is the client hoping to achieve? What would make them say "this was worth it"?
+
+3. **PROBLEM STATEMENT** - What specific problem(s) is the client trying to solve? What pain points did they express? What frustrations came through in the conversation?
+
+4. **MANDATORIES** - What explicit requirements or must-haves did the client mention? Include anything from the additional notes. What are the non-negotiables?
+
+5. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent.
+
+6. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned in either the transcript or additional notes.
+
+7. **KEY STAKEHOLDERS** - Who are the decision makers and key contacts? Who needs to be involved in approvals?
+
+8. **CONTEXT** - Important background about the client's situation, industry, competitive landscape, or internal dynamics that should inform the SOW. Incorporate relevant details from additional notes.
+
+9. **TRIGGER INTENSITY** - How urgent is this need? (High/Medium/Low based on language used)
 
 PART 2: RECOMMENDED SERVICE CATEGORIES
 Based on the client's expressed needs, challenges, goals, pain points, and situational context, identify which service categories are relevant.
@@ -3302,6 +3403,9 @@ Available categories (with trigger pattern examples):
 ${serviceCategoriesPrompt}
 
 Format your response EXACTLY as:
+
+## EXECUTIVE SUMMARY
+[2-3 sentence overview synthesizing the project, client archetype, and engagement approach]
 
 ## SUCCESS DEFINITION
 [Clear statement of what success looks like for this client]
@@ -3332,10 +3436,7 @@ Format your response EXACTLY as:
 ## RECOMMENDED_CATEGORIES
 [List ONLY the category IDs that are relevant, comma-separated. Be generous - include any category that might be relevant based on the analysis above.]
 
-Example: website, brand, pr, executive_visibility, content_production
-
-TRANSCRIPT:
-${transcript}`
+Example: website, brand, pr, executive_visibility, content_production`
           }]
         })
       });
@@ -3810,8 +3911,8 @@ IMPORTANT: Structure the SOW with clearly separated sections for each billing mo
 ## ADDITIONAL NOTES FROM ACCOUNT TEAM
 ${draftNotes || 'None provided'}
 
-## CLIENT TRANSCRIPT ANALYSIS
-${transcriptAnalysis || 'No transcript analyzed'}
+## PROJECT SUMMARY
+${transcriptAnalysis || 'No project summary produced'}
 
 ## SELECTED SERVICES TO INCLUDE
 ${selectedServices.map(s => `- ${s}`).join('\n')}
@@ -3820,7 +3921,7 @@ ${selectedServices.map(s => `- ${s}`).join('\n')}
 
 Generate a complete, client-ready SOW that:
 
-1. **Addresses Client Needs**: Directly addresses the success criteria and problems identified in the transcript analysis
+1. **Addresses Client Needs**: Directly addresses the success criteria and problems identified in the project summary
 
 2. **Structured Deliverables**: Includes all selected services as properly structured deliverables with:
    - Clear activities (what Agency will DO)
@@ -4358,7 +4459,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-3">Draft a New SOW</h2>
                   <p className="text-gray-500 mb-4">
-                    Create a Statement of Work from scratch using client call transcripts. AI analyzes the conversation to identify services and requirements.
+                    Create a Statement of Work from scratch using client call transcripts, notes, and FIT archetype selection. AI produces a project summary and recommends services.
                   </p>
                   <div className="flex items-center gap-2 text-[#12161E] font-semibold">
                     <span className="relative overflow-hidden">
@@ -4604,27 +4705,27 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     onClick={analyzeTranscript}
                     disabled={!apiKey || !transcript.trim()}
                     loading={isAnalyzingTranscript}
-                    loadingText="Analyzing Transcript..."
+                    loadingText="Producing Summary..."
                     icon={Lightbulb}
                     className="w-full"
                     size="large"
                   >
-                    Analyze Transcript
+                    Produce Summary and Recommended Services
                   </AntennaButton>
                 </div>
               </div>
               
-              {/* Right Column - Analysis Results */}
+              {/* Right Column - Project Summary & Services */}
               <div className="space-y-6">
                 {transcriptAnalysis && (
                   <>
-                    {/* Analysis Summary */}
+                    {/* Project Summary */}
                     <div className="bg-white rounded-2xl border border-gray-200 p-6">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                           <Target className="w-5 h-5 text-green-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900">Transcript Analysis</h3>
+                        <h3 className="text-lg font-bold text-gray-900">Project Summary</h3>
                       </div>
                       <div className="prose prose-sm max-w-none">
                         <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto text-gray-700 font-sans">
@@ -4702,6 +4803,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               </button>
                             </div>
                             <PricingTotalBar selectedServices={selectedServices} />
+                            <BudgetWarningBar draftNotes={draftNotes} transcript={transcript} selectedServices={selectedServices} />
                             <AntennaButton
                               onClick={generateSOW}
                               disabled={!draftEngagementType}
@@ -4762,6 +4864,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                               </button>
                             </div>
                             <PricingTotalBar selectedServices={selectedServices} />
+                            <BudgetWarningBar draftNotes={draftNotes} transcript={transcript} selectedServices={selectedServices} />
                             <AntennaButton
                               onClick={generateSOW}
                               disabled={!draftEngagementType}
@@ -4788,7 +4891,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                     <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Paste a transcript to get started</h3>
                     <p className="text-sm text-gray-500">
-                      The AI will analyze the conversation to identify client needs, problems to solve, and recommended services.
+                      Add a transcript and any additional notes, then produce a Project Summary with recommended services.
                     </p>
                   </div>
                 )}
