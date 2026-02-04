@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.5.2';
+const APP_VERSION = '2.5.3';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -4340,7 +4340,7 @@ Use the header "## RECOMMENDED SERVICES" and then list each service category and
 - Service Name: Budget Range
 
 ### 4. HOW WE'LL WORK TOGETHER
-Use the header "## HOW WE'LL WORK TOGETHER" and write a short, pithy paragraph (3-5 sentences) describing the preferred working style for this engagement. This should feel warm and human — not a governance framework. It should convey what the day-to-day will feel like: how we communicate, how we make decisions together, and what the client can expect from the partnership. Base this on the FIT Archetype guidance provided below. If no archetype is specified, write a general collaborative working style.
+Use the header "## HOW WE'LL WORK TOGETHER" and write a short, pithy paragraph (3-5 sentences) describing the high-level approach to the working relationship. This should convey the philosophy of the partnership — how we think about collaboration, decision-making, and momentum. Focus on the *character* of the relationship (e.g., transparent, structured, adaptive, creatively led) rather than promising specific meetings, workshops, check-ins, or deliverables. Those details belong in the SOW. Base this on the FIT Archetype guidance provided below. If no archetype is specified, write a general collaborative approach.
 
 ### 5. ESTIMATED INVESTMENT
 Use the header "## ESTIMATED INVESTMENT" and state the total budget range provided below.
@@ -4366,7 +4366,7 @@ ${selectedArchetypes.length > 0 ? `## FIT ARCHETYPE (for Ways of Working section
 ${selectedArchetypes.map(id => `${FIT_ARCHETYPES[id].emoji} ${FIT_ARCHETYPES[id].title}: ${FIT_ARCHETYPES[id].short}
 ${FIT_ARCHETYPES[id].waysOfWorking}`).join('\n\n')}
 ${selectedArchetypes.length === 2 ? `\nThis client is a ${selectedArchetypes.map(id => FIT_ARCHETYPES[id].title).join(' + ')} blend — synthesize both working styles naturally.` : ''}
-IMPORTANT: The "How We'll Work Together" section should distill this into a brief, client-friendly paragraph — NOT reproduce the full archetype framework. Think of it as a warm promise about the working relationship.` : ''}
+IMPORTANT: The "How We'll Work Together" section should distill the archetype into a brief, high-level paragraph about the approach and relationship philosophy. Do NOT mention specific meetings, cadences, workshops, reporting formats, or tactical outputs — those belong in the SOW. Focus on values like transparency, pace, creative ambition, rigour, adaptability, or partnership dynamics.` : ''}
 
 Generate the complete Pre-Scope document now.`
           }]
