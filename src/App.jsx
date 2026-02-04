@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, FileText, CheckCircle, AlertTriangle, AlertCircle, Loader2, ChevronDown, ChevronRight, Key, Eye, EyeOff, ArrowUpRight, Copy, Check, ArrowRight, Download, Sparkles, PenTool, Search, MessageSquare, Lightbulb, Target, Users, ChevronLeft, DollarSign } from 'lucide-react';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType, PageNumber, PageBreak, LevelFormat, ImageRun } from 'docx';
 import { saveAs } from 'file-saver';
@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.4.6';
+const APP_VERSION = '2.4.8';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -3295,7 +3295,17 @@ export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home', 'draft', 'review'
   
   // Shared state
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState(() => {
+    try { return localStorage.getItem('antenna_sow_api_key') || ''; } catch { return ''; }
+  });
+  
+  // Persist API key to localStorage
+  useEffect(() => {
+    try {
+      if (apiKey) localStorage.setItem('antenna_sow_api_key', apiKey);
+      else localStorage.removeItem('antenna_sow_api_key');
+    } catch {}
+  }, [apiKey]);
   
   // Draft SOW state
   const [draftNotes, setDraftNotes] = useState('');
@@ -3430,7 +3440,7 @@ export default function App() {
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 6000,
           system: `You are an expert at analyzing client inputs to produce a comprehensive Project Summary for Statement of Work development at a marketing and communications agency. Your inputs include a client call transcript, additional notes from the account team, the selected client FIT archetype, and the chosen engagement type. Your job is to synthesize ALL of these inputs into a coherent project summary that will inform the SOW AND recommend relevant service categories based on the client's expressed needs.
 
@@ -3580,63 +3590,77 @@ SECONDARY_CATEGORIES: content_production, measurement, training`
       const data = await response.json();
       const analysisText = data.content[0].text;
       
-      // Extract recommended categories from the response - try multiple patterns
-      let detectedCategoryIds = [];
-      
-      // Try pattern 1: ## RECOMMENDED_CATEGORIES followed by content
-      const categoriesMatch = analysisText.match(/## RECOMMENDED_CATEGORIES\s*\n([^\n#]+)/i);
-      if (categoriesMatch) {
-        detectedCategoryIds = categoriesMatch[1]
-          .split(',')
-          .map(s => s.trim().toLowerCase().replace(/[_\s]+/g, '_'))
-          .filter(s => s.length > 0);
-      }
-      
-      // Try pattern 2: Look for category IDs anywhere after RECOMMENDED_CATEGORIES header
-      if (detectedCategoryIds.length === 0) {
-        const altMatch = analysisText.match(/RECOMMENDED_CATEGORIES[:\s]*\n?([^#]+?)(?=\n\n|$)/i);
-        if (altMatch) {
-          detectedCategoryIds = altMatch[1]
-            .split(/[,\n]/)
+      // Extract recommended categories from the response
+      // The prompt asks for PRIMARY_CATEGORIES (core needs) and SECONDARY_CATEGORIES (adjacent services)
+      const parseCategoryLine = (text, header) => {
+        // Try "## HEADER\n content" format
+        const pattern1 = new RegExp(`## ${header}\\s*\\n([^\\n#]+)`, 'i');
+        const match1 = text.match(pattern1);
+        if (match1) {
+          return match1[1].split(',')
             .map(s => s.trim().toLowerCase().replace(/[_\s-]+/g, '_').replace(/[^a-z_]/g, ''))
             .filter(s => s.length > 0);
         }
+        // Try "HEADER: content" or "HEADER\n content" format
+        const pattern2 = new RegExp(`${header}[:\\s]*\\n?([^#]+?)(?=\\n\\n|\\n##|$)`, 'i');
+        const match2 = text.match(pattern2);
+        if (match2) {
+          return match2[1].split(/[,\n]/)
+            .map(s => s.trim().toLowerCase().replace(/[_\s-]+/g, '_').replace(/[^a-z_]/g, ''))
+            .filter(s => s.length > 0);
+        }
+        return [];
+      };
+      
+      let primaryCategoryIds = parseCategoryLine(analysisText, 'PRIMARY_CATEGORIES');
+      let secondaryCategoryIds = parseCategoryLine(analysisText, 'SECONDARY_CATEGORIES');
+      
+      // Fallback: try legacy RECOMMENDED_CATEGORIES format
+      if (primaryCategoryIds.length === 0 && secondaryCategoryIds.length === 0) {
+        primaryCategoryIds = parseCategoryLine(analysisText, 'RECOMMENDED_CATEGORIES');
       }
       
-      console.log('AI Response categories section:', analysisText.substring(analysisText.indexOf('RECOMMENDED_CATEGORIES')));
-      console.log('Extracted category IDs:', detectedCategoryIds);
+      const allCategoryIds = [...new Set([...primaryCategoryIds, ...secondaryCategoryIds])];
+      
+      console.log('Primary category IDs:', primaryCategoryIds);
+      console.log('Secondary category IDs:', secondaryCategoryIds);
+      console.log('All category IDs:', allCategoryIds);
       
       // Map category IDs to full trigger objects (flexible matching)
-      const detected = SERVICE_TRIGGERS.filter(trigger => {
+      const matchCategories = (ids) => SERVICE_TRIGGERS.filter(trigger => {
         const triggerId = trigger.id.toLowerCase();
-        return detectedCategoryIds.some(detectedId => 
+        return ids.some(detectedId => 
           detectedId === triggerId || 
           detectedId.includes(triggerId) || 
           triggerId.includes(detectedId) ||
-          // Also match without underscores
           detectedId.replace(/_/g, '') === triggerId.replace(/_/g, '')
         );
       });
       
-      console.log('Matched triggers:', detected.map(t => t.id));
+      const primaryTriggers = matchCategories(primaryCategoryIds);
+      const detected = matchCategories(allCategoryIds); // All triggers for display
+      
+      console.log('Primary triggers:', primaryTriggers.map(t => t.id));
+      console.log('All matched triggers:', detected.map(t => t.id));
       
       setDetectedTriggers(detected);
       
-      // Auto-select services marked as 'always' recommend from detected triggers
-      const autoSelectedServices = detected.flatMap(trigger => 
+      // Auto-select services marked as 'always' recommend from PRIMARY triggers only
+      // Secondary categories are shown but not auto-selected
+      const autoSelectedServices = primaryTriggers.flatMap(trigger => 
         trigger.services
           .filter(service => typeof service === 'object' && service.recommend === 'always')
           .map(service => service.name)
       );
       
       // Merge in archetype-boosted services (only from detected categories for auto-selection)
-      const archetypeBoostedMap = getArchetypeBoostedServices(detected, selectedArchetypes);
+      const archetypeBoostedMap = getArchetypeBoostedServices(primaryTriggers, selectedArchetypes);
       const archetypeBoosted = Object.keys(archetypeBoostedMap);
-      // Only auto-select boosted services that belong to detected trigger categories
-      const detectedServiceNames = new Set(
-        detected.flatMap(t => t.services.map(s => typeof s === 'object' ? s.name : s))
+      // Only auto-select boosted services that belong to primary trigger categories
+      const primaryServiceNames = new Set(
+        primaryTriggers.flatMap(t => t.services.map(s => typeof s === 'object' ? s.name : s))
       );
-      const archetypeBoostedForAutoSelect = archetypeBoosted.filter(name => detectedServiceNames.has(name));
+      const archetypeBoostedForAutoSelect = archetypeBoosted.filter(name => primaryServiceNames.has(name));
       const mergedServices = [...new Set([...autoSelectedServices, ...archetypeBoostedForAutoSelect])];
       
       console.log('Auto-selected services:', autoSelectedServices);
@@ -3671,8 +3695,12 @@ SECONDARY_CATEGORIES: content_production, measurement, training`
         }
       }
       
-      // Remove the RECOMMENDED_CATEGORIES section from the displayed analysis
-      const cleanedAnalysis = analysisText.replace(/## RECOMMENDED_CATEGORIES[\s\S]*$/, '').trim();
+      // Remove the category sections from the displayed analysis
+      const cleanedAnalysis = analysisText
+        .replace(/## PRIMARY_CATEGORIES[\s\S]*$/, '')
+        .replace(/## SECONDARY_CATEGORIES[\s\S]*$/, '')
+        .replace(/## RECOMMENDED_CATEGORIES[\s\S]*$/, '')
+        .trim();
       setTranscriptAnalysis(cleanedAnalysis);
       
     } catch (err) {
@@ -3960,7 +3988,7 @@ IMPORTANT:
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 16000,
           system: `You are an expert at drafting professional Statements of Work for Antenna Group, a marketing and communications agency. You create SOWs that protect the agency while being fair and professional for clients.
 
@@ -4324,7 +4352,7 @@ Remember: Quality over quantity. Only report actual issues that need action, wit
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 8000,
           messages
         })
@@ -4516,7 +4544,7 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
           'anthropic-dangerous-direct-browser-access': 'true'
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-5-20250929',
           max_tokens: 16000,
           messages
         })
