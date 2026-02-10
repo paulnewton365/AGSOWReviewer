@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.5.3';
+const APP_VERSION = '2.6.0';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -763,22 +763,22 @@ const SERVICE_TRIGGERS = [
     description: 'Media relations, press coverage, and ongoing media engagement',
     engagementType: 'retainer',
     services: [
-      // Standard PR bundle
-      { name: 'Media Relations', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation', pricing: { termLow: 52, termHigh: 52, budgetLow: 180000, budgetHigh: 360000, bundle: 'Standard PR', note: 'Annual retainer ($15K-$30K/month)' } },
-      { name: 'Press Kit Development', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, or reputation', pricing: { bundle: 'Standard PR' } },
+      // Standard PR bundle — only auto-select when earned media / press / PR is explicitly needed
+      { name: 'Media Relations', recommend: 'always', condition: 'only when client explicitly requests PR, press coverage, earned media, media relations, journalist outreach, or press releases — NOT for general awareness or reputation goals alone', pricing: { termLow: 52, termHigh: 52, budgetLow: 180000, budgetHigh: 360000, bundle: 'Standard PR', note: 'Annual retainer ($15K-$30K/month)' } },
+      { name: 'Press Kit Development', recommend: 'always', condition: 'only when client explicitly requests PR, press coverage, earned media, media relations, journalist outreach, or press releases — NOT for general awareness or reputation goals alone', pricing: { bundle: 'Standard PR' } },
       // Individual services
-      { name: 'Media Training', recommend: 'conditional', condition: 'when client mentions reputation, credibility, executive visibility, or requests directly', pricing: { termLow: 52, termHigh: 52, budgetLow: 20000, budgetHigh: 60000, note: 'Annual or per session' } },
-      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis or urgent PR support', pricing: { termLow: 1, termHigh: 4, budgetLow: 40000, budgetHigh: 200000, note: 'T&M based on severity' } },
-      { name: 'Media Monitoring', recommend: 'always', condition: 'when client requests comms, PR, earned media, awareness, reputation, or share of voice', pricing: { termLow: 52, termHigh: 52, budgetLow: 12000, budgetHigh: 40000, note: 'Annual, excludes tool costs' } },
+      { name: 'Media Training', recommend: 'conditional', condition: 'only when client mentions spokesperson preparation, media interviews, or executive media readiness', pricing: { termLow: 52, termHigh: 52, budgetLow: 20000, budgetHigh: 60000, note: 'Annual or per session' } },
+      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis, reputational threat, or urgent PR support', pricing: { termLow: 1, termHigh: 4, budgetLow: 40000, budgetHigh: 200000, note: 'T&M based on severity' } },
+      { name: 'Media Monitoring', recommend: 'conditional', condition: 'only when PR or earned media services are already being recommended, or client specifically requests media monitoring or share of voice tracking', pricing: { termLow: 52, termHigh: 52, budgetLow: 12000, budgetHigh: 40000, note: 'Annual, excludes tool costs' } },
       { name: 'Newsjacking Strategy', recommend: 'conditional', condition: 'only if requested or transcript mentions intercepting another news story', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 60000, note: 'T&M per opportunity' } },
       { name: 'Industry Domain Consultancy', recommend: 'conditional', condition: 'when client needs industry expertise and trend analysis', pricing: { termLow: 52, termHigh: 52, budgetLow: 52000, budgetHigh: 100000, note: 'Annual retainer' } }
     ],
     triggerPatterns: {
-      direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency', 'want to be seen as a source', 'need rapid response'],
-      indirect: ['important news not getting coverage', 'lack of third-party credibility', 'competitors in media more', 'no journalist relationships', 'story not being told externally', 'need crisis preparedness', 'journalists covering competitors'],
-      situational: ['product launch', 'funding announcement', 'executive hire', 'research release', 'awards', 'company milestone', 'crisis', 'merger announcement', 'industry event', 'breaking developments'],
-      performance: ['low share of voice', 'minimal media mentions', 'negative coverage without response', 'lack of third-party validation', 'sales team lacking proof points', 'competitors quoted more'],
-      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story', 'launching something big and need coverage', 'not prepared if something goes wrong', 'need credibility with our audience', 'when something happens we\'re never quoted', 'want to be top of mind for reporters']
+      direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency', 'want to be seen as a source', 'need rapid response', 'earned media', 'press releases', 'media outreach', 'journalist relationships'],
+      indirect: ['important news not getting coverage', 'lack of third-party credibility through media', 'competitors in media more', 'no journalist relationships', 'story not being told in the press', 'need crisis preparedness', 'journalists covering competitors but not us'],
+      situational: ['funding announcement needing press coverage', 'executive hire needing media announcement', 'research release needing media amplification', 'crisis situation', 'merger announcement needing press strategy'],
+      performance: ['low share of voice in media', 'minimal media mentions', 'negative press coverage without response', 'competitors quoted more in media', 'no earned media results'],
+      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story to the press', 'launching something big and need press coverage', 'not prepared if something goes wrong publicly', 'when something happens in our industry we\'re never quoted', 'want to be top of mind for reporters', 'need earned media']
     }
   },
   {
@@ -3536,7 +3536,17 @@ Common combinations to look for:
 2. Look for the underlying NEED, not just the stated want
 3. If a client mentions multiple pain points, recommend multiple categories
 4. Consider what services often go TOGETHER (e.g., website + brand, PR + executive visibility)
-5. If unsure, include the category - the user can deselect services they don't need`,
+5. If unsure, include the category - the user can deselect services they don't need
+
+## CRITICAL: PR / EARNED MEDIA DETECTION
+
+Do NOT recommend the "pr" category unless the client explicitly signals a need for EARNED MEDIA — meaning press coverage, journalist relationships, media pitching, press releases, or media outreach. The following are NOT sufficient on their own to trigger PR:
+- General "awareness" or "visibility" goals (these are often addressed by paid social, content, SEO, or brand strategy)
+- "Reputation" or "credibility" goals (these may be brand strategy, thought leadership, or content — not necessarily earned media)
+- Product launches, company milestones, or funding rounds (these MIGHT need PR, but only if the client specifically wants press coverage or media attention for them)
+- "Tell our story" (this is often content strategy or brand narrative, not media relations)
+
+PR should only be a PRIMARY category when the client uses language like: press, media coverage, journalists, reporters, earned media, PR agency, press releases, media relations, news coverage, share of voice in media, or similar earned-media-specific language. It can be a SECONDARY (adjacent) recommendation for launch scenarios or awareness building, but should not auto-select as primary unless earned media intent is clear.`,
           messages: [{
             role: 'user',
             content: `Analyze ALL of the following inputs and produce a comprehensive Project Summary.
@@ -4292,61 +4302,92 @@ The SOW should be ready for client presentation with minimal editing needed. Mak
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-5-20250929',
-          max_tokens: 6000,
-          system: `You are a senior strategist at Antenna Group, a marketing and communications agency, writing a client-facing Pre-Scope document. This document is warm, professional, confident, and concise. It should feel like a senior advisor laying out a clear recommendation — not a legal document. Avoid jargon and overly formal language. Write in a way that a CMO or CEO would find compelling and easy to act on.
+          max_tokens: 8000,
+          system: `You are a senior strategist at Antenna Group, a marketing and communications agency, writing a client-facing Pre-Scope document. This document is warm, professional, confident, and specific. It should feel like a senior advisor laying out a clear, actionable recommendation with enough detail that the client can see exactly what they're getting.
 
-IMPORTANT FORMATTING RULES:
-- Use markdown formatting with ## headers for the main sections
-- Keep sections concise — this is a summary, not a detailed SOW
-- The tone should be collaborative and advisory
-- Do NOT include legal language, change order processes, or SOW-style protections
-- Do NOT use bullet points for the overview sections — write in flowing paragraphs
-- For the services section, a clean list format is appropriate
-- Do NOT invent specific dollar amounts or timelines — use only what is provided in the services data`,
+TONE & STYLE:
+- Confident and advisory — like a trusted partner making a clear recommendation
+- Specific and concrete — describe exactly what Antenna will DO and PRODUCE for each service
+- Warm but professional — not a legal document, not a vague overview
+- Use "Antenna will..." to describe activities — active, direct language
+- Write service descriptions as flowing paragraphs, not bullet lists
+
+CRITICAL FORMATTING RULES:
+- Use markdown formatting with ## headers
+- Each proposed service should be a ### heading with (price range, timeline) in parentheses
+- Service descriptions should be 2-4 sentences of SPECIFIC activities and outputs — what Antenna will do, what will be produced, what the client can expect
+- Do NOT invent specific dollar amounts — use the budget ranges provided in the services data
+- Do NOT invent specific timelines — use the term ranges provided, or say "timeline to be confirmed during scoping" if none provided
+- Do NOT include legal language, change order processes, revision limits, or SOW-style protections
+- Do NOT pad with generic marketing language — every sentence should convey specific information about what will be delivered`,
           messages: [{
             role: 'user',
             content: `Generate a Pre-Scope document using the information below.
 
 ## DOCUMENT STRUCTURE
 
-The document MUST follow this exact structure:
+The document MUST follow this EXACT structure. Do not add extra sections.
 
-### 1. INTRODUCTION (use this text verbatim)
+### 1. TITLE
+Use: "## Pre-Scope Document"
+
+### 2. INTRODUCTION (use this text verbatim as the first paragraph, no header)
 "This document details each proposed deliverable and the outputs you can anticipate in a formal contract. It is intended to encourage conversation and be iterated until it represents the services and focus that you want to see. Once it is finalized, we will quickly move forward with an SOW and start work."
 
-### 2. OVERVIEW SECTIONS
-Generate the following sections based on the Project Summary below. Each should be 2-4 sentences maximum, written as flowing paragraphs:
+### 3. DEFINITION OF SUCCESS
+Use the header "## Definition of Success" and write 2-4 sentences describing what success looks like for this engagement. Pull directly from the client's stated goals and the project summary. Be specific about the outcomes, not the activities.
 
-## EXECUTIVE SUMMARY
-A brief, compelling overview of what we're proposing and why — frame it as the strategic opportunity.
+### 4. PROPOSED SERVICES
+Use the header "## Proposed Services"
 
-## SUCCESS DEFINITION
-What will success look like for this engagement? Pull from the client's stated goals.
+This is the CORE of the document. For EACH service or service bundle listed below, create a subsection formatted as:
 
-## PROBLEM STATEMENT
-What challenges or gaps are we addressing? Be direct but diplomatic.
+### [Service Name] — ([budget range], [timeline])
 
-## MANDATORIES
-Any non-negotiable requirements, constraints, or must-haves identified by the client.
+Then write 2-4 sentences describing:
+- What Antenna will DO (specific activities — research, workshops, development, etc.)
+- What will be PRODUCED (specific deliverables — documents, designs, reports, platforms, etc.)
+- Key details the client should know (what's included, what it covers, any important context)
 
-## TIMELINE
-High-level timing expectations or phasing (if mentioned). If no timeline was discussed, write a brief note that timeline will be established during scoping.
+IMPORTANT GUIDELINES for service descriptions:
+- Be SPECIFIC to the client's situation using context from the Project Summary
+- Describe activities in terms of what the client will experience and receive
+- Where services are bundled, describe the bundle as a cohesive offering, not individual line items
+- Use language like "Antenna will..." to describe activities
+- Include quantities where known (e.g., "up to 3 naming options", "up to 2 visual territories")
+- Reference the client's specific goals, industry, or challenges where relevant
+- If a service is a retainer, note the monthly commitment and what it covers
+- If a service is T&M, note the minimum commitment and what types of work it covers
 
-### 3. RECOMMENDED SERVICES
-Use the header "## RECOMMENDED SERVICES" and then list each service category and its services exactly as provided below. Include the budget range for each service. Format as:
+### 5. HOW WE'LL WORK TOGETHER
+Use the header "## How We'll Work Together" and write a short paragraph (3-5 sentences) describing the philosophy of the working relationship. Focus on the CHARACTER of the partnership (transparent, structured, adaptive, creatively led, data-driven, etc.) NOT specific meetings, cadences, workshops, or deliverables. Those details belong in the SOW. Base this on the FIT Archetype guidance if provided.
 
-**[Category Name]**
-- Service Name: Budget Range
-- Service Name: Budget Range
+### 6. ESTIMATED TOTALS
+Use the header "## Estimated Totals"
 
-### 4. HOW WE'LL WORK TOGETHER
-Use the header "## HOW WE'LL WORK TOGETHER" and write a short, pithy paragraph (3-5 sentences) describing the high-level approach to the working relationship. This should convey the philosophy of the partnership — how we think about collaboration, decision-making, and momentum. Focus on the *character* of the relationship (e.g., transparent, structured, adaptive, creatively led) rather than promising specific meetings, workshops, check-ins, or deliverables. Those details belong in the SOW. Base this on the FIT Archetype guidance provided below. If no archetype is specified, write a general collaborative approach.
+Break the total into categories where applicable:
+- **One-Off / Project:** [sum of fixed-fee services]
+- **Retained Services:** [sum of retainer services, expressed as monthly or annual]
 
-### 5. ESTIMATED INVESTMENT
-Use the header "## ESTIMATED INVESTMENT" and state the total budget range provided below.
+Then add a brief note about project timeline and any overlap between workstreams, similar to:
+"Please note that some deliverables may overlap. [Brief timeline summary based on what's known.]"
 
-### 6. NEXT STEPS
-Write a short, warm paragraph (2-3 sentences) encouraging the client to review this document, flag anything that needs adjusting, and confirming that once aligned, we'll move quickly into a detailed SOW.
+### 7. NEXT STEPS
+Write 2-3 sentences encouraging the client to review, flag adjustments, and confirming we'll move quickly to SOW once aligned.
+
+---
+
+## REFERENCE: DER COALITION PRE-SCOPE EXAMPLE
+
+Here is an example of the TONE and DETAIL LEVEL expected for service descriptions. Your output should match this level of specificity:
+
+"Onboarding, Rapid Discovery & Stakeholder Research - ($13,000, 2 Weeks)
+Antenna will spend 1 week onboarding onto your existing brand, reviewing any foundational documentation and data you can share. An Assignment brief will be created to ensure that we have a clear definition of success for the project and ways of working that work for you. The production of a discussion guide and 3-5 IDIs (in-depth interviews) with coalition-identified stakeholders will be held and recorded. Based upon the Assignment Brief and IDIs, Antenna will conduct desk research on your audience and landscape to identify audience needs and landscape opportunities."
+
+"Brand Strategy - ($20,000, 2-3 Weeks)
+Based on the above, the Antenna team will produce a brand strategy hypothesis document that outlines new language and positioning opportunities for your brand based on what you have told us and what we have learned, alongside creative guidance for all identified creative deliverables. This will be presented as a creative brief and will be iterated until final approval is given. The Antenna team will produce naming options based on the creative brief and brand strategy hypothesis to arrive at three (3) viable and available options."
+
+Note how each description: starts with what Antenna will DO, specifies what will be PRODUCED, includes concrete quantities, and references the client's specific situation.
 
 ---
 
@@ -4362,11 +4403,11 @@ ${servicesText}
 ## TOTAL ESTIMATED BUDGET RANGE
 ${totalBudgetText}
 
-${selectedArchetypes.length > 0 ? `## FIT ARCHETYPE (for Ways of Working section)
+${selectedArchetypes.length > 0 ? `## FIT ARCHETYPE (for How We'll Work Together section)
 ${selectedArchetypes.map(id => `${FIT_ARCHETYPES[id].emoji} ${FIT_ARCHETYPES[id].title}: ${FIT_ARCHETYPES[id].short}
 ${FIT_ARCHETYPES[id].waysOfWorking}`).join('\n\n')}
 ${selectedArchetypes.length === 2 ? `\nThis client is a ${selectedArchetypes.map(id => FIT_ARCHETYPES[id].title).join(' + ')} blend — synthesize both working styles naturally.` : ''}
-IMPORTANT: The "How We'll Work Together" section should distill the archetype into a brief, high-level paragraph about the approach and relationship philosophy. Do NOT mention specific meetings, cadences, workshops, reporting formats, or tactical outputs — those belong in the SOW. Focus on values like transparency, pace, creative ambition, rigour, adaptability, or partnership dynamics.` : ''}
+IMPORTANT: The "How We'll Work Together" section should distill the archetype into a brief paragraph about the partnership philosophy. Do NOT list specific meetings, cadences, reporting formats, or tactical processes.` : ''}
 
 Generate the complete Pre-Scope document now.`
           }]
