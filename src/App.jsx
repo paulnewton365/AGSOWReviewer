@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.7.0';
+const APP_VERSION = '2.8.0';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -609,6 +609,7 @@ const downloadAsDocx = async (sowText, filename, projectInfo = {}) => {
 // ============================================================================
 // SERVICE TRIGGER MAPPINGS (Streamlined 19 categories)
 // ============================================================================
+// === SYNC:SERVICE_TRIGGERS_START ===
 const SERVICE_TRIGGERS = [
   {
     id: 'website',
@@ -631,10 +632,10 @@ const SERVICE_TRIGGERS = [
     ],
     triggerPatterns: {
       direct: ['need a new website', 'website redesign', 'site looks outdated', 'rebuild our site', 'new landing page', 'mobile-friendly'],
-      indirect: ['high bounce rates', 'site is slow', 'can\\\'t update the site ourselves', 'CMS is difficult', 'doesn\\\'t reflect our brand', 'can\\\'t integrate with our tools'],
+      indirect: ['high bounce rates', 'site is slow', 'can\'t update the site ourselves', 'CMS is difficult', 'doesn\'t reflect our brand', 'can\'t integrate with our tools'],
       situational: ['recent rebrand', 'merger', 'new product launch', 'expansion into new markets', 'adding e-commerce', 'company milestone'],
       performance: ['low conversion rates', 'cart abandonment', 'poor search rankings', 'low time on site', 'customer complaints about UX', 'website not generating leads'],
-      sampleLanguage: ['people leave our site within seconds', 'can\\\'t compete with competitors\\\' sites', 'developer left and we can\\\'t make changes', 'looks fine on desktop but terrible on mobile', 'doesn\\\'t show up in Google', 'customers can\\\'t find what they\\\'re looking for', 'outgrown our platform', 'website doesn\\\'t tell our story']
+      sampleLanguage: ['people leave our site within seconds', 'can\'t compete with competitors\' sites', 'developer left and we can\'t make changes', 'looks fine on desktop but terrible on mobile', 'doesn\'t show up in Google', 'customers can\'t find what they\'re looking for', 'outgrown our platform', 'website doesn\'t tell our story']
     }
   },
   {
@@ -652,11 +653,11 @@ const SERVICE_TRIGGERS = [
       { name: 'Audience Research & Segmentation', recommend: 'conditional', condition: 'when client does not know their audience, what inspires them, or how to reach them', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } },
     ],
     triggerPatterns: {
-      direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\\\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
+      direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
       indirect: ['marketing not producing results', 'conflicting messages', 'no customer journey', 'which channels to prioritize', 'marketing and sales not aligned', 'budget spread too thin'],
       situational: ['new fiscal year', 'leadership change', 'entering new market', 'product launch', 'competitive pressure', 'organizational shift'],
       performance: ['declining market share', 'acquisition costs increasing', 'ROI unknown', 'lead quality issues', 'lifetime value decreasing', 'inconsistent channel performance'],
-      sampleLanguage: ['throwing spaghetti at the wall', 'don\\\'t know what\\\'s working', 'competitors seem to be everywhere', 'marketing and sales blame each other', 'never had a real strategy', 'channels aren\\\'t talking to each other', 'someone to make sense of all this', 'reactive instead of proactive']
+      sampleLanguage: ['throwing spaghetti at the wall', 'don\'t know what\'s working', 'competitors seem to be everywhere', 'marketing and sales blame each other', 'never had a real strategy', 'channels aren\'t talking to each other', 'someone to make sense of all this', 'reactive instead of proactive']
     }
   },
   {
@@ -684,11 +685,11 @@ const SERVICE_TRIGGERS = [
       { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } },
     ],
     triggerPatterns: {
-      direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\\\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
-      indirect: ['company evolved but identity hasn\\\'t', 'can\\\'t explain what makes us different', 'inconsistent messaging', 'employees can\\\'t articulate positioning', 'customer confusion', 'premium pricing not supported by perception'],
+      direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
+      indirect: ['company evolved but identity hasn\'t', 'can\'t explain what makes us different', 'inconsistent messaging', 'employees can\'t articulate positioning', 'customer confusion', 'premium pricing not supported by perception'],
       situational: ['merger or acquisition', 'spin-off', 'new leadership', 'expansion beyond original scope', 'new markets', 'negative reputation', 'company milestone', 'IPO'],
-      performance: ['brand awareness declining', 'NPS dropping', 'customer feedback about perception', 'can\\\'t command premium prices', 'losing deals to stronger brands', 'employee engagement declining'],
-      sampleLanguage: ['nobody knows who we are', 'look just like everyone else', 'brand worked when we were small but we\\\'ve grown', 'customers don\\\'t understand our value', 'visual identity all over the place', 'embarrassed to hand out business cards', 'can\\\'t attract talent', 'different departments use different logos', 'evolved but brand hasn\\\'t', 'associated with something we don\\\'t do anymore', 'launching in new markets']
+      performance: ['brand awareness declining', 'NPS dropping', 'customer feedback about perception', 'can\'t command premium prices', 'losing deals to stronger brands', 'employee engagement declining'],
+      sampleLanguage: ['nobody knows who we are', 'look just like everyone else', 'brand worked when we were small but we\'ve grown', 'customers don\'t understand our value', 'visual identity all over the place', 'embarrassed to hand out business cards', 'can\'t attract talent', 'different departments use different logos', 'evolved but brand hasn\'t', 'associated with something we don\'t do anymore', 'launching in new markets']
     }
   },
   {
@@ -712,11 +713,11 @@ const SERVICE_TRIGGERS = [
       { name: 'Transcreation (Multi-language)', recommend: 'conditional', condition: 'only if requested or translation/multi-language is mentioned', pricing: { bundle: 'Creative Retainer' } },
     ],
     triggerPatterns: {
-      direct: ['need a brochure', 'need a video', 'don\\\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
+      direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
       indirect: ['marketing team stretched thin', 'quality inconsistent', 'no in-house design', 'need specialized formats', 'high volume of creative needs', 'tight deadlines'],
       situational: ['campaign launch', 'trade show', 'sales team needs collateral', 'product launch', 'seasonal campaign', 'executive presentations'],
-      performance: ['creative not generating engagement', 'sales team not using materials', 'A/B tests showing underperformance', 'feedback that materials aren\\\'t compelling', 'social engagement below benchmarks'],
-      sampleLanguage: ['don\\\'t have designers on staff', 'team is overwhelmed', 'need a video but don\\\'t know where to start', 'sales deck needs updating', 'need assets for our campaign', 'everything takes too long to produce', 'competitors\\\' materials look more polished', 'have the strategy but need help executing']
+      performance: ['creative not generating engagement', 'sales team not using materials', 'A/B tests showing underperformance', 'feedback that materials aren\'t compelling', 'social engagement below benchmarks'],
+      sampleLanguage: ['don\'t have designers on staff', 'team is overwhelmed', 'need a video but don\'t know where to start', 'sales deck needs updating', 'need assets for our campaign', 'everything takes too long to produce', 'competitors\' materials look more polished', 'have the strategy but need help executing']
     }
   },
   {
@@ -733,11 +734,11 @@ const SERVICE_TRIGGERS = [
       { name: 'UGC Programs', recommend: 'conditional', condition: 'only if user-generated content is requested', pricing: { bundle: 'Influencer Retainer' } },
     ],
     triggerPatterns: {
-      direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\\\'t work'],
+      direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\'t work'],
       indirect: ['difficulty reaching younger audiences', 'need authentic endorsements', 'product requires demonstration', 'brand awareness stalled', 'user-generated content insufficient'],
       situational: ['product launch needing buzz', 'new demographic market', 'brand relevance concerns', 'competitors using influencers', 'need authentic content at scale', 'event amplification'],
       performance: ['social engagement declining', 'owned content not resonating', 'advertising fatigue', 'high CPA on paid channels', 'brand trust declining'],
-      sampleLanguage: ['can\\\'t break through on social', 'younger audiences don\\\'t trust us directly', 'competitors partnering with creators', 'need authentic voices', 'tried on our own but didn\\\'t see results', 'don\\\'t know how to find the right creators', 'need content that feels genuine', 'want to be part of the conversation on TikTok']
+      sampleLanguage: ['can\'t break through on social', 'younger audiences don\'t trust us directly', 'competitors partnering with creators', 'need authentic voices', 'tried on our own but didn\'t see results', 'don\'t know how to find the right creators', 'need content that feels genuine', 'want to be part of the conversation on TikTok']
     }
   },
   {
@@ -756,7 +757,7 @@ const SERVICE_TRIGGERS = [
       indirect: ['campaigns feel tactical', 'each effort is standalone', 'difficulty creating memorable work', 'need to differentiate', 'brand awareness plateaued', 'work is boring', 'looks like everyone else'],
       situational: ['major launch', 'brand repositioning', 'new market entry', 'competitive threat', 'company transformation', 'major anniversary', 'category disruption'],
       performance: ['brand recall declining', 'campaign metrics mediocre', 'share of voice decreasing', 'advertising not breaking through', 'content engagement low', 'creative fatigue'],
-      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\\\'t break through the clutter', 'want something competitors can\\\'t copy', 'creative that people talk about', 'ads are forgettable', 'cut through the noise', 'campaigns are safe']
+      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\'t break through the clutter', 'want something competitors can\'t copy', 'creative that people talk about', 'ads are forgettable', 'cut through the noise', 'campaigns are safe']
     }
   },
   {
@@ -787,7 +788,7 @@ const SERVICE_TRIGGERS = [
       indirect: ['important news not getting coverage', 'lack of third-party credibility through media', 'competitors in media more', 'no journalist relationships', 'story not being told in the press', 'need crisis preparedness', 'journalists covering competitors but not us'],
       situational: ['funding announcement needing press coverage', 'executive hire needing media announcement', 'research release needing media amplification', 'crisis situation', 'merger announcement needing press strategy'],
       performance: ['low share of voice in media', 'minimal media mentions', 'negative press coverage without response', 'competitors quoted more in media', 'no earned media results'],
-      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\\\'t have relationships with journalists', 'don\\\'t know how to pitch media', 'need someone to tell our story to the press', 'launching something big and need press coverage', 'not prepared if something goes wrong publicly', 'when something happens in our industry we\\\'re never quoted', 'want to be top of mind for reporters', 'need earned media']
+      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story to the press', 'launching something big and need press coverage', 'not prepared if something goes wrong publicly', 'when something happens in our industry we\'re never quoted', 'want to be top of mind for reporters', 'need earned media']
     }
   },
   {
@@ -812,13 +813,13 @@ const SERVICE_TRIGGERS = [
       indirect: ['competitor executives more visible', 'difficulty attracting talent', 'investor relations need credibility', 'sales cycle requires leadership trust', 'industry influence desired', 'board wants more visible CEO'],
       situational: ['new CEO', 'IPO preparation', 'fundraising', 'conference schedule', 'speaking pipeline', 'award nominations', 'acquisition', 'crisis'],
       performance: ['low leadership recognition', 'executive content not engaging', 'speaking invitations not coming', 'board feedback about visibility', 'LinkedIn engagement low', 'not invited to speak'],
-      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\\\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership', 'credibility problem', 'communications is timid']
+      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership', 'credibility problem', 'communications is timid']
     }
   },
   {
     id: 'paid_media',
     category: 'Paid Media',
-    description: 'Social advertising campaigns',
+    description: 'Paid Media',
     engagementType: 'fixed_fee',
     services: [
       // Paid Media Strategy bundle
@@ -830,17 +831,17 @@ const SERVICE_TRIGGERS = [
       { name: 'Paid Media Reporting', recommend: 'always', condition: 'Offer an economy of scale if reporting for both paid media and scoal media selected. This should present costs as two thirds of teh ranges here fore each when both are selected.', pricing: { termLow: 4, termHigh: 52, budgetLow: 8000, budgetHigh: 60000, bundle: 'Paid Media Execution' } },
     ],
     triggerPatterns: {
-      direct: ['need social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\\\'t working'],
-      indirect: ['organic reach declining', 'need precise targeting', 'have budget but no expertise', 'campaigns underperforming', 'need lead generation'],
-      situational: ['campaign launch', 'product launch', 'event promotion', 'time-sensitive offers', 'competitive pressure on social'],
-      performance: ['high CPA on social', 'low conversion rates', 'ad fatigue', 'poor targeting results', 'ROAS below benchmarks'],
-      sampleLanguage: ['organic reach has tanked', 'spending money but not seeing results', 'don\\\'t know if targeting is right', 'competitors\\\' ads everywhere', 'need to generate leads from social', 'not sure which platforms to focus on', 'social advertising is inconsistent', 'want to reach specific audience']
+      direct: [],
+      indirect: [],
+      situational: [],
+      performance: [],
+      sampleLanguage: []
     }
   },
   {
     id: 'social_media',
     category: 'Social Media',
-    description: 'Social media strategy, community management, and content',
+    description: 'Social Media',
     engagementType: 'retainer',
     services: [
       // Social Media Strategy bundle
@@ -853,11 +854,11 @@ const SERVICE_TRIGGERS = [
       { name: 'Social Media Reporting', recommend: 'conditional', condition: 'Offer an economy of scale if reporting for both paid media and scoal media selected. This should present costs as two thirds of the ranges here fore each when both are selected.', pricing: { termLow: 4, termHigh: 52, budgetLow: 8000, budgetHigh: 60000, bundle: 'Social Execution' } },
     ],
     triggerPatterns: {
-      direct: ['need social media help', 'social media strategy', 'we need to be on social', 'social channels', 'community management'],
-      indirect: ['no social presence', 'social channels inactive', 'competitors active on social', 'need to engage audiences online', 'brand not represented on social platforms'],
-      situational: ['brand launch needing social presence', 'campaign requiring social amplification', 'new channels to set up', 'social content needs'],
-      performance: ['low social engagement', 'follower growth stalled', 'social content not resonating', 'no community engagement'],
-      sampleLanguage: ['we need to get on social media', 'our social channels are dead', 'we don\'t know what to post', 'competitors are everywhere on social', 'we need someone to manage our social', 'we want to build a community']
+      direct: [],
+      indirect: [],
+      situational: [],
+      performance: [],
+      sampleLanguage: []
     }
   },
   {
@@ -879,34 +880,34 @@ const SERVICE_TRIGGERS = [
       { name: 'SEO Reporting', recommend: 'conditional', condition: 'for all SEO engagements', pricing: { termLow: 4, termHigh: 52, budgetLow: 4000, budgetHigh: 40000, bundle: 'SEO Reporting' } },
     ],
     triggerPatterns: {
-      direct: ['don\\\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
+      direct: ['don\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
       indirect: ['website not appearing in search', 'competitors outranking us', 'paid search costs too high', 'content not getting discovered', 'technical website issues'],
       situational: ['website redesign', 'new content strategy', 'competitive threat in search', 'market expansion', 'algorithm update impact'],
       performance: ['declining organic traffic', 'keyword rankings dropping', 'low domain authority', 'high reliance on paid search', 'competitor visibility increasing'],
-      sampleLanguage: ['don\\\'t show up when people search for what we do', 'competitors always rank above us', 'website redesign and traffic disappeared', 'paying too much for search ads', 'people can\\\'t find us online', 'content doesn\\\'t rank', 'don\\\'t understand SEO', 'hit by a Google update']
+      sampleLanguage: ['don\'t show up when people search for what we do', 'competitors always rank above us', 'website redesign and traffic disappeared', 'paying too much for search ads', 'people can\'t find us online', 'content doesn\'t rank', 'don\'t understand SEO', 'hit by a Google update']
     }
   },
   {
-    id: 'orm',
+    id: 'online_reputation_management_orm',
     category: 'Online Reputation Management (ORM)',
-    description: 'Online reputation management and brand perception',
+    description: 'Online Reputation Management (ORM)',
     engagementType: 'fixed_fee',
     services: [
       // GEO Strategy bundle
       { name: 'GEO Strategy & Audit', recommend: 'always', condition: 'Where there is a problem or opportunity to shape or improve how a brand appears on LLM  or AI search. Recommend if client is having issues with reputation or perception.', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 20000, bundle: 'GEO Strategy', note: 'Annual retainer, often bundled with SEO' } },
     ],
     triggerPatterns: {
-      direct: ['online reputation', 'brand perception online', 'what people see when they search us', 'reputation management'],
-      indirect: ['negative search results', 'outdated information online', 'Wikipedia page needs updating', 'Reddit threads about us', 'AI tools saying wrong things about us'],
-      situational: ['reputation issue discovered', 'negative coverage persisting in search', 'competitive misinformation', 'brand perception audit'],
-      performance: ['negative sentiment in search results', 'inaccurate brand information online', 'competitors controlling narrative', 'AI-generated misinformation'],
-      sampleLanguage: ['when you Google us the results are wrong', 'our Wikipedia page is outdated', 'people on Reddit are saying incorrect things', 'AI chatbots give wrong info about us', 'we need to control our online narrative']
+      direct: [],
+      indirect: [],
+      situational: [],
+      performance: [],
+      sampleLanguage: []
     }
   },
   {
-    id: 'geo',
+    id: 'generative_engine_optimization_orm',
     category: 'Generative Engine Optimization (ORM)',
-    description: 'Optimize for AI-powered search',
+    description: 'Generative Engine Optimization (ORM)',
     engagementType: 'fixed_fee',
     services: [
       // GEO Execution bundle
@@ -915,28 +916,28 @@ const SERVICE_TRIGGERS = [
       { name: 'Earned Strategy for GEO', recommend: 'conditional', condition: 'GEO focused Earned Strategy Enhancement. When we are doing earned and their is a request to limprove visibility, repur=tation and differentiation on LLMs and AI.', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 15000, bundle: 'GEO Execution' } },
     ],
     triggerPatterns: {
-      direct: ['need to show up in AI search', 'want to be cited by ChatGPT', 'optimize for AI answers'],
-      indirect: ['concern about AI changing search', 'questions about future of organic search', 'interest in emerging search', 'competitors in AI content'],
-      situational: ['AI search feature launches', 'industry AI conversations', 'competitive monitoring', 'future planning'],
-      performance: ['declining traditional search traffic', 'absence from AI answers', 'competitors cited in AI', 'audience behavior changing'],
-      sampleLanguage: ['people using AI to search now', 'will ChatGPT mention us', 'how do we prepare for AI search', 'content needs to be AI-friendly', 'search is changing', 'want to be the authoritative source AI cites']
+      direct: [],
+      indirect: [],
+      situational: [],
+      performance: [],
+      sampleLanguage: []
     }
   },
   {
-    id: 'integrated_measurement',
+    id: 'integrated_measurement_analytics',
     category: 'Integrated Measurement & Analytics',
-    description: 'Unified measurement across earned, social, paid channels',
+    description: 'Integrated Measurement & Analytics',
     engagementType: 'fixed_fee',
     services: [
       // Integrated Measurement Strategy bundle
       { name: 'Analytics Strategy & Measurement Framework', recommend: 'always', condition: 'When there is an integrated program touching any combination of earned, social, web and paid. When selected this supercedes the need for standallone reporting for paid and social', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000, bundle: 'Integrated Measurement Strategy' } },
     ],
     triggerPatterns: {
-      direct: ['need integrated reporting', 'unified dashboard', 'cross-channel measurement', 'integrated measurement framework'],
-      indirect: ['can\'t see how channels work together', 'reporting is siloed', 'no unified view of performance', 'different teams report differently'],
-      situational: ['launching integrated campaign', 'multiple agencies need unified reporting', 'board wants holistic marketing view'],
-      performance: ['can\'t attribute results across channels', 'no integrated performance view', 'conflicting reports from different channels'],
-      sampleLanguage: ['we need one view of everything', 'our reporting is all over the place', 'we can\'t tell how earned and paid work together', 'need a single source of truth for marketing performance']
+      direct: [],
+      indirect: [],
+      situational: [],
+      performance: [],
+      sampleLanguage: []
     }
   },
   {
@@ -955,11 +956,11 @@ const SERVICE_TRIGGERS = [
       { name: 'Reporting', recommend: 'always', condition: 'When there is a need to report on integrated campaign impact, and recommend optimizations, A/B tests or changes to creative and strategy.', pricing: { termLow: 52, termHigh: 52, budgetLow: 30000, budgetHigh: 40000, bundle: 'Integrated Reporting' } },
     ],
     triggerPatterns: {
-      direct: ['don\\\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\\\'t prove ROI'],
+      direct: ['don\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\'t prove ROI'],
       indirect: ['decisions without data', 'tools not integrated', 'leadership asking for accountability', 'budget justification challenges', 'unclear attribution'],
       situational: ['new leadership demanding accountability', 'budget review', 'board reporting', 'marketing technology audit', 'new initiatives'],
-      performance: ['can\\\'t report on basic metrics', 'data conflicts between systems', 'no baseline', 'unknown customer journey', 'efficiency unclear'],
-      sampleLanguage: ['have no idea what\\\'s working', 'data is all over the place', 'can\\\'t connect marketing to sales', 'board wants to see ROI', 'decisions based on gut feel', 'each tool tells us something different', 'need a dashboard that makes sense', 'can\\\'t justify marketing spend']
+      performance: ['can\'t report on basic metrics', 'data conflicts between systems', 'no baseline', 'unknown customer journey', 'efficiency unclear'],
+      sampleLanguage: ['have no idea what\'s working', 'data is all over the place', 'can\'t connect marketing to sales', 'board wants to see ROI', 'decisions based on gut feel', 'each tool tells us something different', 'need a dashboard that makes sense', 'can\'t justify marketing spend']
     }
   },
   {
@@ -980,7 +981,7 @@ const SERVICE_TRIGGERS = [
       indirect: ['uncertainty about target audience', 'no launch plan', 'pricing and positioning questions', 'channel strategy unclear', 'sales and marketing alignment needed'],
       situational: ['product development completion', 'service line expansion', 'market expansion', 'competitive response', 'acquisition of new capabilities'],
       performance: ['previous launches underperformed', 'new product uptake slow', 'market penetration below expectations', 'customer acquisition challenges', 'sales cycle too long'],
-      sampleLanguage: ['launching in Q[X] and need a plan', 'built something great but don\\\'t know how to sell it', 'need to understand who will buy this', 'how do we price this', 'entering a new category', 'need to generate demand quickly', 'last launch didn\\\'t go well', 'have the product but not the plan']
+      sampleLanguage: ['launching in Q[X] and need a plan', 'built something great but don\'t know how to sell it', 'need to understand who will buy this', 'how do we price this', 'entering a new category', 'need to generate demand quickly', 'last launch didn\'t go well', 'have the product but not the plan']
     }
   },
   {
@@ -1001,10 +1002,10 @@ const SERVICE_TRIGGERS = [
     ],
     triggerPatterns: {
       direct: ['have an event coming up', 'need to plan a conference', 'need event support'],
-      indirect: ['team doesn\\\'t have event experience', 'past events had issues', 'budget requires professional management', 'complex logistics', 'need creative concepts'],
+      indirect: ['team doesn\'t have event experience', 'past events had issues', 'budget requires professional management', 'complex logistics', 'need creative concepts'],
       situational: ['annual conference', 'product launch event', 'customer events', 'trade show', 'employee events', 'milestone celebrations', 'investor events'],
       performance: ['event feedback poor', 'attendance declining', 'event ROI unclear', 'logistics challenges', 'content quality inconsistent'],
-      sampleLanguage: ['have our annual conference and need help', 'want to make this event memorable', 'don\\\'t have time to plan ourselves', 'need vendors and don\\\'t know where to start', 'last event was a disaster', 'want to elevate our event experience', 'need creative ideas for the event', 'budget is tight but want something special']
+      sampleLanguage: ['have our annual conference and need help', 'want to make this event memorable', 'don\'t have time to plan ourselves', 'need vendors and don\'t know where to start', 'last event was a disaster', 'want to elevate our event experience', 'need creative ideas for the event', 'budget is tight but want something special']
     }
   },
   {
@@ -1044,7 +1045,7 @@ const SERVICE_TRIGGERS = [
       indirect: ['stakeholder expectations for transparency', 'ESG reporting requirements', 'investor relations needs', 'employee engagement communications', 'competitor reports setting higher bar', 'customers want to know our values'],
       situational: ['annual reporting cycle', 'sustainability milestones', 'stakeholder meeting', 'grant reporting', 'public accountability', 'B Corp certification'],
       performance: ['stakeholder feedback on transparency', 'competitor reports more compelling', 'internal data not shared', 'impact not being communicated', 'brand purpose scores low'],
-      sampleLanguage: ['do great work but don\\\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story', 'want people to know we\\\'re more than just a business']
+      sampleLanguage: ['do great work but don\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story', 'want people to know we\'re more than just a business']
     }
   },
   {
@@ -1069,13 +1070,13 @@ const SERVICE_TRIGGERS = [
       indirect: ['content calendar empty', 'publishing frequency declined', 'team stretched too thin', 'quality inconsistent', 'topics not resonating'],
       situational: ['blog launch', 'newsletter launch', 'podcast initiative', 'video series', 'campaign content', 'thought leadership program'],
       performance: ['content engagement declining', 'audience growth stalled', 'SEO content needed', 'social content underperforming', 'lead magnet requests'],
-      sampleLanguage: ['know we need content but don\\\'t know what to create', 'started a blog but ran out of steam', 'team doesn\\\'t have time to write', 'need fresh ideas', 'content isn\\\'t getting engagement', 'want to start a podcast', 'need more lead magnets']
+      sampleLanguage: ['know we need content but don\'t know what to create', 'started a blog but ran out of steam', 'team doesn\'t have time to write', 'need fresh ideas', 'content isn\'t getting engagement', 'want to start a podcast', 'need more lead magnets']
     }
   },
   {
     id: 'operational_support',
     category: 'Operational Support',
-    description: 'Coordinate complex marketing initiatives',
+    description: 'Operational Support',
     engagementType: 'retainer',
     services: [
       { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested', pricing: { termLow: 52, termHigh: 52, percentageOfProject: 10, note: 'Approximately 15% of total project fee. Not required on PR/Earned-only engagements.' } },
@@ -1085,14 +1086,15 @@ const SERVICE_TRIGGERS = [
       { name: 'Client Side Project Management', recommend: 'conditional', condition: 'If we need top offer project management support to help coordinate clients internal operation. Project Management as a service,', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000 } },
     ],
     triggerPatterns: {
-      direct: ['need help managing projects', 'overwhelmed with coordination', 'need a PM', 'need onboarding support', 'need someone to manage vendors'],
-      indirect: ['projects always late', 'over budget', 'multiple agencies not coordinated', 'quality control problems', 'no project management'],
-      situational: ['complex campaign launch', 'multiple initiatives', 'major event', 'organizational change', 'agency consolidation', 'first engagement'],
-      performance: ['missed deadlines', 'budget overruns', 'quality inconsistencies', 'team burnout', 'stakeholder dissatisfaction'],
-      sampleLanguage: ['things keep falling through the cracks', 'can\'t keep all the pieces coordinated', 'internal team is overwhelmed', 'projects always go over budget', 'need someone to keep everything on track', 'communication is a mess']
+      direct: [],
+      indirect: [],
+      situational: [],
+      performance: [],
+      sampleLanguage: []
     }
   },
 ];
+// === SYNC:SERVICE_TRIGGERS_END ===
 // Helper function to extract service name from service object or string
 const getServiceName = (service) => {
   return typeof service === 'object' ? service.name : service;
@@ -1617,6 +1619,7 @@ const REVIEW_ENGAGEMENT_TYPES = [
 // ============================================================================
 // PRICING GUIDE FOR SOW REVIEW VALIDATION
 // ============================================================================
+// === SYNC:PRICING_GUIDE_START ===
 const PRICING_GUIDE = `
 ## SERVICE PRICING GUIDE - For Validation
 
@@ -1787,7 +1790,9 @@ Use this guide to validate pricing in SOWs. Flag fees that are significantly bel
 | Marketing Operations | Annual | ~10% of paid media management fees |
 | Cross-agency Coordination | Annual | $24,000 - $50,000 |
 | Onboarding | 1-2 weeks | $5,000 - $15,000 ($5K-$10K/month, for managing other agencies, partners and third parties) |
-| Client Side Project Management | Annual | $60,000 - $120,000 |`;
+| Client Side Project Management | Annual | $60,000 - $120,000 |
+`;
+// === SYNC:PRICING_GUIDE_END ===
 
 // ============================================================================
 // ASSESSMENT FRAMEWORK (Comprehensive - for review flow)
@@ -3667,25 +3672,19 @@ ${draftEngagementType ? (DRAFT_ENGAGEMENT_TYPES.find(t => t.value === draftEngag
 Provide TWO things based on ALL inputs above:
 
 PART 1: PROJECT SUMMARY
-Synthesize the transcript, additional notes, archetype profile, and engagement type into a unified project summary. Extract the following:
+Synthesize the transcript, additional notes, archetype profile, and engagement type into a sharp, consolidated project summary. Be concise and direct — every word should earn its place. Extract the following:
 
-1. **EXECUTIVE SUMMARY** - A concise 2-3 sentence overview of the project: who the client is, what they need, and the recommended approach. Reference the FIT archetype and engagement type to frame the engagement style.
+1. **EXECUTIVE SUMMARY** (max 60 words) - Who the client is, what they need, and the recommended approach. Reference the FIT archetype and engagement type to frame the engagement style. No filler.
 
-2. **SUCCESS DEFINITION** - What does success look like for this engagement? What specific outcomes is the client hoping to achieve? What would make them say "this was worth it"?
+2. **SUCCESS DEFINITION** (max 60 words) - What specific outcomes would make this engagement successful? What would make the client say "this was worth it"? Be concrete.
 
-3. **PROBLEM STATEMENT** - What specific problem(s) is the client trying to solve? What pain points did they express? What frustrations came through in the conversation?
+3. **PROBLEM STATEMENT** (max 30 words) - The core problem to solve. One or two sentences max. Direct and specific.
 
-4. **MANDATORIES** - What explicit requirements or must-haves did the client mention? Include anything from the additional notes. What are the non-negotiables?
+4. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent. "Not specified" if none mentioned.
 
-5. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent.
+5. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned in either the transcript or additional notes. "Not specified" if none mentioned.
 
-6. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned in either the transcript or additional notes.
-
-7. **KEY STAKEHOLDERS** - Who are the decision makers and key contacts? Who needs to be involved in approvals?
-
-8. **CONTEXT** - Important background about the client's situation, industry, competitive landscape, or internal dynamics that should inform the SOW. Incorporate relevant details from additional notes.
-
-9. **TRIGGER INTENSITY** - How urgent is this need? (High/Medium/Low based on language used)
+6. **WAY OF WORKING** (max 40 words) - Based on the FIT archetype selected, describe in one or two sentences how Antenna will approach the working relationship. Focus on the character of the partnership — e.g., structured, data-led, creatively ambitious, fast-moving. Do NOT list meetings or deliverables.
 
 PART 2: RECOMMENDED SERVICE CATEGORIES
 Based on the client's expressed needs, challenges, goals, pain points, and situational context, identify which service categories are relevant.
@@ -3703,18 +3702,13 @@ ${serviceCategoriesPrompt}
 Format your response EXACTLY as:
 
 ## EXECUTIVE SUMMARY
-[2-3 sentence overview synthesizing the project, client archetype, and engagement approach]
+[Max 60 words. Who, what, how — no filler.]
 
 ## SUCCESS DEFINITION
-[Clear statement of what success looks like for this client]
+[Max 60 words. Concrete outcomes.]
 
 ## PROBLEM STATEMENT
-[The core problem(s) to solve - be specific about the pain points]
-
-## MANDATORIES
-- [Explicit requirement 1]
-- [Explicit requirement 2]
-(List all non-negotiable requirements mentioned)
+[Max 30 words. Direct and specific.]
 
 ## TIMELINE
 [Any timeline information, urgency level, or "Not specified" if none mentioned]
@@ -3722,14 +3716,8 @@ Format your response EXACTLY as:
 ## BUDGET SIGNALS
 [Any budget information, or "Not specified" if none mentioned]
 
-## KEY STAKEHOLDERS
-[Stakeholder information, decision-making structure, or "Not specified" if none mentioned]
-
-## CONTEXT
-[Relevant background that should inform the SOW - industry, competition, internal dynamics]
-
-## TRIGGER INTENSITY
-[High/Medium/Low with brief explanation of why]
+## WAY OF WORKING
+[Max 40 words. Partnership character based on FIT archetype. No meetings or deliverables.]
 
 ## PRIMARY_CATEGORIES
 [List ONLY the category IDs that are CORE to the client's stated needs — the services they are explicitly asking for or that are essential to deliver what they want. Comma-separated. Be selective — only include categories the client clearly needs.]
@@ -4399,91 +4387,141 @@ The SOW should be ready for client presentation with minimal editing needed. Mak
         body: JSON.stringify({
           model: 'claude-sonnet-4-5-20250929',
           max_tokens: 8000,
-          system: `You are a senior strategist at Antenna Group, a marketing and communications agency, writing a client-facing Pre-Scope document. This document is warm, professional, confident, and specific. It should feel like a senior advisor laying out a clear, actionable recommendation with enough detail that the client can see exactly what they're getting.
+          system: `You are a senior strategist at Antenna Group, a marketing and communications agency, writing a client-facing Pre-Scope document. This is the first detailed breakdown of proposed services in the sales process — a precursor to a full SOW. It must be warm, professional, confident, and highly specific.
 
 TONE & STYLE:
-- Confident and advisory — like a trusted partner making a clear recommendation
-- Specific and concrete — describe exactly what Antenna will DO and PRODUCE for each service
-- Warm but professional — not a legal document, not a vague overview
+- Confident and advisory — a trusted partner laying out a clear recommendation
+- Highly specific — describe exactly what Antenna will DO, PRODUCE, and DELIVER
+- Warm but professional — this is a conversation starter, not a legal document
 - Use "Antenna will..." to describe activities — active, direct language
-- Write service descriptions as flowing paragraphs, not bullet lists
+- Use lettered sub-items (a., b., c.) within each numbered service for detail
+- Include OUTPUT or FINAL OUTPUT labels for key deliverables
+- Specify deliverable formats in parentheses: (Word doc), (PowerPoint), (GDrive folder), (deck)
+- Include concrete quantities: "3-5 IDIs", "up to 15 journalists", "up to two rounds of revisions"
+- Reference the client's specific situation, industry, and goals throughout
 
-CRITICAL FORMATTING RULES:
-- Use markdown formatting with ## headers
-- Each proposed service should be a ### heading with (price range, timeline) in parentheses
-- Service descriptions should be 2-4 sentences of SPECIFIC activities and outputs — what Antenna will do, what will be produced, what the client can expect
-- Do NOT invent specific dollar amounts — use the budget ranges provided in the services data
-- Do NOT invent specific timelines — use the term ranges provided, or say "timeline to be confirmed during scoping" if none provided
+CRITICAL RULES:
+- Use markdown formatting
+- Do NOT invent dollar amounts — use budget ranges from the services data provided
+- Do NOT invent timelines — use term ranges provided
 - Do NOT include legal language, change order processes, revision limits, or SOW-style protections
-- Do NOT pad with generic marketing language — every sentence should convey specific information about what will be delivered`,
+- Do NOT pad with generic marketing language — every sentence should convey specific information
+- Do NOT add sections beyond those specified in the document structure
+- For website projects, use the modular cost table format (Definition → UX → Visual Design → Content → Build)
+- Group related services with subtotals where logical (e.g., "Branding Estimated Total: $X")
+- If there are conditional/optional services, present them in a separate "Optional Plus-Up Opportunities" section at the end`,
           messages: [{
             role: 'user',
             content: `Generate a Pre-Scope document using the information below.
 
 ## DOCUMENT STRUCTURE
 
-The document MUST follow this EXACT structure. Do not add extra sections.
+The document MUST follow this EXACT structure. Do not add extra sections beyond these.
 
 ### 1. TITLE
-Use: "## Pre-Scope Document"
+Format as:
+# [Client Name]
+## Pre-Scope Document v1
 
-### 2. INTRODUCTION (use this text verbatim as the first paragraph, no header)
-"This document details each proposed deliverable and the outputs you can anticipate in a formal contract. It is intended to encourage conversation and be iterated until it represents the services and focus that you want to see. Once it is finalized, we will quickly move forward with an SOW and start work."
+If the scope has a clear focus, add a subtitle context (e.g., "Pre-Scope Document For Brand Story and Website v1" or "Phase 1 - Pre-Scope Document v1"). Infer from the selected services.
+
+### 2. EXECUTIVE SUMMARY
+Always begin with this boilerplate paragraph (no header, use as opening text):
+"This document details each proposed deliverable and the outputs you can anticipate in a formal contract. It is intended to encourage conversation and be iterated until it represents the services and focus that you want to see. Once it is finalized, we will quickly move forward with an SOW and start work. Everything in this document is scalable and can be adjusted as needed."
+
+If the project warrants context-setting (complex scope, multiple phases, or specific strategic objectives), add 2-4 sentences framing what the deliverables will achieve. Not all projects need this — simple brand or website projects can skip straight to Definition of Success.
 
 ### 3. DEFINITION OF SUCCESS
-Use the header "## Definition of Success" and write 2-4 sentences describing what success looks like for this engagement. Pull directly from the client's stated goals and the project summary. Be specific about the outcomes, not the activities.
+Use the header: **What Does Success Look Like:**
+
+Write 2-4 sentences describing what success looks like for this engagement. Pull directly from the client's stated goals and the project summary. Be specific about outcomes, not activities. This should answer: what would make the client say "this was worth it"?
 
 ### 4. PROPOSED SERVICES
-Use the header "## Proposed Services"
+Use the header: **Proposed Services:**
 
-This is the CORE of the document. For EACH service or service bundle listed below, create a subsection formatted as:
+This is the CORE of the document. Number each service (1., 2., 3., etc.) with lettered sub-items (a., b., c.) for detail.
 
-### [Service Name] — ([budget range], [timeline])
+Format each service as:
+**[Number]. [Service Name]** - ($[price range], [timeline])
 
-Then write 2-4 sentences describing:
-- What Antenna will DO (specific activities — research, workshops, development, etc.)
-- What will be PRODUCED (specific deliverables — documents, designs, reports, platforms, etc.)
-- Key details the client should know (what's included, what it covers, any important context)
+Then use lettered sub-items to describe:
+a. What Antenna will DO (specific activities)
+b. What Antenna will PRODUCE or DELIVER
+c. Any additional scope details, workshops, or iterations
+d. **OUTPUT:** or **FINAL OUTPUT:** label for the key deliverable
 
-IMPORTANT GUIDELINES for service descriptions:
-- Be SPECIFIC to the client's situation using context from the Project Summary
-- Describe activities in terms of what the client will experience and receive
-- Where services are bundled, describe the bundle as a cohesive offering, not individual line items
-- Use language like "Antenna will..." to describe activities
-- Include quantities where known (e.g., "up to 3 naming options", "up to 2 visual territories")
-- Reference the client's specific goals, industry, or challenges where relevant
-- If a service is a retainer, note the monthly commitment and what it covers
-- If a service is T&M, note the minimum commitment and what types of work it covers
+CRITICAL GUIDELINES:
+- Be SPECIFIC to the client — reference their industry, goals, challenges
+- Use "Antenna will..." language consistently
+- Include quantities: "3-5 IDIs", "up to 15 journalists", "up to two rounds of revisions", "2-3 creative thematic approaches"
+- Specify deliverable formats: "(Word doc)", "(PowerPoint)", "(GDrive folder)", "(deck)"
+- Where services naturally group, add group subtotals: "**Estimated Total: $X-$Y (Z Weeks)**"
+- For retainer services, describe what the monthly commitment covers
+- For T&M services, describe the minimum commitment and flexibility model
 
-### 5. HOW WE'LL WORK TOGETHER
-Use the header "## How We'll Work Together" and write a short paragraph (3-5 sentences) describing the philosophy of the working relationship. Focus on the CHARACTER of the partnership (transparent, structured, adaptive, creatively led, data-driven, etc.) NOT specific meetings, cadences, workshops, or deliverables. Those details belong in the SOW. Base this on the FIT Archetype guidance if provided.
+WEBSITE PROJECTS: If website development is included, present the build as a modular table:
+"Antenna will create a website using this modular budget structure below."
+Table columns: Delivery Step | Description | Cost | Time
+Steps: 1. Website Definition, 2. Website Experience Design, 3. Website Visual Design, 4. Website Content Creation, 5. Website Build Test & Launch
+End with: "**TOTAL FOR WEBSITE WILL BE APPROX: $X-$Y | Z Weeks**"
 
-### 6. ESTIMATED TOTALS
-Use the header "## Estimated Totals"
+PR/COMMS PROJECTS: If PR or earned media is included, describe the program structure: strategy calls cadence, media list size, pitching activities, briefing docs, staffing of conversations, monitoring. Be specific about what "media relations" means in practice.
 
-Break the total into categories where applicable:
-- **One-Off / Project:** [sum of fixed-fee services]
-- **Retained Services:** [sum of retainer services, expressed as monthly or annual]
+CAMPAIGN PROJECTS: If campaign/performance work is included, consider phased structure (Phase 1: Test & Learn, Phase 2: Scale) with week-by-week activity breakdown.
 
-Then add a brief note about project timeline and any overlap between workstreams, similar to:
-"Please note that some deliverables may overlap. [Brief timeline summary based on what's known.]"
+### 5. OPTIONAL PLUS-UP OPPORTUNITIES (only if applicable)
+If there are conditional services or natural add-ons not in core scope, present as numbered options with brief descriptions and estimated costs.
+Use the header: **Optional Plus-Up Opportunities:**
+Common options: Brand Expression, Creative Retainer Drawdown, Media & Social Media Training, Website (if not core).
 
-### 7. NEXT STEPS
-Write 2-3 sentences encouraging the client to review, flag adjustments, and confirming we'll move quickly to SOW once aligned.
+### 6. SCOPE TOTAL
+End with a bold total line:
+**[Scope Description] Total: $[low]k-$[high]k**
+
+If deliverables overlap, add: "Please note that some deliverables overlap. Total Project Term: anticipated to be X-Y weeks + any substantial [client name] review windows."
 
 ---
 
-## REFERENCE: DER COALITION PRE-SCOPE EXAMPLE
+## REFERENCE EXAMPLES
 
-Here is an example of the TONE and DETAIL LEVEL expected for service descriptions. Your output should match this level of specificity:
+EXAMPLE 1 — Brand (Cartography Capital):
+"**1. Onboarding, Rapid Discovery & Stakeholder Research** - ($9,000, 1-2 Weeks)
+a. Antenna will spend 1 week onboarding onto your brand, reviewing any foundational documentation and data you can share.
+b. A discussion guide and 3-5 in-depth interviews (IDIs) with Cartography Capital's identified stakeholders will be conducted and recorded.
+c. A brand assessment will be conducted using Antenna Group's Conscious Compass, based on your existing publicly available branded content.
+d. An audience assessment will capture the motivations and barriers of your target audiences.
+e. We will conduct a WIPO search and a quick landscape study to ensure ownership and usage.
+f. **OUTPUT:** Antenna will produce a findings document outlining insights and opportunities for the new brand."
 
-"Onboarding, Rapid Discovery & Stakeholder Research - ($13,000, 2 Weeks)
-Antenna will spend 1 week onboarding onto your existing brand, reviewing any foundational documentation and data you can share. An Assignment brief will be created to ensure that we have a clear definition of success for the project and ways of working that work for you. The production of a discussion guide and 3-5 IDIs (in-depth interviews) with coalition-identified stakeholders will be held and recorded. Based upon the Assignment Brief and IDIs, Antenna will conduct desk research on your audience and landscape to identify audience needs and landscape opportunities."
+"**2. Brand Strategy** - ($13,000, 2-3 Weeks)
+a. Based on the above, the Antenna team will produce a high-level brand strategy hypothesis document, outlining new language and positioning opportunities for your brand. This hypothesis will consist of a 'What, Why, and How' statement, as well as a positioning, brand platform, and brand house (including mission, vision, purpose, promise, values, and personality). It will also include creative direction for brand expression.
+b. **OUTPUT:** Based on the iteration and approval of this hypothesis, Antenna will produce a brand strategy document that presents the foundations of your new brand."
 
-"Brand Strategy - ($20,000, 2-3 Weeks)
-Based on the above, the Antenna team will produce a brand strategy hypothesis document that outlines new language and positioning opportunities for your brand based on what you have told us and what we have learned, alongside creative guidance for all identified creative deliverables. This will be presented as a creative brief and will be iterated until final approval is given. The Antenna team will produce naming options based on the creative brief and brand strategy hypothesis to arrive at three (3) viable and available options."
+EXAMPLE 2 — PR/Comms (Pacific Fusion):
+"**3. Media Narrative Development & VIP Media Program**
+...Antenna will execute a VIP media program for Pacific Fusion. The VIP media program will include:
+Biweekly strategy calls between Pacific Fusion and Antenna.
+A priority media list of top journalists to build immediate relationships with (up to 15) and research into their beats, backgrounds, story styles (Word Doc).
+Identification of storytelling pillars to support pitches and media conversations.
+Development of a spokesperson matrix (Word Doc).
+A plan to support the program (Word Doc or Power Point).
+Pitches to support media outreach.
+Media pitching.
+A media kit with assets to support outreach and media conversations (GDrive folder).
+Briefing docs (Word Docs) ahead of any conversations with media.
+Prep calls ahead of any media conversations.
+Staffing of all media conversations.
+Management of media relationships and necessary follow-ups.
+Monitoring and flagging of any coverage.
+**Estimated Total: $80,000 (4 Months)**"
 
-Note how each description: starts with what Antenna will DO, specifies what will be PRODUCED, includes concrete quantities, and references the client's specific situation.
+EXAMPLE 3 — Optional Plus-ups:
+"**Optional Plus-Up Opportunities:**
+1) **Brand Expression** - If you would like to bring the brand strategy to life, we would translate the brand strategy into a refreshed and cohesive brand expression. This includes the development of a modernized logo, an extended visual language, and externally facing brand language.
+**Estimated Total: $11,000 - $25,000**
+
+2) **Creative Retainer Drawdown** - Our flexible creative retainer provides access to our broader agency services with an engagement model that adapts to current priorities. Activities may include creative asset production, performance marketing audits, influencer support, and/or campaign ideation and strategy.
+**Drawdown Deposit Minimum: $24,000/year***"
 
 ---
 
@@ -4499,11 +4537,7 @@ ${servicesText}
 ## TOTAL ESTIMATED BUDGET RANGE
 ${totalBudgetText}
 
-${selectedArchetypes.length > 0 ? `## FIT ARCHETYPE (for How We'll Work Together section)
-${selectedArchetypes.map(id => `${FIT_ARCHETYPES[id].emoji} ${FIT_ARCHETYPES[id].title}: ${FIT_ARCHETYPES[id].short}
-${FIT_ARCHETYPES[id].waysOfWorking}`).join('\n\n')}
-${selectedArchetypes.length === 2 ? `\nThis client is a ${selectedArchetypes.map(id => FIT_ARCHETYPES[id].title).join(' + ')} blend — synthesize both working styles naturally.` : ''}
-IMPORTANT: The "How We'll Work Together" section should distill the archetype into a brief paragraph about the partnership philosophy. Do NOT list specific meetings, cadences, reporting formats, or tactical processes.` : ''}
+${selectedArchetypes.length > 0 ? '## FIT ARCHETYPE\n' + selectedArchetypes.map(id => FIT_ARCHETYPES[id].title + ': ' + FIT_ARCHETYPES[id].short).join('; ') + (selectedArchetypes.length === 2 ? '\nThis client is a ' + selectedArchetypes.map(id => FIT_ARCHETYPES[id].title).join(' + ') + ' blend.' : '') : ''}
 
 Generate the complete Pre-Scope document now.`
           }]
@@ -5352,16 +5386,48 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                   <>
                     {/* Project Summary */}
                     <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                      <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-3 mb-5">
                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                           <Target className="w-5 h-5 text-green-600" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900">Project Summary</h3>
                       </div>
-                      <div className="prose prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg overflow-auto text-gray-700 font-sans">
-                          {transcriptAnalysis}
-                        </pre>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(() => {
+                          const sections = [];
+                          const sectionDefs = [
+                            { key: 'EXECUTIVE SUMMARY', icon: '📋', label: 'Executive Summary', span: 2 },
+                            { key: 'SUCCESS DEFINITION', icon: '🎯', label: 'Success Definition', span: 1 },
+                            { key: 'PROBLEM STATEMENT', icon: '⚡', label: 'Problem Statement', span: 1 },
+                            { key: 'TIMELINE', icon: '📅', label: 'Timeline', span: 1 },
+                            { key: 'BUDGET SIGNALS', icon: '💰', label: 'Budget Signals', span: 1 },
+                            { key: 'WAY OF WORKING', icon: '🤝', label: 'Way of Working', span: 2 },
+                          ];
+                          const text = transcriptAnalysis || '';
+                          for (let i = 0; i < sectionDefs.length; i++) {
+                            const def = sectionDefs[i];
+                            const marker = `## ${def.key}`;
+                            const startIdx = text.indexOf(marker);
+                            if (startIdx === -1) continue;
+                            const contentStart = startIdx + marker.length;
+                            // Find next ## or PRIMARY_CATEGORIES or end
+                            let endIdx = text.length;
+                            const nextSection = text.indexOf('\n## ', contentStart);
+                            if (nextSection !== -1) endIdx = nextSection;
+                            const content = text.slice(contentStart, endIdx).trim();
+                            if (!content) continue;
+                            sections.push(
+                              <div key={def.key} className={`bg-gray-50 rounded-xl p-4 ${def.span === 2 ? 'md:col-span-2' : ''}`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-base">{def.icon}</span>
+                                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{def.label}</span>
+                                </div>
+                                <p className="text-sm text-gray-800 leading-relaxed">{content}</p>
+                              </div>
+                            );
+                          }
+                          return sections;
+                        })()}
                       </div>
                     </div>
                     
