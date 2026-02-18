@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.8.0';
+const APP_VERSION = '2.8.1';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -3680,11 +3680,13 @@ Synthesize the transcript, additional notes, archetype profile, and engagement t
 
 3. **PROBLEM STATEMENT** (max 30 words) - The core problem to solve. One or two sentences max. Direct and specific.
 
-4. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent. "Not specified" if none mentioned.
+4. **MANDATORIES** - Non-negotiable requirements or constraints the client has stated. These are specific things the client has said must happen, must be included, or cannot be compromised on. Format as a short bulleted list. If none mentioned, write "None specified."
 
-5. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned in either the transcript or additional notes. "Not specified" if none mentioned.
+5. **TIMELINE** - Any deadlines, milestones, key dates, or timing requirements mentioned. Note urgency level if apparent. "Not specified" if none mentioned.
 
-6. **WAY OF WORKING** (max 40 words) - Based on the FIT archetype selected, describe in one or two sentences how Antenna will approach the working relationship. Focus on the character of the partnership — e.g., structured, data-led, creatively ambitious, fast-moving. Do NOT list meetings or deliverables.
+6. **BUDGET SIGNALS** - Any budget ranges, constraints, expectations, or indications of budget flexibility mentioned in either the transcript or additional notes. "Not specified" if none mentioned.
+
+7. **WAY OF WORKING** (max 40 words) - Based on the FIT archetype selected, describe in one or two sentences how Antenna will approach the working relationship. Focus on the character of the partnership — e.g., structured, data-led, creatively ambitious, fast-moving. Do NOT list meetings or deliverables.
 
 PART 2: RECOMMENDED SERVICE CATEGORIES
 Based on the client's expressed needs, challenges, goals, pain points, and situational context, identify which service categories are relevant.
@@ -3709,6 +3711,9 @@ Format your response EXACTLY as:
 
 ## PROBLEM STATEMENT
 [Max 30 words. Direct and specific.]
+
+## MANDATORIES
+[Bulleted list of non-negotiable requirements, or "None specified"]
 
 ## TIMELINE
 [Any timeline information, urgency level, or "Not specified" if none mentioned]
@@ -5396,12 +5401,13 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                         {(() => {
                           const sections = [];
                           const sectionDefs = [
-                            { key: 'EXECUTIVE SUMMARY', icon: '📋', label: 'Executive Summary', span: 2 },
-                            { key: 'SUCCESS DEFINITION', icon: '🎯', label: 'Success Definition', span: 1 },
-                            { key: 'PROBLEM STATEMENT', icon: '⚡', label: 'Problem Statement', span: 1 },
-                            { key: 'TIMELINE', icon: '📅', label: 'Timeline', span: 1 },
-                            { key: 'BUDGET SIGNALS', icon: '💰', label: 'Budget Signals', span: 1 },
-                            { key: 'WAY OF WORKING', icon: '🤝', label: 'Way of Working', span: 2 },
+                            { key: 'EXECUTIVE SUMMARY', label: 'Executive Summary', span: 2 },
+                            { key: 'SUCCESS DEFINITION', label: 'Success Definition', span: 1 },
+                            { key: 'PROBLEM STATEMENT', label: 'Problem Statement', span: 1 },
+                            { key: 'MANDATORIES', label: 'Mandatories', span: 2 },
+                            { key: 'TIMELINE', label: 'Timeline', span: 1 },
+                            { key: 'BUDGET SIGNALS', label: 'Budget Signals', span: 1 },
+                            { key: 'WAY OF WORKING', label: 'Way of Working', span: 2 },
                           ];
                           const text = transcriptAnalysis || '';
                           for (let i = 0; i < sectionDefs.length; i++) {
@@ -5419,10 +5425,9 @@ Output the complete revised SOW text. Mark sections you've modified with [REVISE
                             sections.push(
                               <div key={def.key} className={`bg-gray-50 rounded-xl p-4 ${def.span === 2 ? 'md:col-span-2' : ''}`}>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-base">{def.icon}</span>
                                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{def.label}</span>
                                 </div>
-                                <p className="text-sm text-gray-800 leading-relaxed">{content}</p>
+                                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">{content}</p>
                               </div>
                             );
                           }
