@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 // ============================================================================
 // VERSION
 // ============================================================================
-const APP_VERSION = '2.6.0';
+const APP_VERSION = '2.7.0';
 
 // ============================================================================
 // DOCX GENERATION UTILITIES
@@ -617,23 +617,24 @@ const SERVICE_TRIGGERS = [
     engagementType: 'fixed_fee',
     services: [
       // Standard Website Offering bundle
-      { name: 'Website Strategy & Planning', recommend: 'always', condition: 'when website is mentioned', pricing: { termLow: 8, termHigh: 16, budgetLow: 50000, budgetHigh: 140000, bundle: 'Standard Website Offering' } },
+      { name: 'Website Strategy & Planning', recommend: 'always', condition: 'when website is mentioned', pricing: { termLow: 8, termHigh: 20, budgetLow: 40000, budgetHigh: 140000, bundle: 'Standard Website Offering' } },
       { name: 'Website Design & UX', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
       { name: 'Website Development', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
       { name: 'CMS Implementation', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
+      { name: 'Performance Assurance', recommend: 'always', condition: 'when website is mentioned', pricing: { bundle: 'Standard Website Offering' } },
       // Individual services
-      { name: 'E-commerce Development', recommend: 'conditional', condition: 'only if ecommerce mentioned specifically', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 30000 } },
-      { name: 'Mobile App Development', recommend: 'conditional', condition: 'only if standalone app is requested', pricing: { termLow: 3, termHigh: 10, budgetLow: 10000, budgetHigh: 60000 } },
-      { name: 'Landing Page Development', recommend: 'conditional', condition: 'only if landing or holding page is referenced', pricing: { termLow: 1, termHigh: 3, budgetLow: 15000, budgetHigh: 25000 } },
-      { name: 'Website Migration', recommend: 'conditional', condition: 'only if content migration is referenced as requirement', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Performance Optimization', recommend: 'conditional', condition: 'only if website reporting and tracking is referenced as requirement', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 30000, note: 'Annual retainer' } }
+      { name: 'Website Refresh', recommend: 'conditional', condition: 'Staying on existing CMS but a simple design refresh without any updates to brand or website structure. This includes enhancements to fonts, color, image selection and data visualization only. Shoudl only be offered when client is stuck on existing CMS and only needs styling updates.', pricing: { termLow: 5, termHigh: 8, budgetLow: 20000, budgetHigh: 30000 } },
+      { name: 'Mobile App Development', recommend: 'conditional', condition: 'only if standalone app is requested. Goo to recopmmend for events, campaigns or launch moments.', pricing: { termLow: 3, termHigh: 10, budgetLow: 10000, budgetHigh: 60000 } },
+      { name: 'Landing Page Development', recommend: 'conditional', condition: 'only if landing or holding page is referenced. Good for temprary websites. Single page fixed structure', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 15000 } },
+      { name: 'Website Migration', recommend: 'conditional', condition: 'only if content migration is referenced as requirement', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 60000 } },
+      { name: 'Performance Optimization and Support', recommend: 'conditional', condition: 'only if website reporting and tracking is referenced as requirement', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 30000, note: 'Annual retainer' } },
     ],
     triggerPatterns: {
       direct: ['need a new website', 'website redesign', 'site looks outdated', 'rebuild our site', 'new landing page', 'mobile-friendly'],
-      indirect: ['high bounce rates', 'site is slow', 'can\'t update the site ourselves', 'CMS is difficult', 'doesn\'t reflect our brand', 'can\'t integrate with our tools'],
+      indirect: ['high bounce rates', 'site is slow', 'can\\\'t update the site ourselves', 'CMS is difficult', 'doesn\\\'t reflect our brand', 'can\\\'t integrate with our tools'],
       situational: ['recent rebrand', 'merger', 'new product launch', 'expansion into new markets', 'adding e-commerce', 'company milestone'],
       performance: ['low conversion rates', 'cart abandonment', 'poor search rankings', 'low time on site', 'customer complaints about UX', 'website not generating leads'],
-      sampleLanguage: ['people leave our site within seconds', 'can\'t compete with competitors\' sites', 'developer left and we can\'t make changes', 'looks fine on desktop but terrible on mobile', 'doesn\'t show up in Google', 'customers can\'t find what they\'re looking for', 'outgrown our platform', 'website doesn\'t tell our story']
+      sampleLanguage: ['people leave our site within seconds', 'can\\\'t compete with competitors\\\' sites', 'developer left and we can\\\'t make changes', 'looks fine on desktop but terrible on mobile', 'doesn\\\'t show up in Google', 'customers can\\\'t find what they\\\'re looking for', 'outgrown our platform', 'website doesn\\\'t tell our story']
     }
   },
   {
@@ -643,18 +644,19 @@ const SERVICE_TRIGGERS = [
     engagementType: 'fixed_fee',
     services: [
       { name: 'Marketing Strategy Development', recommend: 'conditional', condition: 'when client has specific marketing goals (awareness, reputation, credibility, visibility, perception, audience inspiration)', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 25000 } },
-      { name: 'Channel Planning & Media Mix', recommend: 'conditional', condition: 'when paid and social media are discussed as requirements', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Channel Planning & Media Mix & Connections Planning', recommend: 'conditional', condition: 'when paid and social media are discussed as requirements', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
+      { name: 'Primary audience research', recommend: 'conditional', condition: 'This should be delivered by a consultants and will require hard cost fees. For surveys focus groups. TO gather qualitiative insight', pricing: { termLow: 4, termHigh: 6, budgetLow: 25000, budgetHigh: 35000 } },
       { name: 'Customer Journey Mapping', recommend: 'conditional', condition: 'when website conversion is a goal or audience segmentation issues identified', pricing: { termLow: 1, termHigh: 2, budgetLow: 7000, budgetHigh: 15000 } },
       { name: 'Marketing Audit & Assessment (Compass)', recommend: 'conditional', condition: 'when client does not know what problem to solve or has broad goals (awareness, reputation, credibility, visibility, perception)', pricing: { termLow: 1, termHigh: 2, budgetLow: 3000, budgetHigh: 4000 } },
-      { name: 'Market & Competitive Research', recommend: 'conditional', condition: 'when client does not know competitors or requests differentiation', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } },
-      { name: 'Audience Research & Segmentation', recommend: 'conditional', condition: 'when client does not know their audience, what inspires them, or how to reach them', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } }
+      { name: 'Market & Competitive Research', recommend: 'conditional', condition: 'when client does not know competitors or requests differentiation', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 30000 } },
+      { name: 'Audience Research & Segmentation', recommend: 'conditional', condition: 'when client does not know their audience, what inspires them, or how to reach them', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } },
     ],
     triggerPatterns: {
-      direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
+      direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\\\'t have a plan', 'where to focus our budget', 'nothing seems connected'],
       indirect: ['marketing not producing results', 'conflicting messages', 'no customer journey', 'which channels to prioritize', 'marketing and sales not aligned', 'budget spread too thin'],
       situational: ['new fiscal year', 'leadership change', 'entering new market', 'product launch', 'competitive pressure', 'organizational shift'],
       performance: ['declining market share', 'acquisition costs increasing', 'ROI unknown', 'lead quality issues', 'lifetime value decreasing', 'inconsistent channel performance'],
-      sampleLanguage: ['throwing spaghetti at the wall', 'don\'t know what\'s working', 'competitors seem to be everywhere', 'marketing and sales blame each other', 'never had a real strategy', 'channels aren\'t talking to each other', 'someone to make sense of all this', 'reactive instead of proactive']
+      sampleLanguage: ['throwing spaghetti at the wall', 'don\\\'t know what\\\'s working', 'competitors seem to be everywhere', 'marketing and sales blame each other', 'never had a real strategy', 'channels aren\\\'t talking to each other', 'someone to make sense of all this', 'reactive instead of proactive']
     }
   },
   {
@@ -671,22 +673,22 @@ const SERVICE_TRIGGERS = [
       { name: 'Brand House Development', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Brand Workshop', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
       { name: 'Authentic Foundation (Why, What, How)', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Strategy' } },
-      // Brand Expression bundle - includes Tone of Voice, Manifesto, Visual Identity, Logo
+      // Brand Expression bundle
       { name: 'Tone of Voice', recommend: 'always', condition: 'for all brand projects', pricing: { termLow: 3, termHigh: 7, budgetLow: 25000, budgetHigh: 30000, bundle: 'Brand Expression' } },
       { name: 'Manifesto', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
       { name: 'Visual Identity System', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
       { name: 'Logo/Wordmark Development', recommend: 'always', condition: 'for all brand projects', pricing: { bundle: 'Brand Expression' } },
-      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Expression' } },
-      // Brand Assets bundle - Social Lock-ups and Brand Guidelines only
+      { name: 'Brand Deck Asset Production', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 30000, bundle: 'Brand Expression' } },
+      // Brand Assets bundle
       { name: 'Social Lock-ups', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 15000, bundle: 'Brand Assets' } },
-      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } }
+      { name: 'Brand Guidelines', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Brand Assets' } },
     ],
     triggerPatterns: {
-      direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
-      indirect: ['company evolved but identity hasn\'t', 'can\'t explain what makes us different', 'inconsistent messaging', 'employees can\'t articulate positioning', 'customer confusion', 'premium pricing not supported by perception'],
+      direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\\\'t reflect who we are', 'need brand guidelines', 'brand is inconsistent'],
+      indirect: ['company evolved but identity hasn\\\'t', 'can\\\'t explain what makes us different', 'inconsistent messaging', 'employees can\\\'t articulate positioning', 'customer confusion', 'premium pricing not supported by perception'],
       situational: ['merger or acquisition', 'spin-off', 'new leadership', 'expansion beyond original scope', 'new markets', 'negative reputation', 'company milestone', 'IPO'],
-      performance: ['brand awareness declining', 'NPS dropping', 'customer feedback about perception', 'can\'t command premium prices', 'losing deals to stronger brands', 'employee engagement declining'],
-      sampleLanguage: ['nobody knows who we are', 'look just like everyone else', 'brand worked when we were small but we\'ve grown', 'customers don\'t understand our value', 'visual identity all over the place', 'embarrassed to hand out business cards', 'can\'t attract talent', 'different departments use different logos', 'evolved but brand hasn\'t', 'associated with something we don\'t do anymore', 'launching in new markets']
+      performance: ['brand awareness declining', 'NPS dropping', 'customer feedback about perception', 'can\\\'t command premium prices', 'losing deals to stronger brands', 'employee engagement declining'],
+      sampleLanguage: ['nobody knows who we are', 'look just like everyone else', 'brand worked when we were small but we\\\'ve grown', 'customers don\\\'t understand our value', 'visual identity all over the place', 'embarrassed to hand out business cards', 'can\\\'t attract talent', 'different departments use different logos', 'evolved but brand hasn\\\'t', 'associated with something we don\\\'t do anymore', 'launching in new markets']
     }
   },
   {
@@ -695,7 +697,7 @@ const SERVICE_TRIGGERS = [
     description: 'Design, video, animation, and content creation',
     engagementType: 'tm',
     services: [
-      // Creative Retainer bundle - all services priced together
+      // Creative Retainer bundle
       { name: 'Graphic Design', recommend: 'conditional', condition: 'only if requested', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 80000, bundle: 'Creative Retainer', note: 'Annual minimum commitment' } },
       { name: 'Video Production', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
       { name: 'Animation & Motion Graphics', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
@@ -707,14 +709,14 @@ const SERVICE_TRIGGERS = [
       { name: 'Campaign Asset Creation', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
       { name: 'Brand Asset Library', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
       { name: 'Content Ideation', recommend: 'conditional', condition: 'only if requested', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Transcreation (Multi-language)', recommend: 'conditional', condition: 'only if requested or translation/multi-language is mentioned', pricing: { bundle: 'Creative Retainer' } }
+      { name: 'Transcreation (Multi-language)', recommend: 'conditional', condition: 'only if requested or translation/multi-language is mentioned', pricing: { bundle: 'Creative Retainer' } },
     ],
     triggerPatterns: {
-      direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
+      direct: ['need a brochure', 'need a video', 'don\\\'t have creative resources', 'need professional design', 'materials look amateurish', 'need campaign assets'],
       indirect: ['marketing team stretched thin', 'quality inconsistent', 'no in-house design', 'need specialized formats', 'high volume of creative needs', 'tight deadlines'],
       situational: ['campaign launch', 'trade show', 'sales team needs collateral', 'product launch', 'seasonal campaign', 'executive presentations'],
-      performance: ['creative not generating engagement', 'sales team not using materials', 'A/B tests showing underperformance', 'feedback that materials aren\'t compelling', 'social engagement below benchmarks'],
-      sampleLanguage: ['don\'t have designers on staff', 'team is overwhelmed', 'need a video but don\'t know where to start', 'sales deck needs updating', 'need assets for our campaign', 'everything takes too long to produce', 'competitors\' materials look more polished', 'have the strategy but need help executing']
+      performance: ['creative not generating engagement', 'sales team not using materials', 'A/B tests showing underperformance', 'feedback that materials aren\\\'t compelling', 'social engagement below benchmarks'],
+      sampleLanguage: ['don\\\'t have designers on staff', 'team is overwhelmed', 'need a video but don\\\'t know where to start', 'sales deck needs updating', 'need assets for our campaign', 'everything takes too long to produce', 'competitors\\\' materials look more polished', 'have the strategy but need help executing']
     }
   },
   {
@@ -728,14 +730,14 @@ const SERVICE_TRIGGERS = [
       { name: 'Creator Identification & Vetting', recommend: 'always', condition: 'when influencer marketing is discussed', pricing: { bundle: 'Influencer Retainer' } },
       { name: 'Influencer Campaign Management', recommend: 'always', condition: 'when influencer marketing is discussed', pricing: { bundle: 'Influencer Retainer' } },
       { name: 'Ambassador Programs', recommend: 'conditional', condition: 'only if long-term creator partnerships are requested', pricing: { bundle: 'Influencer Retainer' } },
-      { name: 'UGC Programs', recommend: 'conditional', condition: 'only if user-generated content is requested', pricing: { bundle: 'Influencer Retainer' } }
+      { name: 'UGC Programs', recommend: 'conditional', condition: 'only if user-generated content is requested', pricing: { bundle: 'Influencer Retainer' } },
     ],
     triggerPatterns: {
-      direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\'t work'],
+      direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators', 'tried influencer marketing but it didn\\\'t work'],
       indirect: ['difficulty reaching younger audiences', 'need authentic endorsements', 'product requires demonstration', 'brand awareness stalled', 'user-generated content insufficient'],
       situational: ['product launch needing buzz', 'new demographic market', 'brand relevance concerns', 'competitors using influencers', 'need authentic content at scale', 'event amplification'],
       performance: ['social engagement declining', 'owned content not resonating', 'advertising fatigue', 'high CPA on paid channels', 'brand trust declining'],
-      sampleLanguage: ['can\'t break through on social', 'younger audiences don\'t trust us directly', 'competitors partnering with creators', 'need authentic voices', 'tried on our own but didn\'t see results', 'don\'t know how to find the right creators', 'need content that feels genuine', 'want to be part of the conversation on TikTok']
+      sampleLanguage: ['can\\\'t break through on social', 'younger audiences don\\\'t trust us directly', 'competitors partnering with creators', 'need authentic voices', 'tried on our own but didn\\\'t see results', 'don\\\'t know how to find the right creators', 'need content that feels genuine', 'want to be part of the conversation on TikTok']
     }
   },
   {
@@ -747,14 +749,14 @@ const SERVICE_TRIGGERS = [
       // Creative Campaigns bundle
       { name: 'Creative Platform Development', recommend: 'conditional', condition: 'when there is a request for a campaign or content series for owned, earned, paid, and/or social', pricing: { termLow: 2, termHigh: 7, budgetLow: 18000, budgetHigh: 30000, bundle: 'Creative Campaigns' } },
       { name: 'Big Idea Generation', recommend: 'conditional', condition: 'when client wants to make a splash, generate awareness, inspire media attention, or connect with audience', pricing: { bundle: 'Creative Campaigns' } },
-      { name: 'Experiential Concepts', recommend: 'conditional', condition: 'when big idea development, media stunt, or event production are being recommended or requested', pricing: { bundle: 'Creative Campaigns' } }
+      { name: 'Experiential Concepts', recommend: 'conditional', condition: 'when big idea development, media stunt, or event production are being recommended or requested', pricing: { bundle: 'Creative Campaigns' } },
     ],
     triggerPatterns: {
       direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'need a creative platform', 'marketing lacks unifying concept', 'marketing is uninspiring', 'breakthrough ideas'],
       indirect: ['campaigns feel tactical', 'each effort is standalone', 'difficulty creating memorable work', 'need to differentiate', 'brand awareness plateaued', 'work is boring', 'looks like everyone else'],
       situational: ['major launch', 'brand repositioning', 'new market entry', 'competitive threat', 'company transformation', 'major anniversary', 'category disruption'],
       performance: ['brand recall declining', 'campaign metrics mediocre', 'share of voice decreasing', 'advertising not breaking through', 'content engagement low', 'creative fatigue'],
-      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\'t break through the clutter', 'want something competitors can\'t copy', 'creative that people talk about', 'ads are forgettable', 'cut through the noise', 'campaigns are safe']
+      sampleLanguage: ['need something memorable', 'all our campaigns look the same', 'want to stand out', 'need an idea that can run for years', 'work doesn\\\'t break through the clutter', 'want something competitors can\\\'t copy', 'creative that people talk about', 'ads are forgettable', 'cut through the noise', 'campaigns are safe']
     }
   },
   {
@@ -763,22 +765,29 @@ const SERVICE_TRIGGERS = [
     description: 'Media relations, press coverage, and ongoing media engagement',
     engagementType: 'retainer',
     services: [
-      // Standard PR bundle — only auto-select when earned media / press / PR is explicitly needed
+      // Standard PR bundle
       { name: 'Media Relations', recommend: 'always', condition: 'only when client explicitly requests PR, press coverage, earned media, media relations, journalist outreach, or press releases — NOT for general awareness or reputation goals alone', pricing: { termLow: 52, termHigh: 52, budgetLow: 180000, budgetHigh: 360000, bundle: 'Standard PR', note: 'Annual retainer ($15K-$30K/month)' } },
-      { name: 'Press Kit Development', recommend: 'always', condition: 'only when client explicitly requests PR, press coverage, earned media, media relations, journalist outreach, or press releases — NOT for general awareness or reputation goals alone', pricing: { bundle: 'Standard PR' } },
+      { name: 'Narrative & Media Messaging', recommend: 'always', condition: 'Low end: $10k – if brand work/IDI’s were done and translating brand into media narrative. High end: $20k – if no brand work was done and we’re building media messaging and narratives from scratch (inclusive of IDIs, workshop, etc.)', pricing: { termLow: 4, termHigh: 6, budgetLow: 10000, budgetHigh: 20000, bundle: 'Standard PR' } },
       // Individual services
-      { name: 'Media Training', recommend: 'conditional', condition: 'only when client mentions spokesperson preparation, media interviews, or executive media readiness', pricing: { termLow: 52, termHigh: 52, budgetLow: 20000, budgetHigh: 60000, note: 'Annual or per session' } },
-      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis, reputational threat, or urgent PR support', pricing: { termLow: 1, termHigh: 4, budgetLow: 40000, budgetHigh: 200000, note: 'T&M based on severity' } },
-      { name: 'Media Monitoring', recommend: 'conditional', condition: 'only when PR or earned media services are already being recommended, or client specifically requests media monitoring or share of voice tracking', pricing: { termLow: 52, termHigh: 52, budgetLow: 12000, budgetHigh: 40000, note: 'Annual, excludes tool costs' } },
-      { name: 'Newsjacking Strategy', recommend: 'conditional', condition: 'only if requested or transcript mentions intercepting another news story', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 60000, note: 'T&M per opportunity' } },
-      { name: 'Industry Domain Consultancy', recommend: 'conditional', condition: 'when client needs industry expertise and trend analysis', pricing: { termLow: 52, termHigh: 52, budgetLow: 52000, budgetHigh: 100000, note: 'Annual retainer' } }
+      { name: 'Media Training', recommend: 'conditional', condition: 'only when client mentions spokesperson preparation, media interviews, or executive media readiness. Low end: $3k – if training 1 exec, virtual session High end: $10k – if training multiple execs, in-person (does not include travel)', pricing: { termLow: 2, termHigh: 4, budgetLow: 3000, budgetHigh: 10000, note: 'Annual or per session' } },
+      // Crises Comms bundle
+      { name: 'Crises Plan Development', recommend: 'conditional', condition: 'only if client mentions a crisis, reputational threat, or urgent PR support to solve a pressing and immediate reputation, credibility or perception issue. Fixed-fee project priced off crisis rates Low-end: $15k – if developed to prepare for an identified incident High end: $40k – if developed proactively for various scenarios, inclusive of stakeholder interviews, scenario planning, holding statements, stakeholder matrixes, crisis training, plan roll-out', pricing: { termLow: 1, termHigh: 6, budgetLow: 15000, budgetHigh: 40000, bundle: 'Crises Comms' } },
+      { name: 'Crisis Communications', recommend: 'conditional', condition: 'only if client mentions a crisis, reputational threat, or urgent PR support. most of our crisis management work is done on a drawdown basis but should be priced off our crisis flat fee rates vs. standard rate card (crisis rate is higher)', pricing: { termLow: 1, termHigh: 6, budgetLow: 20000, budgetHigh: 100000, bundle: 'Crises Comms', note: 'T&M based on severity' } },
+      // Standard PR bundle
+      { name: 'Media Monitoring', recommend: 'always', condition: 'only when PR or earned media services are already being recommended, or client specifically requests media monitoring or share of voice tracking. Should always be bundled with Media relations and Narrative & Media Messaging', pricing: { termLow: 52, termHigh: 52, budgetLow: 12000, budgetHigh: 40000, bundle: 'Standard PR', note: 'Annual, excludes tool costs' } },
+      { name: 'Earned Media Strategy', recommend: 'conditional', condition: 'This outlines the strategic approach to earned media execution and the plan and is needed if one does not already exist. This is part of the Standard PR bundle and is required wherever a plan or strategy for earned media does not exist.', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 25000, bundle: 'Standard PR', note: 'T&M per opportunity' } },
+      // Individual services
+      { name: 'Announcement Strategy', recommend: 'conditional', condition: 'Specific targeted comms support to support a corporate announcement. This includes product launch, brand launch, renami, merger, Go To Market, and a high profile leadership announcment.', pricing: { termLow: 1, termHigh: 2, budgetLow: 5000, budgetHigh: 10000 } },
+      { name: 'Earned content creation', recommend: 'conditional', condition: 'Blog posts, whitepapers, long form. Based on volume and announcement pipeline. Does not include the coordination of copmplicated releases', pricing: { termLow: 52, termHigh: 52, budgetLow: 12000, budgetHigh: 60000 } },
+      { name: 'Onsite media liaison', recommend: 'conditional', condition: 'If the cient mentions that they need on site support from their comms team as a part of an event or a visit. This should only be recomended when requested explicitly.', pricing: { termLow: 0, termHigh: 1, budgetLow: 5000, budgetHigh: 10000 } },
+      { name: 'Events and meetings travel', recommend: 'conditional', condition: 'If travel is required this should be 5% of total Public Relations & Media Outreach', pricing: { termLow: 0, termHigh: 0, budgetLow: 5000, budgetHigh: 10000 } },
     ],
     triggerPatterns: {
       direct: ['need PR', 'want media coverage', 'help with press relations', 'want to be in specific publications', 'need a PR agency', 'want to be seen as a source', 'need rapid response', 'earned media', 'press releases', 'media outreach', 'journalist relationships'],
       indirect: ['important news not getting coverage', 'lack of third-party credibility through media', 'competitors in media more', 'no journalist relationships', 'story not being told in the press', 'need crisis preparedness', 'journalists covering competitors but not us'],
       situational: ['funding announcement needing press coverage', 'executive hire needing media announcement', 'research release needing media amplification', 'crisis situation', 'merger announcement needing press strategy'],
       performance: ['low share of voice in media', 'minimal media mentions', 'negative press coverage without response', 'competitors quoted more in media', 'no earned media results'],
-      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\'t have relationships with journalists', 'don\'t know how to pitch media', 'need someone to tell our story to the press', 'launching something big and need press coverage', 'not prepared if something goes wrong publicly', 'when something happens in our industry we\'re never quoted', 'want to be top of mind for reporters', 'need earned media']
+      sampleLanguage: ['have great news but nobody covers us', 'competitors always in the press', 'don\\\'t have relationships with journalists', 'don\\\'t know how to pitch media', 'need someone to tell our story to the press', 'launching something big and need press coverage', 'not prepared if something goes wrong publicly', 'when something happens in our industry we\\\'re never quoted', 'want to be top of mind for reporters', 'need earned media']
     }
   },
   {
@@ -788,78 +797,122 @@ const SERVICE_TRIGGERS = [
     engagementType: 'retainer',
     services: [
       // Executive Visibility bundle
-      { name: 'Executive Positioning Strategy', recommend: 'always', condition: 'for all executive visibility projects', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Executive Visibility', note: 'Annual retainer ($5K-$15K/month per executive)' } },
+      { name: 'Executive Positioning Strategy', recommend: 'always', condition: 'for all executive visibility projects - should be receommended when a c;lient states that they are havining issues with credibility, or are struglgling to get explosure for their leadership acrross tehir industry.', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Executive Visibility', note: 'Annual retainer ($5K-$15K/month per executive)' } },
       { name: 'Thought Leadership Content', recommend: 'always', condition: 'for all executive visibility projects', pricing: { bundle: 'Executive Visibility' } },
-      { name: 'Byline & Op-Ed Development', recommend: 'conditional', condition: 'when written thought leadership is requested', pricing: { bundle: 'Executive Visibility' } },
-      { name: 'Speaking Opportunity Development', recommend: 'conditional', condition: 'when speaking engagements are requested', pricing: { bundle: 'Executive Visibility' } },
-      { name: 'Executive Social Media', recommend: 'conditional', condition: 'when LinkedIn or social presence is requested', pricing: { bundle: 'Executive Visibility' } },
-      { name: 'Awards Strategy', recommend: 'conditional', condition: 'when recognition programs are requested', pricing: { bundle: 'Executive Visibility' } },
-      { name: 'Podcast Guest Strategy', recommend: 'conditional', condition: 'when podcast appearances are requested', pricing: { bundle: 'Executive Visibility' } }
+      { name: 'Byline & Op-Ed Development', recommend: 'conditional', condition: 'only when written thought leadership is requested', pricing: { bundle: 'Executive Visibility' } },
+      // Individual services
+      { name: 'Speaking Opportunity Strategy', recommend: 'conditional', condition: 'only when speaking engagements are requested', pricing: { termLow: 1, termHigh: 3, budgetLow: 5000, budgetHigh: 10000 } },
+      { name: 'Onsite Media & Exec Support', recommend: 'conditional', condition: 'only When requested or speaking events are suggested.', pricing: { termLow: 1, termHigh: 1, budgetLow: 5000, budgetHigh: 8000 } },
+      { name: 'Executive Social Media Strategy', recommend: 'conditional', condition: 'only when LinkedIn or social presence for company leaders, board or advocates is requested', pricing: { termLow: 1, termHigh: 3, budgetLow: 5000, budgetHigh: 10000 } },
+      { name: 'Awards Strategy', recommend: 'conditional', condition: 'only when when recognition programs are requested', pricing: { termLow: 1, termHigh: 1, budgetLow: 5000, budgetHigh: 8000 } },
+      { name: 'Podcast Guest Strategy', recommend: 'conditional', condition: 'only when podcast appearances are requested', pricing: { termLow: 1, termHigh: 1, budgetLow: 5000, budgetHigh: 8000 } },
     ],
     triggerPatterns: {
       direct: ['CEO needs to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile', 'leadership is invisible', 'ceo profile'],
       indirect: ['competitor executives more visible', 'difficulty attracting talent', 'investor relations need credibility', 'sales cycle requires leadership trust', 'industry influence desired', 'board wants more visible CEO'],
       situational: ['new CEO', 'IPO preparation', 'fundraising', 'conference schedule', 'speaking pipeline', 'award nominations', 'acquisition', 'crisis'],
       performance: ['low leadership recognition', 'executive content not engaging', 'speaking invitations not coming', 'board feedback about visibility', 'LinkedIn engagement low', 'not invited to speak'],
-      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership', 'credibility problem', 'communications is timid']
+      sampleLanguage: ['CEO should be better known', 'position executive as expert', 'competitors\\\' leaders always at conferences', 'need help with LinkedIn presence', 'leadership has insights but nobody hears them', 'want execs writing about industry issues', 'need bylines and speaking opportunities', 'investors want visible leadership', 'credibility problem', 'communications is timid']
     }
   },
   {
-    id: 'paid_social',
-    category: 'Paid Social Media',
+    id: 'paid_media',
+    category: 'Paid Media',
     description: 'Social advertising campaigns',
-    engagementType: 'retainer',
+    engagementType: 'fixed_fee',
     services: [
-      // Paid Social bundle
-      { name: 'Paid Social Strategy', recommend: 'always', condition: 'when paid social is discussed', pricing: { termLow: 52, termHigh: 52, budgetLow: 80000, budgetHigh: 200000, bundle: 'Paid Social', note: 'Annual retainer, excludes media spend' } },
-      { name: 'Campaign Setup & Management', recommend: 'always', condition: 'when paid social is discussed', pricing: { bundle: 'Paid Social' } },
-      { name: 'Audience Development & Targeting', recommend: 'always', condition: 'when paid social is discussed', pricing: { bundle: 'Paid Social' } },
-      { name: 'Ad Creative Development', recommend: 'conditional', condition: 'when creative support is needed', pricing: { bundle: 'Paid Social' } },
-      { name: 'Retargeting Campaigns', recommend: 'conditional', condition: 'when retargeting or remarketing is mentioned', pricing: { bundle: 'Paid Social' } },
-      { name: 'Paid Social Reporting', recommend: 'always', condition: 'when paid social is discussed', pricing: { bundle: 'Paid Social' } }
+      // Paid Media Strategy bundle
+      { name: 'Paid Strategy', recommend: 'always', condition: 'when paid media, acquiring new audiences or extending reach with paid dlars is discussed. This is always presented when there is not yet a strategy to execute a requested paid media campaign.', pricing: { termLow: 2, termHigh: 6, budgetLow: 10000, budgetHigh: 30000, bundle: 'Paid Media Strategy', note: 'Annual retainer, excludes media spend' } },
+      // Paid Media Execution bundle
+      { name: 'Campaign Setup & Management', recommend: 'conditional', condition: 'when paid media is discussed. This is always required when we are requested to do execution and not just the upfront strategy. This should be presented as a 10% of the paid spend figure quoted by prospect or client. If no paid spend is shared than use the range for this service.', pricing: { termLow: 4, termHigh: 52, budgetLow: 10000, budgetHigh: 100000, bundle: 'Paid Media Execution' } },
+      { name: 'Audience Development & Targeting', recommend: 'conditional', condition: 'When client confirms that they either dont know whoe tehir audience is or they have not done any research into where that audience can be reached.', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000, bundle: 'Paid Media Execution' } },
+      { name: 'Ad Creative Development', recommend: 'conditional', condition: 'Offered as a creative retainer. This is time and material and is offered with a minimum spend of $24k per year', pricing: { termLow: 4, termHigh: 52, budgetLow: 24000, budgetHigh: 60000, bundle: 'Paid Media Execution' } },
+      { name: 'Paid Media Reporting', recommend: 'always', condition: 'Offer an economy of scale if reporting for both paid media and scoal media selected. This should present costs as two thirds of teh ranges here fore each when both are selected.', pricing: { termLow: 4, termHigh: 52, budgetLow: 8000, budgetHigh: 60000, bundle: 'Paid Media Execution' } },
     ],
     triggerPatterns: {
-      direct: ['need social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\'t working'],
+      direct: ['need social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\\\'t working'],
       indirect: ['organic reach declining', 'need precise targeting', 'have budget but no expertise', 'campaigns underperforming', 'need lead generation'],
       situational: ['campaign launch', 'product launch', 'event promotion', 'time-sensitive offers', 'competitive pressure on social'],
       performance: ['high CPA on social', 'low conversion rates', 'ad fatigue', 'poor targeting results', 'ROAS below benchmarks'],
-      sampleLanguage: ['organic reach has tanked', 'spending money but not seeing results', 'don\'t know if targeting is right', 'competitors\' ads everywhere', 'need to generate leads from social', 'not sure which platforms to focus on', 'social advertising is inconsistent', 'want to reach specific audience']
+      sampleLanguage: ['organic reach has tanked', 'spending money but not seeing results', 'don\\\'t know if targeting is right', 'competitors\\\' ads everywhere', 'need to generate leads from social', 'not sure which platforms to focus on', 'social advertising is inconsistent', 'want to reach specific audience']
+    }
+  },
+  {
+    id: 'social_media',
+    category: 'Social Media',
+    description: 'Social media strategy, community management, and content',
+    engagementType: 'retainer',
+    services: [
+      // Social Media Strategy bundle
+      { name: 'Social Media Strategy', recommend: 'always', condition: 'when a client or prospect mentions needing social, or if they outline a need to nurture and build audience, or they dontt know what social channels to be on.', pricing: { termLow: 2, termHigh: 6, budgetLow: 15000, budgetHigh: 25000, bundle: 'Social Media Strategy', note: 'Annual retainer, excludes media spend' } },
+      { name: 'Channel Planning', recommend: 'always', condition: 'Always alongside the social media strategy to identify which cvhannels to use and how', pricing: { bundle: 'Social Media Strategy' } },
+      // Social Execution bundle
+      { name: 'Channel Set Up', recommend: 'conditional', condition: 'If they need to set up an optimimze their social channels based upon a clear brand and social strategy. Includes a little creative for profile and hero image and bio.', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000, bundle: 'Social Execution' } },
+      { name: 'Community Management', recommend: 'conditional', condition: 'If the client wants ongoing management of tehir socisl channels. INcludes engagement, postyinga nd montoring for dverse events.Ongoing management of social communities. This is sold as a monthly cost starting at $4k per month', pricing: { termLow: 4, termHigh: 52, budgetLow: 4000, budgetHigh: 60000, bundle: 'Social Execution' } },
+      { name: 'Social creative', recommend: 'conditional', condition: 'For socisl content creation. When content is needed. Offered as a creative retainer. This is time and material and is offered with a minimum spend of $24k per year', pricing: { termLow: 4, termHigh: 52, budgetLow: 24000, budgetHigh: 60000, bundle: 'Social Execution' } },
+      { name: 'Social Media Reporting', recommend: 'conditional', condition: 'Offer an economy of scale if reporting for both paid media and scoal media selected. This should present costs as two thirds of the ranges here fore each when both are selected.', pricing: { termLow: 4, termHigh: 52, budgetLow: 8000, budgetHigh: 60000, bundle: 'Social Execution' } },
+    ],
+    triggerPatterns: {
+      direct: ['need social media help', 'social media strategy', 'we need to be on social', 'social channels', 'community management'],
+      indirect: ['no social presence', 'social channels inactive', 'competitors active on social', 'need to engage audiences online', 'brand not represented on social platforms'],
+      situational: ['brand launch needing social presence', 'campaign requiring social amplification', 'new channels to set up', 'social content needs'],
+      performance: ['low social engagement', 'follower growth stalled', 'social content not resonating', 'no community engagement'],
+      sampleLanguage: ['we need to get on social media', 'our social channels are dead', 'we don\'t know what to post', 'competitors are everywhere on social', 'we need someone to manage our social', 'we want to build a community']
     }
   },
   {
     id: 'seo',
     category: 'Search Engine Optimization',
     description: 'Improve organic search visibility',
-    engagementType: 'retainer',
+    engagementType: 'fixed_fee',
     services: [
-      // SEO bundle
-      { name: 'SEO Strategy & Audit', recommend: 'always', condition: 'for all SEO engagements', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000, bundle: 'SEO Retainer', note: 'Annual retainer ($5K-$10K/month), 6-month minimum' } },
-      { name: 'Technical SEO', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Retainer' } },
-      { name: 'On-Page Optimization', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Retainer' } },
-      { name: 'Content SEO Strategy', recommend: 'conditional', condition: 'when content marketing is included', pricing: { bundle: 'SEO Retainer' } },
-      { name: 'Link Building', recommend: 'conditional', condition: 'when off-page SEO is requested', pricing: { bundle: 'SEO Retainer' } },
-      { name: 'Local SEO', recommend: 'conditional', condition: 'when local/geographic targeting is needed', pricing: { bundle: 'SEO Retainer' } },
-      { name: 'SEO Reporting', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Retainer' } }
+      // SEO Strategy bundle
+      { name: 'SEO Strategy & Audit', recommend: 'always', condition: 'for all SEO engagements or to solve problems with website visibility.', pricing: { termLow: 4, termHigh: 8, budgetLow: 20000, budgetHigh: 35000, bundle: 'SEO Strategy', note: 'Annual retainer ($5K-$10K/month), 6-month minimum' } },
+      { name: 'Technical SEO', recommend: 'always', condition: 'for all SEO engagements', pricing: { bundle: 'SEO Strategy' } },
+      { name: 'Critical SEO Assessment', recommend: 'conditional', condition: 'If they dont know what SEO statsus is or the problem they need to solve', pricing: { bundle: 'SEO Strategy' } },
+      { name: 'Content SEO Strategy', recommend: 'conditional', condition: 'when content marketing is included', pricing: { bundle: 'SEO Strategy' } },
+      // SEO Execution bundle
+      { name: 'On-Page Optimization', recommend: 'conditional', condition: 'for all SEO engagements', pricing: { termLow: 4, termHigh: 12, budgetLow: 24000, budgetHigh: 60000, bundle: 'SEO Execution' } },
+      { name: 'Link Building', recommend: 'conditional', condition: 'when off-page SEO is requested', pricing: { bundle: 'SEO Execution' } },
+      { name: 'Local SEO', recommend: 'conditional', condition: 'when local/geographic targeting is needed', pricing: { bundle: 'SEO Execution' } },
+      // SEO Reporting bundle
+      { name: 'SEO Reporting', recommend: 'conditional', condition: 'for all SEO engagements', pricing: { termLow: 4, termHigh: 52, budgetLow: 4000, budgetHigh: 40000, bundle: 'SEO Reporting' } },
     ],
     triggerPatterns: {
-      direct: ['don\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
+      direct: ['don\\\'t rank on Google', 'need SEO help', 'organic traffic declining', 'want to rank for keywords'],
       indirect: ['website not appearing in search', 'competitors outranking us', 'paid search costs too high', 'content not getting discovered', 'technical website issues'],
       situational: ['website redesign', 'new content strategy', 'competitive threat in search', 'market expansion', 'algorithm update impact'],
       performance: ['declining organic traffic', 'keyword rankings dropping', 'low domain authority', 'high reliance on paid search', 'competitor visibility increasing'],
-      sampleLanguage: ['don\'t show up when people search for what we do', 'competitors always rank above us', 'website redesign and traffic disappeared', 'paying too much for search ads', 'people can\'t find us online', 'content doesn\'t rank', 'don\'t understand SEO', 'hit by a Google update']
+      sampleLanguage: ['don\\\'t show up when people search for what we do', 'competitors always rank above us', 'website redesign and traffic disappeared', 'paying too much for search ads', 'people can\\\'t find us online', 'content doesn\\\'t rank', 'don\\\'t understand SEO', 'hit by a Google update']
+    }
+  },
+  {
+    id: 'orm',
+    category: 'Online Reputation Management (ORM)',
+    description: 'Online reputation management and brand perception',
+    engagementType: 'fixed_fee',
+    services: [
+      // GEO Strategy bundle
+      { name: 'GEO Strategy & Audit', recommend: 'always', condition: 'Where there is a problem or opportunity to shape or improve how a brand appears on LLM  or AI search. Recommend if client is having issues with reputation or perception.', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 20000, bundle: 'GEO Strategy', note: 'Annual retainer, often bundled with SEO' } },
+    ],
+    triggerPatterns: {
+      direct: ['online reputation', 'brand perception online', 'what people see when they search us', 'reputation management'],
+      indirect: ['negative search results', 'outdated information online', 'Wikipedia page needs updating', 'Reddit threads about us', 'AI tools saying wrong things about us'],
+      situational: ['reputation issue discovered', 'negative coverage persisting in search', 'competitive misinformation', 'brand perception audit'],
+      performance: ['negative sentiment in search results', 'inaccurate brand information online', 'competitors controlling narrative', 'AI-generated misinformation'],
+      sampleLanguage: ['when you Google us the results are wrong', 'our Wikipedia page is outdated', 'people on Reddit are saying incorrect things', 'AI chatbots give wrong info about us', 'we need to control our online narrative']
     }
   },
   {
     id: 'geo',
-    category: 'Generative Engine Optimization (GEO)',
+    category: 'Generative Engine Optimization (ORM)',
     description: 'Optimize for AI-powered search',
-    engagementType: 'retainer',
+    engagementType: 'fixed_fee',
     services: [
-      // GEO bundle
-      { name: 'GEO Strategy & Audit', recommend: 'always', condition: 'for all GEO engagements', pricing: { termLow: 52, termHigh: 52, budgetLow: 50000, budgetHigh: 80000, bundle: 'GEO Retainer', note: 'Annual retainer, often bundled with SEO' } },
-      { name: 'AI Search Optimization', recommend: 'always', condition: 'for all GEO engagements', pricing: { bundle: 'GEO Retainer' } },
-      { name: 'Structured Data Implementation', recommend: 'conditional', condition: 'when technical implementation is needed', pricing: { bundle: 'GEO Retainer' } },
-      { name: 'Content Optimization for AI', recommend: 'always', condition: 'for all GEO engagements', pricing: { bundle: 'GEO Retainer' } }
+      // GEO Execution bundle
+      { name: 'Reddit Optimization', recommend: 'conditional', condition: 'Reddit Optimization program. If the clientcrequires an improvement to Reddit channel', pricing: { termLow: 4, termHigh: 6, budgetLow: 20000, budgetHigh: 30000, bundle: 'GEO Execution' } },
+      { name: 'Wikipedia Optimization', recommend: 'conditional', condition: 'Wikipedia Optimization program. If the client requires an improvement to Wikipedia channel', pricing: { termLow: 3, termHigh: 4, budgetLow: 10000, budgetHigh: 15000, bundle: 'GEO Execution' } },
+      { name: 'Earned Strategy for GEO', recommend: 'conditional', condition: 'GEO focused Earned Strategy Enhancement. When we are doing earned and their is a request to limprove visibility, repur=tation and differentiation on LLMs and AI.', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 15000, bundle: 'GEO Execution' } },
     ],
     triggerPatterns: {
       direct: ['need to show up in AI search', 'want to be cited by ChatGPT', 'optimize for AI answers'],
@@ -870,24 +923,43 @@ const SERVICE_TRIGGERS = [
     }
   },
   {
+    id: 'integrated_measurement',
+    category: 'Integrated Measurement & Analytics',
+    description: 'Unified measurement across earned, social, paid channels',
+    engagementType: 'fixed_fee',
+    services: [
+      // Integrated Measurement Strategy bundle
+      { name: 'Analytics Strategy & Measurement Framework', recommend: 'always', condition: 'When there is an integrated program touching any combination of earned, social, web and paid. When selected this supercedes the need for standallone reporting for paid and social', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000, bundle: 'Integrated Measurement Strategy' } },
+    ],
+    triggerPatterns: {
+      direct: ['need integrated reporting', 'unified dashboard', 'cross-channel measurement', 'integrated measurement framework'],
+      indirect: ['can\'t see how channels work together', 'reporting is siloed', 'no unified view of performance', 'different teams report differently'],
+      situational: ['launching integrated campaign', 'multiple agencies need unified reporting', 'board wants holistic marketing view'],
+      performance: ['can\'t attribute results across channels', 'no integrated performance view', 'conflicting reports from different channels'],
+      sampleLanguage: ['we need one view of everything', 'our reporting is all over the place', 'we can\'t tell how earned and paid work together', 'need a single source of truth for marketing performance']
+    }
+  },
+  {
     id: 'measurement',
     category: 'Measurement & Analytics',
     description: 'Track and prove marketing ROI',
     engagementType: 'fixed_fee',
     services: [
-      { name: 'Analytics Strategy', recommend: 'always', condition: 'for all measurement engagements', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Dashboard Development', recommend: 'conditional', condition: 'when reporting visualization is requested', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Attribution Modeling', recommend: 'conditional', condition: 'when multi-channel attribution is needed', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Marketing ROI Framework', recommend: 'always', condition: 'for all measurement engagements', pricing: { termLow: 2, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'KPI Development', recommend: 'always', condition: 'for all measurement engagements', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Data Integration', recommend: 'conditional', condition: 'when multiple data sources need connecting', pricing: { termLow: 2, termHigh: 4, budgetLow: 20000, budgetHigh: 30000 } }
+      // Integrated Measurement Strategy bundle
+      { name: 'Integrated Dashboard Development', recommend: 'conditional', condition: 'when reporting visualization is requested', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 20000, bundle: 'Integrated Measurement Strategy' } },
+      { name: 'Attribution Modeling', recommend: 'conditional', condition: 'when multi-channel attribution is needed', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 20000, bundle: 'Integrated Measurement Strategy' } },
+      { name: 'Marketing ROI Framework', recommend: 'conditional', condition: 'for all measurement engagements', pricing: { termLow: 2, termHigh: 3, budgetLow: 10000, budgetHigh: 20000, bundle: 'Integrated Measurement Strategy' } },
+      { name: 'KPI Development', recommend: 'conditional', condition: 'for all measurement engagements', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 20000, bundle: 'Integrated Measurement Strategy' } },
+      { name: 'Data Integration', recommend: 'conditional', condition: 'when multiple data sources need connecting', pricing: { termLow: 2, termHigh: 4, budgetLow: 20000, budgetHigh: 30000, bundle: 'Integrated Measurement Strategy' } },
+      // Integrated Reporting bundle
+      { name: 'Reporting', recommend: 'always', condition: 'When there is a need to report on integrated campaign impact, and recommend optimizations, A/B tests or changes to creative and strategy.', pricing: { termLow: 52, termHigh: 52, budgetLow: 30000, budgetHigh: 40000, bundle: 'Integrated Reporting' } },
     ],
     triggerPatterns: {
-      direct: ['don\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\'t prove ROI'],
+      direct: ['don\\\'t know if marketing is working', 'need better reporting', 'need to track performance', 'can\\\'t prove ROI'],
       indirect: ['decisions without data', 'tools not integrated', 'leadership asking for accountability', 'budget justification challenges', 'unclear attribution'],
       situational: ['new leadership demanding accountability', 'budget review', 'board reporting', 'marketing technology audit', 'new initiatives'],
-      performance: ['can\'t report on basic metrics', 'data conflicts between systems', 'no baseline', 'unknown customer journey', 'efficiency unclear'],
-      sampleLanguage: ['have no idea what\'s working', 'data is all over the place', 'can\'t connect marketing to sales', 'board wants to see ROI', 'decisions based on gut feel', 'each tool tells us something different', 'need a dashboard that makes sense', 'can\'t justify marketing spend']
+      performance: ['can\\\'t report on basic metrics', 'data conflicts between systems', 'no baseline', 'unknown customer journey', 'efficiency unclear'],
+      sampleLanguage: ['have no idea what\\\'s working', 'data is all over the place', 'can\\\'t connect marketing to sales', 'board wants to see ROI', 'decisions based on gut feel', 'each tool tells us something different', 'need a dashboard that makes sense', 'can\\\'t justify marketing spend']
     }
   },
   {
@@ -896,18 +968,19 @@ const SERVICE_TRIGGERS = [
     description: 'Launch products and enter markets',
     engagementType: 'fixed_fee',
     services: [
+      // GTM Strategy bundle
       { name: 'Go-to-Market Strategy', recommend: 'always', condition: 'for all GTM projects', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 30000, bundle: 'GTM Strategy' } },
       { name: 'Launch Planning', recommend: 'always', condition: 'for all GTM projects', pricing: { bundle: 'GTM Strategy' } },
       { name: 'Market Entry Strategy', recommend: 'conditional', condition: 'when entering new markets', pricing: { bundle: 'GTM Strategy' } },
       { name: 'Channel Strategy', recommend: 'conditional', condition: 'when distribution channels need defining', pricing: { bundle: 'GTM Strategy' } },
-      { name: 'Sales Enablement', recommend: 'conditional', condition: 'when sales team support is needed', pricing: { bundle: 'GTM Strategy' } }
+      { name: 'Sales Enablement', recommend: 'conditional', condition: 'when sales team support is needed', pricing: { bundle: 'GTM Strategy' } },
     ],
     triggerPatterns: {
       direct: ['launching a new product', 'need a GTM strategy', 'need to bring this to market', 'entering a new market'],
       indirect: ['uncertainty about target audience', 'no launch plan', 'pricing and positioning questions', 'channel strategy unclear', 'sales and marketing alignment needed'],
       situational: ['product development completion', 'service line expansion', 'market expansion', 'competitive response', 'acquisition of new capabilities'],
       performance: ['previous launches underperformed', 'new product uptake slow', 'market penetration below expectations', 'customer acquisition challenges', 'sales cycle too long'],
-      sampleLanguage: ['launching in Q[X] and need a plan', 'built something great but don\'t know how to sell it', 'need to understand who will buy this', 'how do we price this', 'entering a new category', 'need to generate demand quickly', 'last launch didn\'t go well', 'have the product but not the plan']
+      sampleLanguage: ['launching in Q[X] and need a plan', 'built something great but don\\\'t know how to sell it', 'need to understand who will buy this', 'how do we price this', 'entering a new category', 'need to generate demand quickly', 'last launch didn\\\'t go well', 'have the product but not the plan']
     }
   },
   {
@@ -916,20 +989,22 @@ const SERVICE_TRIGGERS = [
     description: 'Plan and execute events',
     engagementType: 'fixed_fee',
     services: [
-      // Events bundle
-      { name: 'Event Strategy', recommend: 'always', condition: 'for all event projects', pricing: { termLow: 4, termHigh: 16, budgetLow: 50000, budgetHigh: 180000, bundle: 'Event Production', note: 'Excludes venue and vendor costs' } },
-      { name: 'Event Production', recommend: 'always', condition: 'for all event projects', pricing: { bundle: 'Event Production' } },
-      { name: 'Virtual Event Production', recommend: 'conditional', condition: 'when virtual or hybrid events are needed', pricing: { bundle: 'Event Production' } },
-      { name: 'Trade Show Management', recommend: 'conditional', condition: 'when trade show participation is involved', pricing: { bundle: 'Event Production' } },
-      { name: 'Speaker Management', recommend: 'conditional', condition: 'when speakers need coordination', pricing: { bundle: 'Event Production' } },
-      { name: 'Event Marketing', recommend: 'conditional', condition: 'when event promotion is needed', pricing: { bundle: 'Event Production' } }
+      // Event Strategy bundle
+      { name: 'Event Strategy', recommend: 'always', condition: 'for all event projects', pricing: { termLow: 4, termHigh: 6, budgetLow: 10000, budgetHigh: 20000, bundle: 'Event Strategy', note: 'Excludes venue and vendor costs' } },
+      // Event Production bundle
+      { name: 'Event Production', recommend: 'always', condition: 'for all event projects', pricing: { termLow: 4, termHigh: 12, budgetLow: 15000, budgetHigh: 100000, bundle: 'Event Production' } },
+      { name: 'Virtual Event Production', recommend: 'conditional', condition: 'when virtual or hybrid events are needed', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, bundle: 'Event Production' } },
+      { name: 'Trade Show Management', recommend: 'conditional', condition: 'when trade show participation is involved', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, bundle: 'Event Production' } },
+      { name: 'Speaker Management', recommend: 'conditional', condition: 'when speakers need coordination', pricing: { termLow: 2, termHigh: 4, budgetLow: 5000, budgetHigh: 15000, bundle: 'Event Production' } },
+      // Event Marketing bundle
+      { name: 'Event Marketing', recommend: 'conditional', condition: 'when event promotion is needed', pricing: { termLow: 2, termHigh: 6, budgetLow: 10000, budgetHigh: 20000, bundle: 'Event Marketing' } },
     ],
     triggerPatterns: {
       direct: ['have an event coming up', 'need to plan a conference', 'need event support'],
-      indirect: ['team doesn\'t have event experience', 'past events had issues', 'budget requires professional management', 'complex logistics', 'need creative concepts'],
+      indirect: ['team doesn\\\'t have event experience', 'past events had issues', 'budget requires professional management', 'complex logistics', 'need creative concepts'],
       situational: ['annual conference', 'product launch event', 'customer events', 'trade show', 'employee events', 'milestone celebrations', 'investor events'],
       performance: ['event feedback poor', 'attendance declining', 'event ROI unclear', 'logistics challenges', 'content quality inconsistent'],
-      sampleLanguage: ['have our annual conference and need help', 'want to make this event memorable', 'don\'t have time to plan ourselves', 'need vendors and don\'t know where to start', 'last event was a disaster', 'want to elevate our event experience', 'need creative ideas for the event', 'budget is tight but want something special']
+      sampleLanguage: ['have our annual conference and need help', 'want to make this event memorable', 'don\\\'t have time to plan ourselves', 'need vendors and don\\\'t know where to start', 'last event was a disaster', 'want to elevate our event experience', 'need creative ideas for the event', 'budget is tight but want something special']
     }
   },
   {
@@ -938,11 +1013,11 @@ const SERVICE_TRIGGERS = [
     description: 'Media and communications training',
     engagementType: 'fixed_fee',
     services: [
-      // Training bundle
+      // Communications Training bundle
       { name: 'Media & Spokesperson Training', recommend: 'always', condition: 'for all communications training', pricing: { termLow: 2, termHigh: 4, budgetLow: 20000, budgetHigh: 50000, bundle: 'Communications Training', note: 'Per session or program' } },
       { name: 'Presentation Training', recommend: 'conditional', condition: 'when presentation skills are needed', pricing: { bundle: 'Communications Training' } },
       { name: 'Crisis Communications Training', recommend: 'conditional', condition: 'when crisis preparedness is needed', pricing: { bundle: 'Communications Training' } },
-      { name: 'Brand Training', recommend: 'conditional', condition: 'when brand alignment training is needed', pricing: { bundle: 'Communications Training' } }
+      { name: 'Brand Training', recommend: 'conditional', condition: 'when brand alignment training is needed', pricing: { bundle: 'Communications Training' } },
     ],
     triggerPatterns: {
       direct: ['team needs media training', 'need communications training', 'executives need spokesperson prep', 'want internal training'],
@@ -958,91 +1033,66 @@ const SERVICE_TRIGGERS = [
     description: 'Sustainability, impact, and purpose communications',
     engagementType: 'fixed_fee',
     services: [
-      // Impact bundle
-      { name: 'Impact Report Writing & Design', recommend: 'always', condition: 'when impact/sustainability report is needed', pricing: { termLow: 4, termHigh: 10, budgetLow: 60000, budgetHigh: 150000, bundle: 'Impact Communications' } },
-      { name: 'Sustainability Communications', recommend: 'conditional', condition: 'when sustainability messaging is needed', pricing: { bundle: 'Impact Communications' } },
-      { name: 'ESG Reporting', recommend: 'conditional', condition: 'when ESG requirements exist', pricing: { bundle: 'Impact Communications' } },
-      { name: 'CSR Communications', recommend: 'conditional', condition: 'when corporate responsibility messaging is needed', pricing: { bundle: 'Impact Communications' } },
-      { name: 'Purpose Discovery Workshop', recommend: 'conditional', condition: 'when purpose definition is needed', pricing: { bundle: 'Impact Communications' } },
-      { name: 'Theory of Change', recommend: 'conditional', condition: 'when impact framework is needed', pricing: { bundle: 'Impact Communications' } }
+      // Impact Reporting bundle
+      { name: 'Impact Report Writing & Design', recommend: 'always', condition: 'when impact/sustainability report is needed', pricing: { termLow: 4, termHigh: 12, budgetLow: 40000, budgetHigh: 80000, bundle: 'Impact Reporting' } },
+      // Impact Communications bundle
+      { name: 'Sustainability Communications Messaging', recommend: 'conditional', condition: 'when sustainability messaging is needed', pricing: { termLow: 3, termHigh: 5, budgetLow: 15000, budgetHigh: 20000, bundle: 'Impact Communications' } },
+      { name: 'Purpose Discovery Workshop', recommend: 'conditional', condition: 'when purpose definition is needed', pricing: { termLow: 1, termHigh: 2, budgetLow: 8000, budgetHigh: 10000, bundle: 'Impact Communications' } },
     ],
     triggerPatterns: {
       direct: ['need an annual report', 'need an impact report', 'need help with CSR report', 'want to showcase our impact', 'impact story', 'sustainability story', 'esg communications', 'purpose driven'],
       indirect: ['stakeholder expectations for transparency', 'ESG reporting requirements', 'investor relations needs', 'employee engagement communications', 'competitor reports setting higher bar', 'customers want to know our values'],
       situational: ['annual reporting cycle', 'sustainability milestones', 'stakeholder meeting', 'grant reporting', 'public accountability', 'B Corp certification'],
       performance: ['stakeholder feedback on transparency', 'competitor reports more compelling', 'internal data not shared', 'impact not being communicated', 'brand purpose scores low'],
-      sampleLanguage: ['do great work but don\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story', 'want people to know we\'re more than just a business']
+      sampleLanguage: ['do great work but don\\\'t communicate it', 'report needs to be more compelling', 'have the data but need help presenting it', 'stakeholders want more transparency', 'competitors have beautiful impact reports', 'need to tell our sustainability story', 'want people to know we\\\'re more than just a business']
     }
   },
   {
     id: 'content_production',
     category: 'Content Ideation & Production',
     description: 'Content strategy and creation',
-    engagementType: 'tm',
+    engagementType: 'fixed_fee',
     services: [
-      // Content Strategy is Fixed Fee
-      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs content to be produced', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, note: 'Fixed Fee deliverable' } },
-      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 180000, bundle: 'Content Production', note: 'Annual T&M based on volume' } },
-      // Ongoing content production is T&M
-      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production', note: 'T&M ongoing' } },
-      { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
-      { name: 'Video Content Series', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
-      { name: 'Social Content Creation', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
-      { name: 'Thought Leadership Content', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { bundle: 'Content Production' } },
-      { name: 'Social Content Creation (Reactive)', recommend: 'conditional', condition: 'only if requested or social media management needed', pricing: { bundle: 'Content Production' } }
+      // Content Strategy bundle
+      { name: 'Content Strategy', recommend: 'always', condition: 'when client needs creative (designed or animated content to be produced', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, bundle: 'Content Strategy', note: 'Fixed Fee deliverable' } },
+      { name: 'Content Calendar Development', recommend: 'always', condition: 'when client needs content produced and distributed over time', pricing: { termLow: 2, termHigh: 4, bundle: 'Content Strategy', note: 'Annual T&M based on volume' } },
+      // Content Production bundle
+      { name: 'Blog & Article Writing', recommend: 'conditional', condition: 'only if requested or included in Additional Notes. For client or prospects own channels or to gues write on a partners channel when they are looking for greater visibility for leaders.', pricing: { termLow: 1, termHigh: 2, budgetLow: 3500, budgetHigh: 8000, bundle: 'Content Production', note: 'T&M ongoing' } },
+      { name: 'Podcast Production', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { termLow: 1, termHigh: 2, budgetLow: 3500, budgetHigh: 10000, bundle: 'Content Production' } },
+      { name: 'Video Content Series', recommend: 'conditional', condition: 'only if requested or included in Additional Notes', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 50000, bundle: 'Content Production' } },
+      { name: 'Thought Leadership Content', recommend: 'conditional', condition: 'These is when client needs articles ghost written for them in teh voice of their brand or executives', pricing: { termLow: 1, termHigh: 2, budgetLow: 6000, budgetHigh: 10000, bundle: 'Content Production' } },
+      // Reactive Content Engine bundle
+      { name: 'Social Content Creation (Reactive)', recommend: 'conditional', condition: 'only if requested or social media management needed and reactive content that hacks into news stories and responds to current events and competitor activity. Sold as a retainer that includes story mining, ideation adn production. All quick production and approvals.', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000, bundle: 'Reactive Content Engine' } },
     ],
     triggerPatterns: {
       direct: ['need more content', 'need a content strategy', 'run out of ideas', 'need help producing content'],
       indirect: ['content calendar empty', 'publishing frequency declined', 'team stretched too thin', 'quality inconsistent', 'topics not resonating'],
       situational: ['blog launch', 'newsletter launch', 'podcast initiative', 'video series', 'campaign content', 'thought leadership program'],
       performance: ['content engagement declining', 'audience growth stalled', 'SEO content needed', 'social content underperforming', 'lead magnet requests'],
-      sampleLanguage: ['know we need content but don\'t know what to create', 'started a blog but ran out of steam', 'team doesn\'t have time to write', 'need fresh ideas', 'content isn\'t getting engagement', 'want to start a podcast', 'need more lead magnets']
+      sampleLanguage: ['know we need content but don\\\'t know what to create', 'started a blog but ran out of steam', 'team doesn\\\'t have time to write', 'need fresh ideas', 'content isn\\\'t getting engagement', 'want to start a podcast', 'need more lead magnets']
     }
   },
   {
-    id: 'performance_marketing',
-    category: 'Performance Marketing & Optimization',
-    description: 'Optimize for conversions and efficiency',
+    id: 'operational_support',
+    category: 'Operational Support',
+    description: 'Coordinate complex marketing initiatives',
     engagementType: 'retainer',
     services: [
-      // Performance Marketing bundle
-      { name: 'Conversion Rate Optimization', recommend: 'always', condition: 'for all performance marketing', pricing: { termLow: 52, termHigh: 52, budgetLow: 120000, budgetHigh: 200000, bundle: 'Performance Marketing', note: 'Annual retainer ($10K-$17K/month)' } },
-      { name: 'A/B Testing Program', recommend: 'always', condition: 'for all performance marketing', pricing: { bundle: 'Performance Marketing' } },
-      { name: 'Landing Page Optimization', recommend: 'conditional', condition: 'when landing pages need improvement', pricing: { bundle: 'Performance Marketing' } },
-      { name: 'Funnel Optimization', recommend: 'conditional', condition: 'when conversion funnel needs improvement', pricing: { bundle: 'Performance Marketing' } },
-      { name: 'Marketing Automation', recommend: 'conditional', condition: 'when automation is requested', pricing: { bundle: 'Performance Marketing' } },
-      { name: 'Performance Reporting (Owned/Earned/Paid/Social)', recommend: 'always', condition: 'for all performance marketing', pricing: { bundle: 'Performance Marketing' } }
+      { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested', pricing: { termLow: 52, termHigh: 52, percentageOfProject: 10, note: 'Approximately 15% of total project fee. Not required on PR/Earned-only engagements.' } },
+      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when paid media is included and operational support is needed', pricing: { termLow: 52, termHigh: 52, percentageOfPaidMedia: 10, note: '~10% of paid media management fees' } },
+      { name: 'Cross-agency Coordination', recommend: 'conditional', condition: 'when cross agency coordimnation is requested to manage other third party vendors or agencies.', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 50000 } },
+      { name: 'Onboarding', recommend: 'conditional', condition: 'required if first engagment to onboard to ways of working and existing platforms so we can be afective.', pricing: { termLow: 1, termHigh: 2, budgetLow: 5000, budgetHigh: 15000, note: '$5K-$10K/month, for managing other agencies, partners and third parties' } },
+      { name: 'Client Side Project Management', recommend: 'conditional', condition: 'If we need top offer project management support to help coordinate clients internal operation. Project Management as a service,', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000 } },
     ],
     triggerPatterns: {
-      direct: ['need to optimize campaigns', 'want to A/B test', 'conversion rates need improvement', 'need CRO help'],
-      indirect: ['campaigns not meeting targets', 'high traffic low conversion', 'marketing efficiency concerns', 'budget pressure', 'data-driven culture needed'],
-      situational: ['new campaign needing optimization', 'declining performance', 'budget cuts', 'competitive pressure on costs', 'new conversion goals'],
-      performance: ['conversion rates below benchmark', 'CPA rising', 'ROAS declining', 'landing page performance poor', 'funnel dropoff identified'],
-      sampleLanguage: ['driving traffic but no one converts', 'campaigns used to work better', 'need to get more from our budget', 'want to test different approaches', 'something\'s broken in our funnel', 'need to understand what\'s working', 'leaving money on the table']
-    }
-  },
-  {
-    id: 'project_management',
-    category: 'Project Management',
-    description: 'Coordinate complex marketing initiatives',
-    engagementType: 'any',
-    services: [
-      // Project Management - percentage based
-      { name: 'Project Management', recommend: 'always', condition: 'when PM support is requested', pricing: { percentageOfProject: 10, note: 'Approximately 10% of total project fee. Not required on PR/Earned-only engagements.' } },
-      { name: 'Marketing Operations', recommend: 'conditional', condition: 'when paid media is included and operational support is needed', pricing: { percentageOfPaidMedia: 10, note: '~10% of paid media management fees' } },
-      { name: 'Cross-agency Coordination', recommend: 'conditional', condition: 'when managing activities of other agencies, partners, or third parties for the client', pricing: { termLow: 52, termHigh: 52, budgetLow: 60000, budgetHigh: 120000, note: '$5K-$10K/month, for managing other agencies, partners and third parties' } },
-      { name: 'Resource Planning', recommend: 'conditional', condition: 'when resource allocation is needed', pricing: { percentageOfProject: 10 } }
-    ],
-    triggerPatterns: {
-      direct: ['need help managing projects', 'overwhelmed with coordination', 'need a PM'],
-      indirect: ['projects always late', 'over budget', 'multiple agencies not coordinated', 'quality control problems'],
-      situational: ['complex campaign launch', 'multiple initiatives', 'major event', 'organizational change', 'agency consolidation'],
+      direct: ['need help managing projects', 'overwhelmed with coordination', 'need a PM', 'need onboarding support', 'need someone to manage vendors'],
+      indirect: ['projects always late', 'over budget', 'multiple agencies not coordinated', 'quality control problems', 'no project management'],
+      situational: ['complex campaign launch', 'multiple initiatives', 'major event', 'organizational change', 'agency consolidation', 'first engagement'],
       performance: ['missed deadlines', 'budget overruns', 'quality inconsistencies', 'team burnout', 'stakeholder dissatisfaction'],
       sampleLanguage: ['things keep falling through the cracks', 'can\'t keep all the pieces coordinated', 'internal team is overwhelmed', 'projects always go over budget', 'need someone to keep everything on track', 'communication is a mess']
     }
-  }
+  },
 ];
-
 // Helper function to extract service name from service object or string
 const getServiceName = (service) => {
   return typeof service === 'object' ? service.name : service;
@@ -1078,9 +1128,9 @@ const FIT_ARCHETYPES = {
     boostCategories: ['integrated_strategy', 'brand', 'executive_visibility', 'measurement', 'pr', 'training'],
     // Specific services to auto-select if the category is detected
     boostServices: [
-      'Marketing Strategy', 'Customer Journey Mapping', 'Marketing Audit',
+      'Marketing Strategy Development', 'Customer Journey Mapping', 'Marketing Audit & Assessment (Compass)',
       'Brand Research (Compass)', 'Stakeholder Interviews (IDIs)', 'Brand Workshop',
-      'Analytics Strategy', 'KPI Development', 'ROI Framework',
+      'Analytics Strategy & Measurement Framework', 'KPI Development', 'Marketing ROI Framework',
       'Executive Positioning Strategy', 'Brand Guidelines'
     ],
     sowGuidance: `CLIENT FIT ARCHETYPE: ARCHITECT
@@ -1186,13 +1236,12 @@ Reporting & Documentation:
     emoji: '📊',
     short: 'Performance & Data-Driven',
     description: 'Demands measurable results, data-driven decisions, and performance optimization.',
-    boostCategories: ['performance_marketing', 'measurement', 'paid_social', 'seo', 'geo'],
+    boostCategories: ['paid_media', 'social_media', 'measurement', 'integrated_measurement', 'seo', 'geo'],
     boostServices: [
-      'CRO', 'A/B Testing', 'Landing Page Optimization', 'Funnel Optimization',
-      'Performance Reporting', 'Marketing Automation',
-      'Analytics Strategy', 'Dashboard Development', 'Attribution Modeling', 'ROI Framework', 'KPI Development',
-      'Paid Social Strategy', 'Campaign Performance Reporting',
-      'SEO Strategy & Audit', 'SEO Reporting & Insights'
+      'Conversion Rate Optimization', 'On-Page Optimization', 'SEO Reporting',
+      'Analytics Strategy & Measurement Framework', 'Integrated Dashboard Development', 'Attribution Modeling', 'Marketing ROI Framework', 'KPI Development',
+      'Paid Strategy', 'Paid Media Reporting', 'Campaign Setup & Management',
+      'SEO Strategy & Audit', 'Reporting'
     ],
     sowGuidance: `CLIENT FIT ARCHETYPE: ACCELERATOR
 This client values measurable performance and data-driven optimization. The SOW should:
@@ -1245,13 +1294,13 @@ Reporting & Documentation:
     emoji: '🚀',
     short: 'Fast & Action-Oriented',
     description: 'Needs flexible, action-oriented partnerships with quick wins at entrepreneurial pace.',
-    boostCategories: ['gtm', 'paid_social', 'performance_marketing', 'creative_campaigns', 'content_production'],
+    boostCategories: ['gtm', 'paid_media', 'social_media', 'creative_campaigns', 'content_production'],
     boostServices: [
-      'GTM Strategy', 'Launch Planning', 'Channel Strategy',
-      'A/B Testing', 'Landing Page Optimization', 'CRO',
+      'Go-to-Market Strategy', 'Launch Planning', 'Channel Strategy',
+      'Landing Page Development', 'On-Page Optimization',
       'Creative Platform Development', 'Campaign Asset Creation',
-      'Paid Social Strategy', 'Audience Development & Testing',
-      'Content Strategy', 'Social Content Creation'
+      'Paid Strategy', 'Audience Development & Targeting',
+      'Content Strategy', 'Social Content Creation (Reactive)'
     ],
     sowGuidance: `CLIENT FIT ARCHETYPE: ENTREPRENEUR
 This client values speed, flexibility, and quick wins. The SOW should:
@@ -1314,6 +1363,9 @@ const ENGAGEMENT_TYPE_RECOMMENDATIONS = {
     'training',            // Communications Training
     'impact',              // Impact & Purpose Communications
     'measurement',         // Measurement & Analytics (setup)
+    'integrated_measurement', // Integrated Measurement & Analytics
+    'orm',                 // Online Reputation Management
+    'geo',                 // Generative Engine Optimization
   ],
   // T&M is best for these (with minimum spend)
   tm_preferred: [
@@ -1324,17 +1376,16 @@ const ENGAGEMENT_TYPE_RECOMMENDATIONS = {
   retainer_preferred: [
     'pr',                  // Public Relations & Media Outreach
     'executive_visibility', // Thought Leadership
-    'paid_social',         // Paid Social Media
+    'paid_media',          // Paid Media
+    'social_media',        // Social Media
     'seo',                 // Search Engine Optimization
-    'geo',                 // Generative Engine Optimization
-    'performance_marketing', // Performance Marketing & Optimization
     'influencer',          // Influencer Marketing
   ],
   // T&M with Cap - only when client specifically requests
   tm_cap_preferred: [],  // Never recommended by default
-  // Project Management can be applied to any engagement type
+  // Operational support can be applied to any engagement type
   any_preferred: [
-    'project_management',  // Project Management (overlay)
+    'operational_support', // Project Management, Ops, Coordination (overlay)
   ]
 };
 
@@ -1355,7 +1406,7 @@ const analyzeServiceBillingModels = (selectedServices) => {
   SERVICE_TRIGGERS.forEach(trigger => {
     const serviceNames = getServiceNames(trigger);
     const matchingServices = serviceNames.filter(s => selectedServices.includes(s));
-    if (matchingServices.length > 0 && trigger.id !== 'project_management') {
+    if (matchingServices.length > 0 && trigger.id !== 'operational_support') {
       const billingModel = getCategoryBillingModel(trigger.id);
       if (billingModel !== 'any') {
         categoryBillingModels[trigger.id] = {
@@ -1410,7 +1461,7 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
     .sort((a, b) => b[1] - a[1])[0][0];
   
   // Project management can be applied to any engagement type - skip recommendation
-  if (dominantCategory === 'project_management' && categories.length === 1) {
+  if (dominantCategory === 'operational_support' && categories.length === 1) {
     return null;
   }
   
@@ -1509,15 +1560,15 @@ const getEngagementTypeRecommendation = (selectedServices, selectedTriggers, cur
     } else if (categories.includes('executive_visibility')) {
       reason = 'Thought leadership is an ongoing professional service best suited to a monthly Retainer structure.';
       budgetGuidance = 'Present as monthly retainer fee with defined activities. Include utilization tracking.';
-    } else if (categories.includes('paid_social')) {
-      reason = 'Paid social media management is an ongoing service best suited to a monthly Retainer structure.';
+    } else if (categories.includes('paid_media')) {
+      reason = 'Paid media management is an ongoing service best suited to a monthly Retainer structure.';
       budgetGuidance = 'Present as monthly retainer fee with defined scope. Separate media spend from agency fees.';
+    } else if (categories.includes('social_media')) {
+      reason = 'Social media management is an ongoing service best suited to a monthly Retainer structure.';
+      budgetGuidance = 'Present as monthly retainer fee with defined scope of activities per month. Separate content creation from management fees.';
     } else if (categories.includes('seo') || categories.includes('geo')) {
       reason = 'SEO and GEO are ongoing optimization services best suited to a monthly Retainer structure.';
       budgetGuidance = 'Present as monthly retainer fee with defined activities and reporting.';
-    } else if (categories.includes('performance_marketing')) {
-      reason = 'Performance marketing optimization is an ongoing service best suited to a monthly Retainer structure.';
-      budgetGuidance = 'Present as monthly retainer fee with defined scope and measurement reporting.';
     } else if (categories.includes('influencer')) {
       reason = 'Influencer marketing is an ongoing service best suited to a monthly Retainer structure.';
       budgetGuidance = 'Present as monthly retainer fee with defined scope. Include utilization tracking and overage rates.';
@@ -1572,126 +1623,171 @@ const PRICING_GUIDE = `
 Use this guide to validate pricing in SOWs. Flag fees that are significantly below the low range (underpriced) or above the high range (overpriced).
 
 ### Website & App Development (Fixed Fee)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Standard Website (Strategy, Design, Dev, CMS) | 8-16 weeks | $50,000 - $140,000 |
-| E-commerce Development | 2-4 weeks | $10,000 - $30,000 |
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Website Strategy & Planning [Standard Website Offering] | 8-20 weeks | $40,000 - $140,000 |
+| Website Refresh | 5-8 weeks | $20,000 - $30,000 |
 | Mobile App Development | 3-10 weeks | $10,000 - $60,000 |
-| Landing Page Development | 1-3 weeks | $15,000 - $25,000 |
-| Website Migration | 1-3 weeks | $10,000 - $20,000 |
-| Performance Optimization | Annual | $24,000 - $30,000 |
+| Landing Page Development | 1-3 weeks | $10,000 - $15,000 |
+| Website Migration | 1-4 weeks | $10,000 - $60,000 |
+| Performance Optimization and Support | Annual | $24,000 - $30,000 (Annual retainer) |
 
 ### Integrated Marketing Strategy (Fixed Fee)
 | Service | Term | Budget Range |
 |---------|------|--------------|
 | Marketing Strategy Development | 1-4 weeks | $10,000 - $25,000 |
-| Channel Planning & Media Mix | 1-3 weeks | $10,000 - $20,000 |
+| Channel Planning & Media Mix & Connections Planning | 1-3 weeks | $10,000 - $20,000 |
+| Primary audience research | 4-6 weeks | $25,000 - $35,000 |
 | Customer Journey Mapping | 1-2 weeks | $7,000 - $15,000 |
-| Marketing Audit (Compass) | 1-2 weeks | $3,000 - $4,000 |
-| Market & Competitive Research | 1-2 weeks | $2,000 - $5,000 |
+| Marketing Audit & Assessment (Compass) | 1-2 weeks | $3,000 - $4,000 |
+| Market & Competitive Research | 1-2 weeks | $2,000 - $30,000 |
 | Audience Research & Segmentation | 1-2 weeks | $2,000 - $5,000 |
 
 ### Brand Strategy & Expression (Fixed Fee)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Brand Strategy (Research, IDIs, Discovery, Positioning, Brand House, Workshop, Foundation) | 2-4 weeks | $15,000 - $20,000 |
-| Brand Expression (Tone of Voice, Manifesto, Visual Identity, Logo) | 3-7 weeks | $25,000 - $30,000 |
-| Brand Assets (Deck, Social Lock-ups, Guidelines) | 1-2 weeks | $10,000 - $15,000 |
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Brand Research (Compass) [Brand Strategy] | 2-4 weeks | $15,000 - $20,000 |
+| Tone of Voice [Brand Expression] | 3-7 weeks | $25,000 - $30,000 |
+| Brand Deck Asset Production [Brand Expression] | 1-4 weeks | $10,000 - $30,000 |
+| Social Lock-ups [Brand Assets] | 1-2 weeks | $10,000 - $15,000 |
 
 ### Creative Production (Time & Materials)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Creative Retainer (Design, Video, Animation, Photography, Copywriting, etc.) | Annual | $24,000 - $80,000/year minimum commitment |
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Graphic Design [Creative Retainer] | Annual | $24,000 - $80,000 (Annual minimum commitment) |
 
 ### Influencer Marketing (Retainer)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Influencer Program (Strategy, Identification, Campaign Management) | Annual | $30,000 - $100,000/year (excludes creator fees) |
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Influencer Strategy [Influencer Retainer] | Annual | $30,000 - $100,000 (Annual retainer, excludes creator fees) |
 
 ### Creative Campaigns & Innovation (Fixed Fee)
 | Service | Term | Budget Range |
 |---------|------|--------------|
-| Creative Platform Development (Big Idea, Experiential) | 2-7 weeks | $18,000 - $30,000 |
+| Creative Platform Development [Creative Campaigns] | 2-7 weeks | $18,000 - $30,000 |
 
 ### Public Relations & Media Outreach (Retainer)
 | Service | Term | Budget Range |
 |---------|------|--------------|
-| Standard PR (Media Relations, Press Kit) | Annual | $180,000 - $360,000/year ($15K-$30K/month) |
-| Media Training | Annual | $20,000 - $60,000 |
-| Crisis Communications | 1-4 weeks | $40,000 - $200,000 (T&M based on severity) |
-| Media Monitoring | Annual | $12,000 - $40,000 (excludes tool costs) |
-| Newsjacking Strategy | 1-4 weeks | $10,000 - $60,000 (T&M per opportunity) |
-| Industry Domain Consultancy | Annual | $52,000 - $100,000 |
+| Media Relations [Standard PR] | Annual | $180,000 - $360,000 (Annual retainer ($15K-$30K/month)) |
+| Narrative & Media Messaging [Standard PR] | 4-6 weeks | $10,000 - $20,000 |
+| Media Training | 2-4 weeks | $3,000 - $10,000 (Annual or per session) |
+| Crises Plan Development [Crises Comms] | 1-6 weeks | $15,000 - $40,000 |
+| Crisis Communications [Crises Comms] | 1-6 weeks | $20,000 - $100,000 (T&M based on severity) |
+| Media Monitoring [Standard PR] | Annual | $12,000 - $40,000 (Annual, excludes tool costs) |
+| Earned Media Strategy [Standard PR] | 2-4 weeks | $10,000 - $25,000 (T&M per opportunity) |
+| Announcement Strategy | 1-2 weeks | $5,000 - $10,000 |
+| Earned content creation | Annual | $12,000 - $60,000 |
+| Onsite media liaison | 0-1 weeks | $5,000 - $10,000 |
+| Events and meetings travel | 0 weeks | $5,000 - $10,000 |
 
 ### Executive Visibility & Thought Leadership (Retainer)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Executive Visibility (Positioning, Content, Bylines, Speaking, Social, Awards) | Annual | $60,000 - $180,000/year ($5K-$15K/month per executive) |
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Executive Positioning Strategy [Executive Visibility] | Annual | $60,000 - $180,000 (Annual retainer ($5K-$15K/month per executive)) |
+| Speaking Opportunity Strategy | 1-3 weeks | $5,000 - $10,000 |
+| Onsite Media & Exec Support | 1 weeks | $5,000 - $8,000 |
+| Executive Social Media Strategy | 1-3 weeks | $5,000 - $10,000 |
+| Awards Strategy | 1 weeks | $5,000 - $8,000 |
+| Podcast Guest Strategy | 1 weeks | $5,000 - $8,000 |
 
-### Paid Social Media (Retainer)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Paid Social (Strategy, Campaign Management, Audience, Creative Testing, Reporting) | Annual | $80,000 - $200,000/year (excludes media spend) |
+### Paid Media (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Paid Strategy [Paid Media Strategy] | 2-6 weeks | $10,000 - $30,000 (Annual retainer, excludes media spend) |
+| Campaign Setup & Management [Paid Media Execution] | 4-52 weeks | $10,000 - $100,000 |
+| Audience Development & Targeting [Paid Media Execution] | 2-4 weeks | $10,000 - $20,000 |
+| Ad Creative Development [Paid Media Execution] | 4-52 weeks | $24,000 - $60,000 |
+| Paid Media Reporting [Paid Media Execution] | 4-52 weeks | $8,000 - $60,000 |
 
-### Search Engine Optimization (Retainer)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| SEO Program (Strategy, Technical, Content, Link Building, Reporting) | Annual | $60,000 - $120,000/year ($5K-$10K/month, 6-month minimum) |
+### Social Media (Retainer)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Social Media Strategy [Social Media Strategy] | 2-6 weeks | $15,000 - $25,000 (Annual retainer, excludes media spend) |
+| Channel Set Up [Social Execution] | 1-3 weeks | $10,000 - $20,000 |
+| Community Management [Social Execution] | 4-52 weeks | $4,000 - $60,000 |
+| Social creative [Social Execution] | 4-52 weeks | $24,000 - $60,000 |
+| Social Media Reporting [Social Execution] | 4-52 weeks | $8,000 - $60,000 |
 
-### Generative Engine Optimization (Retainer)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| GEO Program (Strategy, AI Search Optimization, Content Authority, Reporting) | Annual | $50,000 - $80,000/year (often bundled with SEO) |
+### Search Engine Optimization (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| SEO Strategy & Audit [SEO Strategy] | 4-8 weeks | $20,000 - $35,000 (Annual retainer ($5K-$10K/month), 6-month minimum) |
+| On-Page Optimization [SEO Execution] | 4-12 weeks | $24,000 - $60,000 |
+| SEO Reporting [SEO Reporting] | 4-52 weeks | $4,000 - $40,000 |
+
+### Online Reputation Management (ORM) (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| GEO Strategy & Audit [GEO Strategy] | 1-4 weeks | $10,000 - $20,000 (Annual retainer, often bundled with SEO) |
+
+### Generative Engine Optimization (ORM) (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Reddit Optimization [GEO Execution] | 4-6 weeks | $20,000 - $30,000 |
+| Wikipedia Optimization [GEO Execution] | 3-4 weeks | $10,000 - $15,000 |
+| Earned Strategy for GEO [GEO Execution] | 2-4 weeks | $10,000 - $15,000 |
+
+### Integrated Measurement & Analytics (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Analytics Strategy & Measurement Framework [Integrated Measurement Strategy] | 2-4 weeks | $10,000 - $20,000 |
 
 ### Measurement & Analytics (Fixed Fee)
 | Service | Term | Budget Range |
 |---------|------|--------------|
-| Analytics Strategy | 2-4 weeks | $10,000 - $20,000 |
-| Dashboard Development | 2-4 weeks | $10,000 - $20,000 |
-| Attribution Modeling | 1-2 weeks | $10,000 - $20,000 |
-| Marketing ROI Framework | 2-3 weeks | $10,000 - $20,000 |
-| KPI Development | 1-2 weeks | $10,000 - $20,000 |
-| Data Integration | 2-4 weeks | $20,000 - $30,000 |
+| Integrated Dashboard Development [Integrated Measurement Strategy] | 2-4 weeks | $10,000 - $20,000 |
+| Attribution Modeling [Integrated Measurement Strategy] | 1-2 weeks | $10,000 - $20,000 |
+| Marketing ROI Framework [Integrated Measurement Strategy] | 2-3 weeks | $10,000 - $20,000 |
+| KPI Development [Integrated Measurement Strategy] | 1-2 weeks | $10,000 - $20,000 |
+| Data Integration [Integrated Measurement Strategy] | 2-4 weeks | $20,000 - $30,000 |
+| Reporting [Integrated Reporting] | Annual | $30,000 - $40,000 |
 
 ### Go-to-Market Strategy (Fixed Fee)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| GTM Strategy (Launch Planning, Market Entry, Channel, Sales Enablement) | 1-3 weeks | $10,000 - $30,000 |
-
-### Event Planning & Production (Fixed Fee)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Event Production (Strategy, Production, Virtual, Trade Show, Speaker, Marketing) | 4-16 weeks | $50,000 - $180,000 (excludes venue/vendor costs) |
-
-### Communications Training (Fixed Fee)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Training Program (Media, Presentation, Crisis, Brand) | 2-4 weeks | $20,000 - $50,000 per session/program |
-
-### Impact & Purpose Communications (Fixed Fee)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Impact Communications (Report, Sustainability, ESG, CSR, Purpose, Theory of Change) | 4-10 weeks | $60,000 - $150,000 |
-
-### Content Ideation & Production
 | Service | Term | Budget Range |
 |---------|------|--------------|
-| Content Strategy | 2-4 weeks | $15,000 - $30,000 (Fixed Fee) |
-| Ongoing Content Production | Varies | T&M based on volume |
+| Go-to-Market Strategy [GTM Strategy] | 1-3 weeks | $10,000 - $30,000 |
 
-### Performance Marketing & Optimization (Retainer)
-| Service Bundle | Term | Budget Range |
-|----------------|------|--------------|
-| Performance Marketing (CRO, A/B Testing, Landing Page, Funnel, Automation, Reporting) | Annual | $120,000 - $200,000/year ($10K-$17K/month) |
+### Event Planning & Production (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Event Strategy [Event Strategy] | 4-6 weeks | $10,000 - $20,000 (Excludes venue and vendor costs) |
+| Event Production [Event Production] | 4-12 weeks | $15,000 - $100,000 |
+| Virtual Event Production [Event Production] | 2-4 weeks | $15,000 - $30,000 |
+| Trade Show Management [Event Production] | 2-4 weeks | $15,000 - $30,000 |
+| Speaker Management [Event Production] | 2-4 weeks | $5,000 - $15,000 |
+| Event Marketing [Event Marketing] | 2-6 weeks | $10,000 - $20,000 |
 
-### Project Management
-| Service | Budget Range |
-|---------|--------------|
-| Project Management | ~10% of total project fee |
-| Marketing Operations | ~10% of paid media management fees |
-| Cross-agency Coordination | $5,000 - $10,000/month (when managing other agencies, partners, or third parties) |
-| Note: PM not required on PR/Earned-only engagements |
-`;
+### Communications Training (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Media & Spokesperson Training [Communications Training] | 2-4 weeks | $20,000 - $50,000 (Per session or program) |
+
+### Impact & Purpose Communications (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Impact Report Writing & Design [Impact Reporting] | 4-12 weeks | $40,000 - $80,000 |
+| Sustainability Communications Messaging [Impact Communications] | 3-5 weeks | $15,000 - $20,000 |
+| Purpose Discovery Workshop [Impact Communications] | 1-2 weeks | $8,000 - $10,000 |
+
+### Content Ideation & Production (Fixed Fee)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Content Strategy [Content Strategy] | 2-4 weeks | $15,000 - $30,000 (Fixed Fee deliverable) |
+| Blog & Article Writing [Content Production] | 1-2 weeks | $3,500 - $8,000 (T&M ongoing) |
+| Podcast Production [Content Production] | 1-2 weeks | $3,500 - $10,000 |
+| Video Content Series [Content Production] | 2-4 weeks | $10,000 - $50,000 |
+| Thought Leadership Content [Content Production] | 1-2 weeks | $6,000 - $10,000 |
+| Social Content Creation (Reactive) [Reactive Content Engine] | Annual | $60,000 - $120,000 |
+
+### Operational Support (Retainer)
+| Service | Term | Budget Range |
+|---------|------|--------------|
+| Project Management | Annual | ~10% of total project fee |
+| Marketing Operations | Annual | ~10% of paid media management fees |
+| Cross-agency Coordination | Annual | $24,000 - $50,000 |
+| Onboarding | 1-2 weeks | $5,000 - $15,000 ($5K-$10K/month, for managing other agencies, partners and third parties) |
+| Client Side Project Management | Annual | $60,000 - $120,000 |`;
 
 // ============================================================================
 // ASSESSMENT FRAMEWORK (Comprehensive - for review flow)
@@ -2816,7 +2912,7 @@ const formatPricingGuidance = (service) => {
 };
 
 // Categories whose fees count as "paid media" for Marketing Operations percentage calculation
-const PAID_MEDIA_CATEGORY_IDS = ['paid_social'];
+const PAID_MEDIA_CATEGORY_IDS = ['paid_media'];
 
 // Helper function to calculate total pricing range for selected services
 const calculatePricingTotal = (selectedServices) => {
