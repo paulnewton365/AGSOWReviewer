@@ -16,7 +16,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.2.0';
+const APP_VERSION = '3.3.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -118,229 +118,261 @@ const createOpportunity = (companyName, companyUrl = '', industry = '') => ({
 // SERVICE TRIGGERS
 // ============================================================================
 const SERVICE_TRIGGERS = [
-  {
-    id: 'website', category: 'Website & App Development', description: 'Build or rebuild digital platforms',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Website Strategy & Planning', recommend: 'always', pricing: { termLow: 8, termHigh: 20, budgetLow: 40000, budgetHigh: 140000, bundle: 'Standard Website Offering' } },
-      { name: 'Website Design & UX', recommend: 'always', pricing: { bundle: 'Standard Website Offering' } },
-      { name: 'Website Development', recommend: 'always', pricing: { bundle: 'Standard Website Offering' } },
-      { name: 'CMS Implementation', recommend: 'always', pricing: { bundle: 'Standard Website Offering' } },
-      { name: 'Performance Assurance', recommend: 'always', pricing: { bundle: 'Standard Website Offering' } },
-      { name: 'Website Refresh', recommend: 'conditional', pricing: { termLow: 5, termHigh: 8, budgetLow: 20000, budgetHigh: 30000 } },
-      { name: 'Mobile App Development', recommend: 'conditional', pricing: { termLow: 3, termHigh: 10, budgetLow: 10000, budgetHigh: 60000 } },
-      { name: 'Landing Page Development', recommend: 'conditional', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 15000 } },
-      { name: 'Website Migration', recommend: 'conditional', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 60000 } },
-      { name: 'Performance Optimization and Support', recommend: 'conditional', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 30000, note: 'Annual retainer' } },
-    ],
-    triggerPatterns: { direct: ['need a new website', 'website redesign', 'site looks outdated', 'rebuild our site', 'new landing page', 'mobile-friendly'], indirect: ['high bounce rates', 'site is slow', 'can\'t update the site', 'CMS is difficult', 'doesn\'t reflect our brand'], situational: ['recent rebrand', 'merger', 'new product launch', 'expansion into new markets', 'adding e-commerce'], performance: ['low conversion rates', 'cart abandonment', 'poor search rankings', 'low time on site', 'website not generating leads'], sampleLanguage: ['people leave our site within seconds', 'can\'t compete with competitors\' sites', 'looks fine on desktop but terrible on mobile'] }
-  },
-  {
-    id: 'integrated_strategy', category: 'Integrated Marketing Strategy', description: 'Develop cohesive marketing plans',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Marketing Strategy Development', recommend: 'conditional', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 25000 } },
-      { name: 'Channel Planning & Media Mix', recommend: 'conditional', pricing: { termLow: 1, termHigh: 3, budgetLow: 10000, budgetHigh: 20000 } },
-      { name: 'Primary Audience Research', recommend: 'conditional', pricing: { termLow: 4, termHigh: 6, budgetLow: 25000, budgetHigh: 35000 } },
-      { name: 'Customer Journey Mapping', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 7000, budgetHigh: 15000 } },
-      { name: 'Marketing Audit & Assessment (Compass)', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 3000, budgetHigh: 4000 } },
-      { name: 'Market & Competitive Research', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 30000 } },
-      { name: 'Audience Research & Segmentation', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 2000, budgetHigh: 5000 } },
-    ],
-    triggerPatterns: { direct: ['need a marketing strategy', 'marketing feels disjointed', 'don\'t have a plan', 'where to focus our budget'], indirect: ['marketing not producing results', 'conflicting messages', 'which channels to prioritize', 'marketing and sales not aligned'], situational: ['new fiscal year', 'leadership change', 'entering new market', 'product launch', 'competitive pressure'], performance: ['declining market share', 'acquisition costs increasing', 'ROI unknown', 'lead quality issues'], sampleLanguage: ['throwing spaghetti at the wall', 'don\'t know what\'s working', 'never had a real strategy', 'reactive instead of proactive'] }
-  },
-  {
-    id: 'brand', category: 'Brand Strategy & Expression', description: 'Define or refresh your brand foundation',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Brand Research (Compass)', recommend: 'always', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 20000, bundle: 'Brand Strategy' } },
-      { name: 'Stakeholder Interviews (IDIs)', recommend: 'always', pricing: { bundle: 'Brand Strategy' } },
-      { name: 'Rapid Discovery (Landscape & Audience)', recommend: 'always', pricing: { bundle: 'Brand Strategy' } },
-      { name: 'Brand Positioning', recommend: 'always', pricing: { bundle: 'Brand Strategy' } },
-      { name: 'Brand House Development', recommend: 'always', pricing: { bundle: 'Brand Strategy' } },
-      { name: 'Brand Workshop', recommend: 'always', pricing: { bundle: 'Brand Strategy' } },
-      { name: 'Authentic Foundation (Why, What, How)', recommend: 'always', pricing: { bundle: 'Brand Strategy' } },
-      { name: 'Tone of Voice', recommend: 'always', pricing: { termLow: 3, termHigh: 7, budgetLow: 25000, budgetHigh: 30000, bundle: 'Brand Expression' } },
-      { name: 'Manifesto', recommend: 'always', pricing: { bundle: 'Brand Expression' } },
-      { name: 'Visual Identity System', recommend: 'always', pricing: { bundle: 'Brand Expression' } },
-      { name: 'Logo/Wordmark Development', recommend: 'always', pricing: { bundle: 'Brand Expression' } },
-      { name: 'Brand Deck Asset Production', recommend: 'conditional', pricing: { termLow: 1, termHigh: 4, budgetLow: 10000, budgetHigh: 30000, bundle: 'Brand Expression' } },
-      { name: 'Social Lock-ups', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 10000, budgetHigh: 15000, bundle: 'Brand Assets' } },
-      { name: 'Brand Guidelines', recommend: 'conditional', pricing: { bundle: 'Brand Assets' } },
-    ],
-    triggerPatterns: { direct: ['need to rebrand', 'brand feels outdated', 'need a new logo', 'brand doesn\'t reflect who we are', 'need brand guidelines'], indirect: ['company evolved but identity hasn\'t', 'inconsistent messaging', 'customer confusion', 'premium pricing not supported'], situational: ['merger or acquisition', 'new leadership', 'expansion beyond original scope', 'company milestone', 'IPO'], performance: ['brand awareness declining', 'can\'t command premium prices', 'losing deals to stronger brands'], sampleLanguage: ['nobody knows who we are', 'look just like everyone else', 'brand worked when small but we\'ve grown', 'visual identity all over the place'] }
-  },
-  {
-    id: 'creative_production', category: 'Creative Production', description: 'Design, video, animation, and content creation',
-    engagementType: 'tm',
-    services: [
-      { name: 'Graphic Design', recommend: 'conditional', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 80000, bundle: 'Creative Retainer', note: 'Annual minimum commitment' } },
-      { name: 'Video Production', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Animation & Motion Graphics', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Photography', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Copywriting', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Sales Collateral', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Presentation Design', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Social Media Content', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-      { name: 'Campaign Asset Creation', recommend: 'conditional', pricing: { bundle: 'Creative Retainer' } },
-    ],
-    triggerPatterns: { direct: ['need a brochure', 'need a video', 'don\'t have creative resources', 'materials look amateurish'], indirect: ['marketing team stretched thin', 'no in-house design', 'high volume of creative needs', 'tight deadlines'], situational: ['campaign launch', 'trade show', 'product launch', 'executive presentations'], performance: ['creative not generating engagement', 'A/B tests showing underperformance'], sampleLanguage: ['don\'t have designers on staff', 'team is overwhelmed', 'competitors\' materials look more polished'] }
-  },
-  {
-    id: 'influencer', category: 'Influencer Marketing', description: 'Leverage creator partnerships',
-    engagementType: 'retainer',
-    services: [
-      { name: 'Influencer Strategy', recommend: 'always', pricing: { termLow: 52, termHigh: 52, budgetLow: 30000, budgetHigh: 100000, bundle: 'Influencer Retainer', note: 'Annual retainer, excludes creator fees' } },
-      { name: 'Creator Identification & Vetting', recommend: 'always', pricing: { bundle: 'Influencer Retainer' } },
-      { name: 'Influencer Campaign Management', recommend: 'always', pricing: { bundle: 'Influencer Retainer' } },
-      { name: 'Ambassador Programs', recommend: 'conditional', pricing: { bundle: 'Influencer Retainer' } },
-      { name: 'UGC Programs', recommend: 'conditional', pricing: { bundle: 'Influencer Retainer' } },
-    ],
-    triggerPatterns: { direct: ['want to work with influencers', 'need an influencer campaign', 'reach audience through creators'], indirect: ['difficulty reaching younger audiences', 'need authentic endorsements', 'brand awareness stalled'], situational: ['product launch needing buzz', 'new demographic market', 'competitors using influencers'], performance: ['social engagement declining', 'high CPA on paid channels', 'brand trust declining'], sampleLanguage: ['can\'t break through on social', 'younger audiences don\'t trust us directly', 'need authentic voices'] }
-  },
-  {
-    id: 'creative_campaigns', category: 'Creative Campaigns & Innovation', description: 'Develop breakthrough campaign concepts',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Creative Platform Development', recommend: 'conditional', pricing: { termLow: 2, termHigh: 7, budgetLow: 18000, budgetHigh: 30000, bundle: 'Creative Campaigns' } },
-      { name: 'Big Idea Generation', recommend: 'conditional', pricing: { bundle: 'Creative Campaigns' } },
-      { name: 'Experiential Concepts', recommend: 'conditional', pricing: { bundle: 'Creative Campaigns' } },
-    ],
-    triggerPatterns: { direct: ['need a big idea', 'need a campaign concept', 'want something breakthrough', 'marketing lacks unifying concept'], indirect: ['campaigns feel tactical', 'difficulty creating memorable work', 'brand awareness plateaued'], situational: ['major launch', 'brand repositioning', 'competitive threat', 'company transformation'], performance: ['brand recall declining', 'share of voice decreasing', 'advertising not breaking through'], sampleLanguage: ['need something memorable', 'ads are forgettable', 'cut through the noise', 'want something competitors can\'t copy'] }
-  },
-  {
-    id: 'pr', category: 'Public Relations & Media Outreach', description: 'Media relations, press coverage, and ongoing media engagement',
-    engagementType: 'retainer',
-    services: [
-      { name: 'PR Strategy & Planning', recommend: 'always', pricing: { termLow: 52, termHigh: 52, budgetLow: 72000, budgetHigh: 120000, bundle: 'PR Retainer', note: 'Annual retainer' } },
-      { name: 'Media List Development', recommend: 'always', pricing: { bundle: 'PR Retainer' } },
-      { name: 'Media Relations & Pitching', recommend: 'always', pricing: { bundle: 'PR Retainer' } },
-      { name: 'Press Release Writing & Distribution', recommend: 'always', pricing: { bundle: 'PR Retainer' } },
-      { name: 'Media Monitoring & Reporting', recommend: 'always', pricing: { bundle: 'PR Retainer' } },
-      { name: 'PR Launch Program', recommend: 'conditional', pricing: { termLow: 4, termHigh: 16, budgetLow: 30000, budgetHigh: 80000 } },
-      { name: 'Media Training', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 5000, budgetHigh: 10000 } },
-      { name: 'Crisis Communications Planning', recommend: 'conditional', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 25000 } },
-    ],
-    triggerPatterns: { direct: ['need PR', 'want media coverage', 'need help with press relations', 'need a PR agency'], indirect: ['important news not getting coverage', 'lack of third-party credibility', 'no journalist relationships'], situational: ['product launch', 'funding announcement', 'executive hire', 'research release', 'company milestone', 'crisis situation'], performance: ['low share of voice', 'minimal media mentions', 'lack of third-party validation'], sampleLanguage: ['have great news but nobody covers us', 'competitors are always in the press', 'don\'t have relationships with journalists', 'launching something big and need coverage'] }
-  },
-  {
-    id: 'executive_visibility', category: 'Executive Visibility & Thought Leadership', description: 'Build leadership profiles and industry influence',
-    engagementType: 'retainer',
-    services: [
-      { name: 'Executive Positioning Strategy', recommend: 'always', pricing: { termLow: 52, termHigh: 52, budgetLow: 36000, budgetHigh: 84000, bundle: 'Executive Visibility Retainer', note: 'Annual retainer' } },
-      { name: 'Thought Leadership Content', recommend: 'always', pricing: { bundle: 'Executive Visibility Retainer' } },
-      { name: 'Speaking Opportunity Pipeline', recommend: 'always', pricing: { bundle: 'Executive Visibility Retainer' } },
-      { name: 'LinkedIn Profile & Content Strategy', recommend: 'conditional', pricing: { bundle: 'Executive Visibility Retainer' } },
-      { name: 'Byline & Article Writing', recommend: 'conditional', pricing: { bundle: 'Executive Visibility Retainer' } },
-      { name: 'Award Nominations', recommend: 'conditional', pricing: { bundle: 'Executive Visibility Retainer' } },
-    ],
-    triggerPatterns: { direct: ['want our CEO to be more visible', 'position executives as experts', 'need thought leadership content', 'leaders need higher profile'], indirect: ['competitor executives have stronger presence', 'difficulty attracting talent', 'investor relations require leadership credibility'], situational: ['new CEO', 'IPO preparation', 'fundraising rounds', 'industry conference schedule'], performance: ['low recognition of leadership team', 'executive content not generating engagement', 'speaking invitations not materializing'], sampleLanguage: ['our CEO should be better known', 'competitors\' leaders are always at conferences', 'leadership team has great insights but nobody hears them'] }
-  },
-  {
-    id: 'paid_social', category: 'Paid Social', description: 'Social media advertising across platforms',
-    engagementType: 'retainer',
-    services: [
-      { name: 'Paid Social Strategy', recommend: 'always', pricing: { termLow: 52, termHigh: 52, budgetLow: 36000, budgetHigh: 72000, bundle: 'Paid Social Retainer', note: 'Annual retainer, excludes media spend' } },
-      { name: 'Campaign Setup & Management', recommend: 'always', pricing: { bundle: 'Paid Social Retainer' } },
-      { name: 'Audience Targeting & Optimization', recommend: 'always', pricing: { bundle: 'Paid Social Retainer' } },
-      { name: 'Creative Direction for Ads', recommend: 'conditional', pricing: { bundle: 'Paid Social Retainer' } },
-      { name: 'Performance Reporting', recommend: 'always', pricing: { bundle: 'Paid Social Retainer' } },
-    ],
-    triggerPatterns: { direct: ['need to run social media ads', 'want paid social campaigns', 'help with Facebook/Instagram/LinkedIn ads', 'social ads aren\'t working'], indirect: ['organic reach declining', 'need to target specific audiences', 'current campaigns underperforming'], situational: ['campaign launch', 'product launch', 'event promotion', 'competitive pressure'], performance: ['high CPA on social', 'low conversion rates from social', 'poor targeting results', 'ROAS below benchmarks'], sampleLanguage: ['organic reach has tanked', 'spending money on ads but not seeing results', 'don\'t know if targeting is right'] }
-  },
-  {
-    id: 'seo_geo', category: 'SEO & Generative Engine Optimization', description: 'Search visibility and AI search presence',
-    engagementType: 'retainer',
-    services: [
-      { name: 'SEO Strategy & Audit', recommend: 'always', pricing: { termLow: 52, termHigh: 52, budgetLow: 36000, budgetHigh: 84000, bundle: 'SEO/GEO Retainer', note: 'Annual retainer' } },
-      { name: 'On-page Optimization', recommend: 'always', pricing: { bundle: 'SEO/GEO Retainer' } },
-      { name: 'Content SEO & Keyword Strategy', recommend: 'always', pricing: { bundle: 'SEO/GEO Retainer' } },
-      { name: 'Technical SEO', recommend: 'conditional', pricing: { bundle: 'SEO/GEO Retainer' } },
-      { name: 'Generative Engine Optimization (GEO)', recommend: 'conditional', pricing: { bundle: 'SEO/GEO Retainer' } },
-      { name: 'Local SEO', recommend: 'conditional', pricing: { bundle: 'SEO/GEO Retainer' } },
-    ],
-    triggerPatterns: { direct: ['don\'t rank on Google', 'need SEO help', 'organic traffic is declining', 'want to rank for keywords', 'show up in AI search'], indirect: ['website not appearing in search', 'competitors outranking', 'paid search costs too high', 'content not getting discovered'], situational: ['website redesign', 'new content strategy', 'competitive threat in search', 'algorithm update impact'], performance: ['declining organic traffic', 'keyword rankings dropping', 'high reliance on paid search'], sampleLanguage: ['don\'t show up when people search for what we do', 'competitors always rank above us', 'people can\'t find us online', 'people are using AI to search now'] }
-  },
-  {
-    id: 'paid_media', category: 'Paid Media', description: 'Search, display, and programmatic advertising',
-    engagementType: 'retainer',
-    services: [
-      { name: 'Paid Media Strategy', recommend: 'always', pricing: { termLow: 52, termHigh: 52, budgetLow: 36000, budgetHigh: 84000, bundle: 'Paid Media Retainer', note: 'Annual retainer, excludes media spend' } },
-      { name: 'Search Advertising (SEM/PPC)', recommend: 'conditional', pricing: { bundle: 'Paid Media Retainer' } },
-      { name: 'Display & Programmatic', recommend: 'conditional', pricing: { bundle: 'Paid Media Retainer' } },
-      { name: 'Performance Reporting & Optimization', recommend: 'always', pricing: { bundle: 'Paid Media Retainer' } },
-    ],
-    triggerPatterns: { direct: ['need SEM', 'Google Ads', 'paid search', 'programmatic advertising'], indirect: ['need leads quickly', 'organic too slow', 'competitors showing up in search ads'], situational: ['product launch', 'seasonal push', 'competitive defense'], performance: ['rising CPC', 'ROAS declining', 'budget not being used effectively'], sampleLanguage: ['we need more leads now', 'competitors\' ads are everywhere', 'spending on Google but not seeing returns'] }
-  },
-  {
-    id: 'measurement', category: 'Measurement & Analytics', description: 'Data strategy, reporting, and ROI frameworks',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Analytics Strategy & Measurement Framework', recommend: 'conditional', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 25000 } },
-      { name: 'KPI Development', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 5000, budgetHigh: 10000 } },
-      { name: 'Marketing ROI Framework', recommend: 'conditional', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 25000 } },
-      { name: 'Dashboard Development', recommend: 'conditional', pricing: { termLow: 2, termHigh: 6, budgetLow: 10000, budgetHigh: 30000 } },
-      { name: 'Marketing Technology Audit', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 5000, budgetHigh: 15000 } },
-    ],
-    triggerPatterns: { direct: ['don\'t know if marketing is working', 'need better reporting', 'can\'t prove ROI', 'need to track performance'], indirect: ['decision-making without data', 'multiple tools not integrated', 'leadership asking for accountability', 'budget justification challenges'], situational: ['new leadership', 'board reporting', 'marketing technology audit', 'new marketing initiatives'], performance: ['inability to report on basic metrics', 'data conflicts', 'unknown customer journey'], sampleLanguage: ['have no idea what\'s working', 'data is all over the place', 'can\'t connect marketing to sales', 'board wants to see marketing ROI'] }
-  },
-  {
-    id: 'go_to_market', category: 'Go-to-Market Strategy', description: 'Product and service launch planning',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'GTM Strategy Development', recommend: 'always', pricing: { termLow: 2, termHigh: 6, budgetLow: 20000, budgetHigh: 50000, bundle: 'GTM Bundle' } },
-      { name: 'Positioning & Messaging', recommend: 'always', pricing: { bundle: 'GTM Bundle' } },
-      { name: 'Launch Planning & Execution', recommend: 'always', pricing: { bundle: 'GTM Bundle' } },
-      { name: 'Sales Enablement Materials', recommend: 'conditional', pricing: { bundle: 'GTM Bundle' } },
-    ],
-    triggerPatterns: { direct: ['launching a new product', 'need a GTM strategy', 'bringing this to market', 'entering a new market'], indirect: ['uncertainty about target audience', 'no launch plan', 'questions about pricing and positioning', 'channel strategy unclear'], situational: ['new product completion', 'service line expansion', 'market expansion', 'acquisition of new capabilities'], performance: ['previous launches underperformed', 'new product uptake slow', 'customer acquisition challenges'], sampleLanguage: ['launching in Q[X] and need a plan', 'built something great but don\'t know how to sell it', 'have the product but not the plan'] }
-  },
-  {
-    id: 'impact_purpose', category: 'Impact & Purpose Communications', description: 'Sustainability, impact, and purpose communications',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Impact Report Writing & Design', recommend: 'always', pricing: { termLow: 4, termHigh: 12, budgetLow: 40000, budgetHigh: 80000, bundle: 'Impact Reporting' } },
-      { name: 'Sustainability Communications Messaging', recommend: 'conditional', pricing: { termLow: 3, termHigh: 5, budgetLow: 15000, budgetHigh: 20000, bundle: 'Impact Communications' } },
-      { name: 'Purpose Discovery Workshop', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 8000, budgetHigh: 10000, bundle: 'Impact Communications' } },
-    ],
-    triggerPatterns: { direct: ['need an annual report', 'need an impact report', 'CSR report', 'showcase our impact', 'sustainability story', 'ESG communications'], indirect: ['stakeholder expectations for transparency', 'ESG reporting requirements', 'competitor reports setting higher bar'], situational: ['annual reporting cycle', 'sustainability milestones', 'stakeholder meeting', 'B Corp certification'], performance: ['stakeholder feedback on transparency', 'impact not being communicated'], sampleLanguage: ['do great work but don\'t communicate it', 'have the data but need help presenting it', 'competitors have beautiful impact reports'] }
-  },
-  {
-    id: 'content_production', category: 'Content Ideation & Production', description: 'Content strategy and creation',
-    engagementType: 'fixed_fee',
-    services: [
-      { name: 'Content Strategy', recommend: 'always', pricing: { termLow: 2, termHigh: 4, budgetLow: 15000, budgetHigh: 30000, bundle: 'Content Strategy' } },
-      { name: 'Content Calendar Development', recommend: 'always', pricing: { bundle: 'Content Strategy' } },
-      { name: 'Blog & Article Writing', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 3500, budgetHigh: 8000, bundle: 'Content Production', note: 'T&M ongoing' } },
-      { name: 'Podcast Production', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 3500, budgetHigh: 10000, bundle: 'Content Production' } },
-      { name: 'Video Content Series', recommend: 'conditional', pricing: { termLow: 2, termHigh: 4, budgetLow: 10000, budgetHigh: 50000, bundle: 'Content Production' } },
-      { name: 'Thought Leadership Content', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 6000, budgetHigh: 10000, bundle: 'Content Production' } },
-    ],
-    triggerPatterns: { direct: ['need more content', 'need a content strategy', 'run out of ideas', 'need help producing content'], indirect: ['content calendar empty', 'team stretched too thin', 'quality inconsistent'], situational: ['blog launch', 'podcast initiative', 'video series', 'thought leadership program'], performance: ['content engagement declining', 'audience growth stalled', 'social content underperforming'], sampleLanguage: ['know we need content but don\'t know what to create', 'team doesn\'t have time to write', 'content isn\'t getting engagement'] }
-  },
-  {
-    id: 'operational_support', category: 'Operational Support', description: 'Project management and agency operations',
-    engagementType: 'retainer',
-    services: [
-      { name: 'Project Management', recommend: 'always', pricing: { termLow: 52, termHigh: 52, percentageOfProject: 10, note: 'Approx 10-15% of total project fee. Not required on PR-only engagements.' } },
-      { name: 'Marketing Operations', recommend: 'conditional', pricing: { termLow: 52, termHigh: 52, percentageOfPaidMedia: 10, note: '~10% of paid media management fees' } },
-      { name: 'Cross-agency Coordination', recommend: 'conditional', pricing: { termLow: 52, termHigh: 52, budgetLow: 24000, budgetHigh: 50000 } },
-      { name: 'Onboarding', recommend: 'conditional', pricing: { termLow: 1, termHigh: 2, budgetLow: 5000, budgetHigh: 15000 } },
-    ],
-    triggerPatterns: { direct: [], indirect: [], situational: [], performance: [], sampleLanguage: [] }
-  },
+  {"id": "website", "category": "Website & App Development", "description": "Build or rebuild digital platforms", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need a new website", "website redesign", "site looks outdated", "rebuild our site", "new landing page", "mobile-friendly"], "indirect": ["high bounce rates", "site is slow", "can\\'t update the site ourselves", "CMS is difficult", "doesn\\'t reflect our brand", "can\\'t integrate with our tools"], "situational": ["recent rebrand", "merger", "new product launch", "expansion into new markets", "adding e-commerce", "company milestone"], "performance": ["low conversion rates", "cart abandonment", "poor search rankings", "low time on site", "customer complaints about UX", "website not generating leads"]}, "services": [{"name": "Website Strategy & Planning", "recommend": "always", "condition": "when website is mentioned", "pricing": {"bundle": "Standard Website Offering", "engagementType": "fixed_fee", "termLow": 8, "termHigh": 20, "budgetLow": 40000, "budgetHigh": 140000}}, {"name": "Website Design & UX", "recommend": "always", "condition": "when website is mentioned", "pricing": {"bundle": "Standard Website Offering", "engagementType": "fixed_fee"}}, {"name": "Website Development", "recommend": "always", "condition": "when website is mentioned", "pricing": {"bundle": "Standard Website Offering", "engagementType": "fixed_fee"}}, {"name": "CMS Implementation", "recommend": "always", "condition": "when website is mentioned", "pricing": {"bundle": "Standard Website Offering", "engagementType": "fixed_fee"}}, {"name": "Performance Assurance", "recommend": "always", "condition": "when website is mentioned", "pricing": {"bundle": "Standard Website Offering", "engagementType": "fixed_fee"}}, {"name": "Website Refresh", "recommend": "conditional", "condition": "Staying on existing CMS but a simple design refresh without any updates to brand or website structure. This includes enhancements to fonts, color, image selection and data visualization only. Shoudl only be offered when client is stuck on existing CMS and only needs styling updates.", "pricing": {"engagementType": "fixed_fee", "termLow": 5, "termHigh": 8, "budgetLow": 20000, "budgetHigh": 30000}}, {"name": "Mobile App Development", "recommend": "conditional", "condition": "only if standalone app is requested. Goo to recopmmend for events, campaigns or launch moments.", "pricing": {"engagementType": "fixed_fee", "termLow": 3, "termHigh": 10, "budgetLow": 10000, "budgetHigh": 60000}}, {"name": "Landing Page Development", "recommend": "conditional", "condition": "only if landing or holding page is referenced. Good for temprary websites. Single page fixed structure", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 10000, "budgetHigh": 15000}}, {"name": "Website Migration", "recommend": "conditional", "condition": "only if content migration is referenced as requirement. This includes lift and ahift and the lower end and an audiit appraisel and some light refresh at the top end. Top end also reflects scale of contentvrequirements which is anticipated to be under 50 within this range. More pages will required more budget", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 60000}}, {"name": "Performance Optimization and Support", "recommend": "conditional", "condition": "only if website reporting and tracking is referenced as requirement", "pricing": {"engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 24000, "budgetHigh": 30000, "note": "Annual retainer"}}]},
+  {"id": "integrated_strategy", "category": "Integrated Marketing Strategy", "description": "Develop cohesive marketing plans", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need a marketing strategy", "marketing feels disjointed", "don\\'t have a plan", "where to focus our budget", "nothing seems connected"], "indirect": ["marketing not producing results", "conflicting messages", "no customer journey", "which channels to prioritize", "marketing and sales not aligned", "budget spread too thin"], "situational": ["new fiscal year", "leadership change", "entering new market", "product launch", "competitive pressure", "organizational shift"], "performance": ["declining market share", "acquisition costs increasing", "ROI unknown", "lead quality issues", "lifetime value decreasing", "inconsistent channel performance"]}, "services": [{"name": "Integrated Marketing Strategy Development", "recommend": "conditional", "condition": "when client has specific marketing goals (awareness, reputation, credibility, visibility, perception, audience inspiration)", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 25000}}, {"name": "Channel Planning & Media Mix & Connections Planning", "recommend": "conditional", "condition": "when paid and social media are discussed as requirements", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Primary audience research", "recommend": "conditional", "condition": "This should be delivered by a consultants and will require hard cost fees. For surveys focus groups. TO gather qualitiative insight", "pricing": {"engagementType": "fixed_fee", "termLow": 4, "termHigh": 6, "budgetLow": 25000, "budgetHigh": 35000}}, {"name": "Customer Journey Mapping", "recommend": "conditional", "condition": "when website conversion is a goal or audience segmentation issues identified", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 7000, "budgetHigh": 15000}}, {"name": "Marketing Audit & Assessment (Compass)", "recommend": "conditional", "condition": "when client does not know what problem to solve or has broad goals (awareness, reputation, credibility, visibility, perception)", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 3000, "budgetHigh": 4000}}, {"name": "Market & Competitive Research", "recommend": "conditional", "condition": "when client does not know competitors or requests differentiation", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 2000, "budgetHigh": 30000}}, {"name": "Audience Research & Segmentation", "recommend": "conditional", "condition": "when client does not know their audience, what inspires them, or how to reach them", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 2000, "budgetHigh": 5000}}]},
+  {"id": "brand", "category": "Brand Strategy & Expression", "description": "Define or refresh your brand foundation", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need to rebrand", "brand feels outdated", "need a new logo", "brand doesn\\'t reflect who we are", "need brand guidelines", "Brand stricture is confusing", "brand is inconsistent"], "indirect": ["company evolved but identity hasn't", "can't explain what makes us different", "inconsistent messaging", "employees can\\'t articulate positioning", "customer confusion", "Interelationship between brands is not clear", "premium pricing not supported by perception"], "situational": ["merger or acquisition", "spin-off", "new leadership", "expansion beyond original scope", "new markets", "negative reputation", "company milestone", "geographical exansion", "IPO"], "performance": ["brand awareness declining", "NPS dropping", "customer feedback about perception", "can\\'t command premium prices", "losing deals to stronger brands", "employee engagement declining"]}, "services": [{"name": "Brand Research (Compass)", "recommend": "always", "condition": "for all brand refresh projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 15000, "budgetHigh": 20000}}, {"name": "Stakeholder Interviews (IDIs)", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee"}}, {"name": "Rapid Discovery (Landscape & Audience)", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee"}}, {"name": "Brand Positioning", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee"}}, {"name": "Brand House Development", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee"}}, {"name": "Brand Workshop", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee"}}, {"name": "Authentic Foundation (Why, What, How)", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Strategy", "engagementType": "fixed_fee"}}, {"name": "Brand Heirachy Definition", "recommend": "conditional", "condition": "For projectd that identify a confused relationship between brand, subrands, products and partners - and geographies/languages", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 1, "budgetLow": 3000, "budgetHigh": 5000}}, {"name": "Tone of Voice", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Expression", "engagementType": "fixed_fee", "termLow": 3, "termHigh": 7, "budgetLow": 25000, "budgetHigh": 30000}}, {"name": "Manifesto", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Expression", "engagementType": "fixed_fee"}}, {"name": "Visual Identity System", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Expression", "engagementType": "fixed_fee"}}, {"name": "Logo/Wordmark Development", "recommend": "always", "condition": "for all brand projects", "pricing": {"bundle": "Brand Expression", "engagementType": "fixed_fee"}}, {"name": "Brand Deck Asset Production", "recommend": "conditional", "condition": "only if requested", "pricing": {"bundle": "Brand Expression", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 30000}}, {"name": "Social Lock-ups", "recommend": "conditional", "condition": "only if requested", "pricing": {"bundle": "Brand Assets", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 10000, "budgetHigh": 15000}}, {"name": "Brand Guidelines", "recommend": "conditional", "condition": "only if requested", "pricing": {"bundle": "Brand Assets", "engagementType": "fixed_fee"}}]},
+  {"id": "ongoing_creative_production", "category": "Ongoing Creative Production", "description": "", "engagementType": "fixed_fee", "triggerPatterns": {"direct": [], "indirect": [], "situational": [], "performance": []}, "services": [{"name": "Graphic Design", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm", "termLow": 52, "termHigh": 52, "budgetLow": 24000, "budgetHigh": 80000, "note": "Annual minimum commitment"}}, {"name": "Video Production", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Animation & Motion Graphics", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Photography", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Copywriting", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Sales Collateral", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Presentation Design", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Social Media Content", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Campaign Asset Creation", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Brand Asset Library", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Content Ideation", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}, {"name": "Transcreation (Multi-language)", "recommend": "conditional", "condition": "only if requested in the context of undefined ongoing need for content that may include teh service name", "pricing": {"bundle": "Creative Retainer", "engagementType": "tm"}}]},
+  {"id": "standalone_creative_production", "category": "Standalone Creative Production", "description": "", "engagementType": "fixed_fee", "triggerPatterns": {"direct": [], "indirect": [], "situational": [], "performance": []}, "services": [{"name": "Video Production", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 2, "termHigh": 8, "budgetLow": 10000, "budgetHigh": 50000}}, {"name": "Animation & Motion Graphics", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Photography", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 2000, "budgetHigh": 30000}}, {"name": "Copywriting", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 4000, "budgetHigh": 10000}}, {"name": "Sales Collateral", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 2000, "budgetHigh": 15000}}, {"name": "Presentation Design", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 2000, "budgetHigh": 10000}}, {"name": "Social Media Content", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 2000, "budgetHigh": 10000}}, {"name": "Campaign Asset Creation", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. This assumes a content series as a part of a predefined campaign with a big idea, art direction and messagting strategy set If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 5000, "budgetHigh": 20000}}, {"name": "Brand Asset Library", "recommend": "conditional", "condition": "Production cost only. Does not include ideation, treatment and scripting. It assumes that a brand staretgy and exp[ression and guidlines already exist. If standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 2, "termHigh": 5, "budgetLow": 8000, "budgetHigh": 20000}}, {"name": "Content Ideation", "recommend": "conditional", "condition": "If there is no idea for a content series this covers the strategy, and conceptual ideation to recommend specific describes content for production of standalone, campaign or a request of scale and complexity that required conceptual creative, ideation and iteration not just production", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 5000, "budgetHigh": 20000}}]},
+  {"id": "influencer", "category": "Influencer Marketing", "description": "Leverage creator partnerships", "engagementType": "retainer", "triggerPatterns": {"direct": ["want to work with influencers", "need an influencer campaign", "reach audience through creators", "tried influencer marketing but it didn\\'t work"], "indirect": ["difficulty reaching younger audiences", "need authentic endorsements", "product requires demonstration", "brand awareness stalled", "user-generated content insufficient"], "situational": ["product launch needing buzz", "new demographic market", "brand relevance concerns", "competitors using influencers", "need authentic content at scale", "event amplification"], "performance": ["social engagement declining", "owned content not resonating", "advertising fatigue", "high CPA on paid channels", "brand trust declining"]}, "services": [{"name": "Influencer Strategy", "recommend": "always", "condition": "when influencer marketing is discussed", "pricing": {"bundle": "Influencer Retainer", "engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 30000, "budgetHigh": 100000, "note": "Annual retainer, excludes creator fees"}}, {"name": "Creator Identification & Vetting", "recommend": "always", "condition": "when influencer marketing is discussed", "pricing": {"bundle": "Influencer Retainer", "engagementType": "retainer"}}, {"name": "Influencer Campaign Management", "recommend": "always", "condition": "when influencer marketing is discussed", "pricing": {"bundle": "Influencer Retainer", "engagementType": "retainer"}}, {"name": "Ambassador Programs", "recommend": "conditional", "condition": "only if long-term creator partnerships are requested", "pricing": {"bundle": "Influencer Retainer", "engagementType": "retainer"}}, {"name": "UGC Programs", "recommend": "conditional", "condition": "only if user-generated content is requested", "pricing": {"bundle": "Influencer Retainer", "engagementType": "retainer"}}]},
+  {"id": "creative_campaigns", "category": "Creative Campaigns & Innovation", "description": "Develop breakthrough campaign concepts", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need a big idea", "need a campaign concept", "want something breakthrough", "need a creative platform", "marketing lacks unifying concept", "marketing is uninspiring", "breakthrough ideas"], "indirect": ["campaigns feel tactical", "each effort is standalone", "difficulty creating memorable work", "need to differentiate", "brand awareness plateaued", "work is boring", "looks like everyone else"], "situational": ["major launch", "brand repositioning", "new market entry", "competitive threat", "company transformation", "major anniversary", "category disruption"], "performance": ["brand recall declining", "campaign metrics mediocre", "share of voice decreasing", "advertising not breaking through", "content engagement low", "creative fatigue"]}, "services": [{"name": "Creative Platform Development", "recommend": "conditional", "condition": "when there is a request for a campaign or content series for owned, earned, paid, and/or social", "pricing": {"bundle": "Creative Campaigns", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 7, "budgetLow": 18000, "budgetHigh": 30000}}, {"name": "Big Idea Generation", "recommend": "conditional", "condition": "when client wants to make a splash, generate awareness, inspire media attention, or connect with audience", "pricing": {"bundle": "Creative Campaigns", "engagementType": "fixed_fee"}}, {"name": "Experiential Concepts", "recommend": "conditional", "condition": "when big idea development, media stunt, or event production are being recommended or requested", "pricing": {"bundle": "Creative Campaigns", "engagementType": "fixed_fee"}}]},
+  {"id": "pr", "category": "Public Relations & Media Outreach", "description": "Media relations, press coverage, and ongoing media engagement", "engagementType": "retainer", "triggerPatterns": {"direct": ["need PR", "want media coverage", "help with press relations", "want to be in specific publications", "need a PR agency", "want to be seen as a source", "need rapid response", "earned media", "press releases", "media outreach", "journalist relationships"], "indirect": ["important news not getting coverage", "lack of third-party credibility through media", "competitors in media more", "no journalist relationships", "story not being told in the press", "need crisis preparedness", "journalists covering competitors but not us"], "situational": ["funding announcement needing press coverage", "executive hire needing media announcement", "research release needing media amplification", "crisis situation", "merger announcement needing press strategy"], "performance": ["low share of voice in media", "minimal media mentions", "negative press coverage without response", "competitors quoted more in media", "no earned media results"]}, "services": [{"name": "Media Relations", "recommend": "always", "condition": "only when client explicitly requests PR, press coverage, earned media, media relations, journalist outreach, or press releases \u2014 NOT for general awareness or reputation goals alone", "pricing": {"bundle": "Standard PR", "engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 180000, "budgetHigh": 360000, "note": "Annual retainer ($15K-$30K/month)"}}, {"name": "Narrative & Media Messaging", "recommend": "always", "condition": "Low end: $10k \u2013 if brand work/IDI\u2019s were done and translating brand into media narrative. High end: $20k \u2013 if no brand work was done and we\u2019re building media messaging and narratives from scratch (inclusive of IDIs, workshop, etc.)", "pricing": {"bundle": "Standard PR", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 6, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Media Training", "recommend": "conditional", "condition": "only when client mentions spokesperson preparation, media interviews, or executive media readiness. Low end: $3k \u2013 if training 1 exec, virtual session\nHigh end: $10k \u2013 if training multiple execs, in-person (does not include travel)", "pricing": {"engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 3000, "budgetHigh": 10000, "note": "Annual or per session"}}, {"name": "Crises Plan Development", "recommend": "conditional", "condition": "only if client mentions a crisis, reputational threat, or urgent PR support to solve a pressing and immediate reputation, credibility or perception issue. Fixed-fee project priced off crisis rates\nLow-end: $15k \u2013 if developed to prepare for an identified incident\nHigh end: $40k \u2013 if developed proactively for various scenarios, inclusive of stakeholder interviews, scenario planning, holding statements, stakeholder matrixes, crisis training, plan roll-out", "pricing": {"bundle": "Crises Comms", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 6, "budgetLow": 15000, "budgetHigh": 40000}}, {"name": "Crisis Communications", "recommend": "conditional", "condition": "only if client mentions a crisis, reputational threat, or urgent PR support. most of our crisis management work is done on a drawdown basis but should be priced off our crisis flat fee rates vs. standard rate card (crisis rate is higher)", "pricing": {"bundle": "Crises Comms", "engagementType": "tm", "termLow": 1, "termHigh": 6, "budgetLow": 20000, "budgetHigh": 100000, "note": "T&M based on severity"}}, {"name": "Media Monitoring", "recommend": "always", "condition": "only when PR or earned media services are already being recommended, or client specifically requests media monitoring or share of voice tracking. Should always be bundled with Media relations and Narrative & Media Messaging", "pricing": {"bundle": "Standard PR", "engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 12000, "budgetHigh": 40000, "note": "Annual, excludes tool costs"}}, {"name": "Earned Media Strategy", "recommend": "conditional", "condition": "This outlines the strategic approach to earned media execution and the plan and is needed if one does not already exist. This is part of the Standard PR bundle and is required wherever a plan or strategy for earned media does not exist.", "pricing": {"bundle": "Standard PR", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 25000, "note": "T&M per opportunity"}}, {"name": "Announcement Strategy", "recommend": "conditional", "condition": "Specific targeted comms support to support a corporate announcement. This includes product launch, brand launch, renami, merger, Go To Market, and a high profile leadership announcment.", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 5000, "budgetHigh": 10000}}, {"name": "Earned content creation", "recommend": "conditional", "condition": "Blog posts, whitepapers, long form. Based on volume and announcement pipeline. Does not include the coordination of copmplicated releases", "pricing": {"engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 12000, "budgetHigh": 60000}}, {"name": "Onsite media liaison", "recommend": "conditional", "condition": "If the cient mentions that they need on site support from their comms team as a part of an event or a visit. This should only be recomended when requested explicitly.", "pricing": {"engagementType": "fixed_fee", "termLow": 0, "termHigh": 1, "budgetLow": 5000, "budgetHigh": 10000}}, {"name": "Events and meetings travel", "recommend": "conditional", "condition": "If travel is required this should be 5% of total Public Relations & Media Outreach", "pricing": {"engagementType": "retainer", "termLow": 0, "termHigh": 0, "budgetLow": 5000, "budgetHigh": 10000}}]},
+  {"id": "executive_visibility", "category": "Executive Visibility & Thought Leadership", "description": "Elevate leadership profiles and establish authority", "engagementType": "retainer", "triggerPatterns": {"direct": ["CEO needs to be more visible", "position executives as experts", "need thought leadership content", "leaders need higher profile", "leadership is invisible", "ceo profile"], "indirect": ["competitor executives more visible", "difficulty attracting talent", "investor relations need credibility", "sales cycle requires leadership trust", "industry influence desired", "board wants more visible CEO"], "situational": ["new CEO", "IPO preparation", "fundraising", "conference schedule", "speaking pipeline", "award nominations", "acquisition", "crisis"], "performance": ["low leadership recognition", "executive content not engaging", "speaking invitations not coming", "board feedback about visibility", "LinkedIn engagement low", "not invited to speak"]}, "services": [{"name": "Executive Positioning Strategy", "recommend": "always", "condition": "for all executive visibility projects - should be receommended when a c;lient states that they are havining issues with credibility, or are struglgling to get explosure for their leadership acrross tehir industry.", "pricing": {"bundle": "Executive Visibility", "engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 60000, "budgetHigh": 180000, "note": "Annual retainer ($5K-$15K/month per executive)"}}, {"name": "Thought Leadership Content", "recommend": "always", "condition": "for all executive visibility projects", "pricing": {"bundle": "Executive Visibility", "engagementType": "retainer"}}, {"name": "Byline & Op-Ed Development", "recommend": "conditional", "condition": "only when written thought leadership is requested", "pricing": {"bundle": "Executive Visibility", "engagementType": "retainer"}}, {"name": "Speaking Opportunity Strategy", "recommend": "conditional", "condition": "only when speaking engagements are requested", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 5000, "budgetHigh": 10000}}, {"name": "Onsite Media & Exec Support", "recommend": "conditional", "condition": "only When requested or speaking events are suggested.", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 1, "budgetLow": 5000, "budgetHigh": 8000}}, {"name": "Executive Social Media Strategy", "recommend": "conditional", "condition": "only when LinkedIn or social presence for company leaders, board or advocates is requested", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 5000, "budgetHigh": 10000}}, {"name": "Awards Strategy", "recommend": "conditional", "condition": "only when when recognition programs are requested", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 1, "budgetLow": 5000, "budgetHigh": 8000}}, {"name": "Podcast Guest Strategy", "recommend": "conditional", "condition": "only when podcast appearances are requested", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 1, "budgetLow": 5000, "budgetHigh": 8000}}]},
+  {"id": "paid_media", "category": "Paid Media", "description": "Social advertising campaigns", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need social media ads", "want paid social campaigns", "help with Facebook/Instagram/LinkedIn ads", "social ads aren\\'t working"], "indirect": ["organic reach declining", "need precise targeting", "have budget but no expertise", "campaigns underperforming", "need lead generation"], "situational": ["campaign launch", "product launch", "event promotion", "time-sensitive offers", "competitive pressure on social"], "performance": ["high CPA on social", "low conversion rates", "ad fatigue", "poor targeting results", "ROAS below benchmarks"]}, "services": [{"name": "Paid Strategy", "recommend": "always", "condition": "when paid media, acquiring new audiences or extending reach with paid dlars is discussed. This is always presented when there is not yet a strategy to execute a requested paid media campaign.", "pricing": {"bundle": "Paid Media Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 6, "budgetLow": 10000, "budgetHigh": 30000, "note": "Annual retainer, excludes media spend"}}, {"name": "Campaign Setup & Management", "recommend": "conditional", "condition": "when paid media is discussed. This is always required when we are requested to do execution and not just the upfront strategy. This should be presented as a 10% of the paid spend figure quoted by prospect or client. If no paid spend is shared than use the range for this service.", "pricing": {"bundle": "Paid Media Execution", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 52, "budgetLow": 10000, "budgetHigh": 100000}}, {"name": "Audience Development & Targeting", "recommend": "conditional", "condition": "When client confirms that they either dont know whoe tehir audience is or they have not done any research into where that audience can be reached.", "pricing": {"bundle": "Paid Media Execution", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Ad Creative Development", "recommend": "conditional", "condition": "Offered as a creative retainer. This is time and material and is offered with a minimum spend of $24k per year", "pricing": {"bundle": "Paid Media Execution", "engagementType": "tm", "termLow": 4, "termHigh": 52, "budgetLow": 24000, "budgetHigh": 60000}}, {"name": "Paid Media Reporting", "recommend": "always", "condition": "Offer an economy of scale if reporting for both paid media and scoal media selected. This should present costs as two thirds of teh ranges here fore each when both are selected.", "pricing": {"bundle": "Paid Media Execution", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 52, "budgetLow": 8000, "budgetHigh": 60000}}]},
+  {"id": "social_media", "category": "Social Media", "description": "Social media strategy, community management, and content", "engagementType": "retainer", "triggerPatterns": {"direct": ["need social media help", "social media strategy", "we need to be on social", "social channels", "community management"], "indirect": ["no social presence", "social channels inactive", "competitors active on social", "need to engage audiences online", "brand not represented on social platforms"], "situational": ["brand launch needing social presence", "campaign requiring social amplification", "new channels to set up", "social content needs"], "performance": ["low social engagement", "follower growth stalled", "social content not resonating", "no community engagement"]}, "services": [{"name": "Social Media Strategy", "recommend": "always", "condition": "when a client or prospect mentions needing social, or if they outline a need to nurture and build audience, or they dontt know what social channels to be on.", "pricing": {"bundle": "Social Media Strategy", "engagementType": "retainer", "termLow": 2, "termHigh": 6, "budgetLow": 15000, "budgetHigh": 25000, "note": "Annual retainer, excludes media spend"}}, {"name": "Channel Planning", "recommend": "always", "condition": "Always alongside the social media strategy to identify which cvhannels to use and how", "pricing": {"bundle": "Social Media Strategy", "engagementType": "retainer"}}, {"name": "Channel Set Up", "recommend": "conditional", "condition": "If they need to set up an optimimze their social channels based upon a clear brand and social strategy. Includes a little creative for profile and hero image and bio.", "pricing": {"bundle": "Social Execution", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Community Management", "recommend": "conditional", "condition": "If the client wants ongoing management of tehir socisl channels. INcludes engagement, postyinga nd montoring for dverse events.Ongoing management of social communities. This is sold as a monthly cost starting at $4k per month", "pricing": {"bundle": "Social Execution", "engagementType": "retainer", "termLow": 4, "termHigh": 52, "budgetLow": 4000, "budgetHigh": 60000}}, {"name": "Social creative", "recommend": "conditional", "condition": "For ongoing social content creation not for a specific activation or campaign. When content is needed. Offered as a creative retainer. This is time and material and is offered with a minimum spend of $24k per year", "pricing": {"bundle": "Social Execution", "engagementType": "tm", "termLow": 4, "termHigh": 52, "budgetLow": 24000, "budgetHigh": 60000}}, {"name": "Social Media Reporting", "recommend": "conditional", "condition": "Offer an economy of scale if reporting for both paid media and scoal media selected. This should present costs as two thirds of the ranges here fore each when both are selected.", "pricing": {"bundle": "Social Execution", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 52, "budgetLow": 8000, "budgetHigh": 60000}}]},
+  {"id": "seo", "category": "Search Engine Optimization", "description": "Improve organic search visibility", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["don\\'t rank on Google", "need SEO help", "organic traffic declining", "want to rank for keywords"], "indirect": ["website not appearing in search", "competitors outranking us", "paid search costs too high", "content not getting discovered", "technical website issues"], "situational": ["website redesign", "new content strategy", "competitive threat in search", "market expansion", "algorithm update impact"], "performance": ["declining organic traffic", "keyword rankings dropping", "low domain authority", "high reliance on paid search", "competitor visibility increasing"]}, "services": [{"name": "SEO Strategy & Audit", "recommend": "always", "condition": "for all SEO engagements or to solve problems with website visibility.", "pricing": {"bundle": "SEO Strategy", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 8, "budgetLow": 20000, "budgetHigh": 35000, "note": "Annual retainer ($5K-$10K/month), 6-month minimum"}}, {"name": "Technical SEO", "recommend": "always", "condition": "for all SEO engagements", "pricing": {"bundle": "SEO Strategy", "engagementType": "fixed_fee"}}, {"name": "Critical SEO Assessment", "recommend": "conditional", "condition": "If they dont know what SEO statsus is or the problem they need to solve", "pricing": {"bundle": "SEO Strategy", "engagementType": "fixed_fee"}}, {"name": "Content SEO Strategy", "recommend": "conditional", "condition": "when content marketing is included", "pricing": {"bundle": "SEO Strategy", "engagementType": "fixed_fee"}}, {"name": "On-Page Optimization", "recommend": "conditional", "condition": "for all SEO engagements", "pricing": {"bundle": "SEO Execution", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 12, "budgetLow": 24000, "budgetHigh": 60000}}, {"name": "Link Building", "recommend": "conditional", "condition": "when off-page SEO is requested", "pricing": {"bundle": "SEO Execution", "engagementType": "fixed_fee"}}, {"name": "Local SEO", "recommend": "conditional", "condition": "when local/geographic targeting is needed", "pricing": {"bundle": "SEO Execution", "engagementType": "fixed_fee"}}, {"name": "SEO Reporting", "recommend": "conditional", "condition": "for all SEO engagements", "pricing": {"bundle": "SEO Reporting", "engagementType": "retainer", "termLow": 4, "termHigh": 52, "budgetLow": 4000, "budgetHigh": 40000}}]},
+  {"id": "orm", "category": "Online Reputation Management (ORM)", "description": "Online reputation management and brand perception", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["online reputation", "brand perception online", "what people see when they search us", "reputation management"], "indirect": ["negative search results", "outdated information online", "Wikipedia page needs updating", "Reddit threads about us", "AI tools saying wrong things about us"], "situational": ["reputation issue discovered", "negative coverage persisting in search", "competitive misinformation", "brand perception audit"], "performance": ["negative sentiment in search results", "inaccurate brand information online", "competitors controlling narrative", "AI-generated misinformation"]}, "services": [{"name": "GEO Strategy & Audit", "recommend": "always", "condition": "Where there is a problem or opportunity to shape or improve how a brand appears on LLM  or AI search. Recommend if client is having issues with reputation or perception.", "pricing": {"bundle": "GEO Strategy", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 20000, "note": "Annual retainer, often bundled with SEO"}}]},
+  {"id": "geo", "category": "Generative Engine Optimization (ORM)", "description": "Optimize for AI-powered search", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need to show up in AI search", "want to be cited by ChatGPT", "optimize for AI answers"], "indirect": ["concern about AI changing search", "questions about future of organic search", "interest in emerging search", "competitors in AI content"], "situational": ["AI search feature launches", "industry AI conversations", "competitive monitoring", "future planning"], "performance": ["declining traditional search traffic", "absence from AI answers", "competitors cited in AI", "audience behavior changing"]}, "services": [{"name": "Reddit Optimization", "recommend": "conditional", "condition": "Reddit Optimization program. If the clientcrequires an improvement to Reddit channel", "pricing": {"bundle": "GEO Execution", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 6, "budgetLow": 20000, "budgetHigh": 30000}}, {"name": "Wikipedia Optimization", "recommend": "conditional", "condition": "Wikipedia Optimization program. If the client requires an improvement to Wikipedia channel", "pricing": {"bundle": "GEO Execution", "engagementType": "fixed_fee", "termLow": 3, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 15000}}, {"name": "Earned Strategy for GEO", "recommend": "conditional", "condition": "GEO focused Earned Strategy Enhancement. When we are doing earned and their is a request to limprove visibility, repur=tation and differentiation on LLMs and AI.", "pricing": {"bundle": "GEO Execution", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 15000}}]},
+  {"id": "integrated_measurement", "category": "Integrated Measurement & Analytics", "description": "Unified measurement across earned, social, paid channels", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need integrated reporting", "unified dashboard", "cross-channel measurement", "integrated measurement framework"], "indirect": ["can't see how channels work together", "reporting is siloed", "no unified view of performance", "different teams report differently"], "situational": ["launching integrated campaign", "multiple agencies need unified reporting", "board wants holistic marketing view"], "performance": ["can't attribute results across channels", "no integrated performance view", "conflicting reports from different channels"]}, "services": [{"name": "Analytics Strategy & Measurement Framework", "recommend": "always", "condition": "When there is an integrated program touching any combination of earned, social, web and paid. When selected this supercedes the need for standallone reporting for paid and social", "pricing": {"bundle": "Integrated Measurement Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 20000}}]},
+  {"id": "measurement", "category": "Measurement & Analytics", "description": "Track and prove marketing ROI", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["don\\'t know if marketing is working", "need better reporting", "need to track performance", "can\\'t prove ROI"], "indirect": ["decisions without data", "tools not integrated", "leadership asking for accountability", "budget justification challenges", "unclear attribution"], "situational": ["new leadership demanding accountability", "budget review", "board reporting", "marketing technology audit", "new initiatives"], "performance": ["can\\'t report on basic metrics", "data conflicts between systems", "no baseline", "unknown customer journey", "efficiency unclear"]}, "services": [{"name": "Integrated Dashboard Development", "recommend": "conditional", "condition": "when reporting visualization is requested", "pricing": {"bundle": "Integrated Measurement Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Attribution Modeling", "recommend": "conditional", "condition": "when multi-channel attribution is needed", "pricing": {"bundle": "Integrated Measurement Strategy", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Marketing ROI Framework", "recommend": "conditional", "condition": "for all measurement engagements", "pricing": {"bundle": "Integrated Measurement Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 3, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "KPI Development", "recommend": "conditional", "condition": "for all measurement engagements", "pricing": {"bundle": "Integrated Measurement Strategy", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 10000, "budgetHigh": 20000}}, {"name": "Data Integration", "recommend": "conditional", "condition": "when multiple data sources need connecting", "pricing": {"bundle": "Integrated Measurement Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 20000, "budgetHigh": 30000}}, {"name": "Reporting", "recommend": "always", "condition": "When there is a need to report on integrated campaign impact, and recommend optimizations, A/B tests or changes to creative and strategy.", "pricing": {"bundle": "Integrated Reporting", "engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 30000, "budgetHigh": 40000}}]},
+  {"id": "gtm", "category": "Go-to-Market Strategy", "description": "Launch products and enter markets", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["launching a new product", "need a GTM strategy", "need to bring this to market", "entering a new market"], "indirect": ["uncertainty about target audience", "no launch plan", "pricing and positioning questions", "channel strategy unclear", "sales and marketing alignment needed"], "situational": ["product development completion", "service line expansion", "market expansion", "competitive response", "acquisition of new capabilities"], "performance": ["previous launches underperformed", "new product uptake slow", "market penetration below expectations", "customer acquisition challenges", "sales cycle too long"]}, "services": [{"name": "Go-to-Market Strategy", "recommend": "always", "condition": "for all GTM projects", "pricing": {"bundle": "GTM Strategy", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 3, "budgetLow": 10000, "budgetHigh": 30000}}, {"name": "Launch Planning", "recommend": "always", "condition": "for all GTM projects", "pricing": {"bundle": "GTM Strategy", "engagementType": "fixed_fee"}}, {"name": "Market Entry Strategy", "recommend": "conditional", "condition": "when entering new markets", "pricing": {"bundle": "GTM Strategy", "engagementType": "fixed_fee"}}, {"name": "Channel Strategy", "recommend": "conditional", "condition": "when distribution channels need defining", "pricing": {"bundle": "GTM Strategy", "engagementType": "fixed_fee"}}, {"name": "Sales Enablement", "recommend": "conditional", "condition": "when sales team support is needed", "pricing": {"bundle": "GTM Strategy", "engagementType": "fixed_fee"}}]},
+  {"id": "events", "category": "Event Planning & Production", "description": "Plan and execute events", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["have an event coming up", "need to plan a conference", "need event support"], "indirect": ["team doesn\\'t have event experience", "past events had issues", "budget requires professional management", "complex logistics", "need creative concepts"], "situational": ["annual conference", "product launch event", "customer events", "trade show", "employee events", "milestone celebrations", "investor events"], "performance": ["event feedback poor", "attendance declining", "event ROI unclear", "logistics challenges", "content quality inconsistent"]}, "services": [{"name": "Event Strategy", "recommend": "always", "condition": "for all event projects", "pricing": {"bundle": "Event Strategy", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 6, "budgetLow": 10000, "budgetHigh": 20000, "note": "Excludes venue and vendor costs"}}, {"name": "Event Production", "recommend": "always", "condition": "for all event projects", "pricing": {"bundle": "Event Production", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 12, "budgetLow": 15000, "budgetHigh": 100000}}, {"name": "Virtual Event Production", "recommend": "conditional", "condition": "when virtual or hybrid events are needed", "pricing": {"bundle": "Event Production", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 15000, "budgetHigh": 30000}}, {"name": "Trade Show Management", "recommend": "conditional", "condition": "when trade show participation is involved", "pricing": {"bundle": "Event Production", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 15000, "budgetHigh": 30000}}, {"name": "Speaker Management", "recommend": "conditional", "condition": "when speakers need coordination", "pricing": {"bundle": "Event Production", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 5000, "budgetHigh": 15000}}, {"name": "Event Marketing", "recommend": "conditional", "condition": "when event promotion is needed", "pricing": {"bundle": "Event Marketing", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 6, "budgetLow": 10000, "budgetHigh": 20000}}]},
+  {"id": "training", "category": "Communications Training", "description": "Media and communications training", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["team needs media training", "need communications training", "executives need spokesperson prep", "want internal training"], "indirect": ["executives uncomfortable with media", "teams lack marketing skills", "inconsistent brand representation", "new hires need onboarding", "crisis preparedness concerns"], "situational": ["new spokesperson", "upcoming media tour", "crisis preparation", "marketing team expansion", "leadership changes", "brand launch"], "performance": ["poor media interview performance", "inconsistent external communication", "brand message dilution", "crisis response failures", "employee communications issues"]}, "services": [{"name": "Media & Spokesperson Training", "recommend": "always", "condition": "for all communications training", "pricing": {"bundle": "Communications Training", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 20000, "budgetHigh": 50000, "note": "Per session or program"}}, {"name": "Presentation Training", "recommend": "conditional", "condition": "when presentation skills are needed", "pricing": {"bundle": "Communications Training", "engagementType": "fixed_fee"}}, {"name": "Crisis Communications Training", "recommend": "conditional", "condition": "when crisis preparedness is needed", "pricing": {"bundle": "Communications Training", "engagementType": "fixed_fee"}}, {"name": "Brand Training", "recommend": "conditional", "condition": "when brand alignment training is needed", "pricing": {"bundle": "Communications Training", "engagementType": "fixed_fee"}}]},
+  {"id": "impact", "category": "Impact & Purpose Communications", "description": "Sustainability, impact, and purpose communications", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need an annual report", "need an impact report", "need help with CSR report", "want to showcase our impact", "impact story", "sustainability story", "esg communications", "purpose driven"], "indirect": ["stakeholder expectations for transparency", "ESG reporting requirements", "investor relations needs", "employee engagement communications", "competitor reports setting higher bar", "customers want to know our values"], "situational": ["annual reporting cycle", "sustainability milestones", "stakeholder meeting", "grant reporting", "public accountability", "B Corp certification"], "performance": ["stakeholder feedback on transparency", "competitor reports more compelling", "internal data not shared", "impact not being communicated", "brand purpose scores low"]}, "services": [{"name": "Impact Report Writing & Design", "recommend": "always", "condition": "when impact/sustainability report is needed", "pricing": {"bundle": "Impact Reporting", "engagementType": "fixed_fee", "termLow": 4, "termHigh": 12, "budgetLow": 40000, "budgetHigh": 80000}}, {"name": "Sustainability Communications Messaging", "recommend": "conditional", "condition": "when sustainability messaging is needed", "pricing": {"bundle": "Impact Communications", "engagementType": "fixed_fee", "termLow": 3, "termHigh": 5, "budgetLow": 15000, "budgetHigh": 20000}}, {"name": "Purpose Discovery Workshop", "recommend": "conditional", "condition": "when purpose definition is needed", "pricing": {"bundle": "Impact Communications", "engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 8000, "budgetHigh": 10000}}]},
+  {"id": "content_production", "category": "Content Ideation & Production", "description": "Content strategy and creation", "engagementType": "fixed_fee", "triggerPatterns": {"direct": ["need more content", "need a content strategy", "run out of ideas", "need help producing content"], "indirect": ["content calendar empty", "publishing frequency declined", "team stretched too thin", "quality inconsistent", "topics not resonating"], "situational": ["blog launch", "newsletter launch", "podcast initiative", "video series", "campaign content", "thought leadership program"], "performance": ["content engagement declining", "audience growth stalled", "SEO content needed", "social content underperforming", "lead magnet requests"]}, "services": [{"name": "Content Strategy", "recommend": "always", "condition": "when client needs creative (designed or animated content to be produced", "pricing": {"bundle": "Content Strategy", "engagementType": "fixed_fee", "termLow": 2, "termHigh": 4, "budgetLow": 15000, "budgetHigh": 30000, "note": "Fixed Fee deliverable"}}, {"name": "Content Calendar Development", "recommend": "always", "condition": "when client needs content produced and distributed over time", "pricing": {"bundle": "Content Strategy", "engagementType": "tm", "termLow": 2, "termHigh": 4, "note": "Annual T&M based on volume"}}, {"name": "Blog & Article Writing", "recommend": "conditional", "condition": "only if requested or included in Additional Notes. For client or prospects own channels or to gues write on a partners channel when they are looking for greater visibility for leaders.", "pricing": {"bundle": "Content Production", "engagementType": "tm", "termLow": 1, "termHigh": 2, "budgetLow": 3500, "budgetHigh": 8000, "note": "T&M ongoing"}}, {"name": "Podcast Production", "recommend": "conditional", "condition": "only if requested or included in Additional Notes", "pricing": {"bundle": "Content Production", "engagementType": "tm", "termLow": 1, "termHigh": 2, "budgetLow": 3500, "budgetHigh": 10000}}, {"name": "Video Content Series", "recommend": "conditional", "condition": "only if requested or included in Additional Notes", "pricing": {"bundle": "Content Production", "engagementType": "tm", "termLow": 2, "termHigh": 4, "budgetLow": 10000, "budgetHigh": 50000}}, {"name": "Thought Leadership Content", "recommend": "conditional", "condition": "These is when client needs articles ghost written for them in teh voice of their brand or executives", "pricing": {"bundle": "Content Production", "engagementType": "tm", "termLow": 1, "termHigh": 2, "budgetLow": 6000, "budgetHigh": 10000}}, {"name": "Social Content Creation (Reactive)", "recommend": "conditional", "condition": "only if requested or social media management needed and reactive content that hacks into news stories and responds to current events and competitor activity. Sold as a retainer that includes story mining, ideation adn production. All quick production and approvals.", "pricing": {"bundle": "Reactive Content Engine", "engagementType": "tm", "termLow": 52, "termHigh": 52, "budgetLow": 60000, "budgetHigh": 120000}}]},
+  {"id": "operational_support", "category": "Operational Support", "description": "Coordinate complex marketing initiatives", "engagementType": "retainer", "triggerPatterns": {"direct": ["need help managing projects", "overwhelmed with coordination", "need a PM", "need onboarding support", "need someone to manage vendors"], "indirect": ["projects always late", "over budget", "multiple agencies not coordinated", "quality control problems", "no project management"], "situational": ["complex campaign launch", "multiple initiatives", "major event", "organizational change", "agency consolidation", "first engagement"], "performance": ["missed deadlines", "budget overruns", "quality inconsistencies", "team burnout", "stakeholder dissatisfaction"]}, "services": [{"name": "Project Management", "recommend": "always", "condition": "when PM support is requested", "pricing": {"engagementType": "retainer", "termLow": 52, "termHigh": 52, "percentageOfProject": 10.0, "note": "Approximately 15% of total project fee. Not required on PR/Earned-only engagements."}}, {"name": "Marketing Operations", "recommend": "conditional", "condition": "when paid media is included and operational support is needed", "pricing": {"engagementType": "retainer", "termLow": 52, "termHigh": 52, "percentageOfPaidMedia": 10.0, "note": "~10% of paid media management fees"}}, {"name": "Cross-agency Coordination", "recommend": "conditional", "condition": "when cross agency coordimnation is requested to manage other third party vendors or agencies.", "pricing": {"engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 24000, "budgetHigh": 50000}}, {"name": "Onboarding", "recommend": "conditional", "condition": "required if first engagment to onboard to ways of working and existing platforms so we can be afective.", "pricing": {"engagementType": "fixed_fee", "termLow": 1, "termHigh": 2, "budgetLow": 5000, "budgetHigh": 15000, "note": "$5K-$10K/month, for managing other agencies, partners and third parties"}}, {"name": "Client Side Project Management", "recommend": "conditional", "condition": "If we need top offer project management support to help coordinate clients internal operation. Project Management as a service,", "pricing": {"engagementType": "retainer", "termLow": 52, "termHigh": 52, "budgetLow": 60000, "budgetHigh": 120000}}]}
 ];
 
-
-// ============================================================================
-// FIT ARCHETYPES
-// ============================================================================
 const FIT_ARCHETYPES = {
-  architect: { id: 'architect', title: 'Architect', emoji: '📐', short: 'Strategic & Systematic', description: 'Values systematic approaches, formal planning, and proven methodologies.', boostCategories: ['integrated_strategy', 'brand', 'measurement'], boostServices: ['Marketing Strategy Development', 'Analytics Strategy & Measurement Framework', 'Customer Journey Mapping', 'Brand Research (Compass)', 'Brand Workshop', 'Marketing Audit & Assessment (Compass)'] },
-  visionary: { id: 'visionary', title: 'Visionary', emoji: '✨', short: 'Creative & Bold', description: 'Prioritizes authentic brand expression, breakthrough ideas, and bold creative risks.', boostCategories: ['brand', 'creative_production', 'creative_campaigns', 'influencer'], boostServices: ['Creative Platform Development', 'Big Idea Generation', 'Visual Identity System', 'Manifesto', 'Tone of Voice', 'Video Production'] },
-  connector: { id: 'connector', title: 'Connector', emoji: '🤝', short: 'Relationship & Community', description: 'Prioritizes relationships, community building, and earned trust through authentic connection.', boostCategories: ['pr', 'executive_visibility', 'influencer', 'content_production'], boostServices: ['PR Strategy & Planning', 'Media Relations & Pitching', 'Executive Positioning Strategy', 'Influencer Strategy', 'Content Strategy'] },
-  catalyst: { id: 'catalyst', title: 'Catalyst', emoji: '⚡', short: 'Growth & Performance', description: 'Focused on measurable results, rapid growth, and performance-driven marketing.', boostCategories: ['paid_social', 'paid_media', 'seo_geo', 'measurement', 'go_to_market'], boostServices: ['Paid Social Strategy', 'SEO Strategy & Audit', 'Marketing ROI Framework', 'GTM Strategy Development', 'Campaign Setup & Management'] },
-  champion: { id: 'champion', title: 'Champion', emoji: '🎯', short: 'Purpose & Impact', description: 'Driven by values, impact, and authentic purpose beyond profit.', boostCategories: ['impact_purpose', 'brand', 'pr'], boostServices: ['Impact Report Writing & Design', 'Sustainability Communications Messaging', 'Purpose Discovery Workshop', 'Brand Positioning', 'Authentic Foundation (Why, What, How)'] },
+  architect: {
+    id: 'architect',
+    title: 'Architect',
+    emoji: '📐',
+    short: 'Strategic & Systematic',
+    description: 'Values systematic approaches, formal planning, and proven methodologies.',
+    // Categories to boost — conditional services in these become auto-selected
+    boostCategories: ['integrated_strategy', 'brand', 'executive_visibility', 'measurement', 'pr', 'training'],
+    // Specific services to auto-select if the category is detected
+    boostServices: [
+      'Marketing Strategy Development', 'Customer Journey Mapping', 'Marketing Audit & Assessment (Compass)',
+      'Brand Research (Compass)', 'Stakeholder Interviews (IDIs)', 'Brand Workshop',
+      'Analytics Strategy & Measurement Framework', 'KPI Development', 'Marketing ROI Framework',
+      'Executive Positioning Strategy', 'Brand Guidelines'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: ARCHITECT
+This client values strategic thinking and systematic approaches. The SOW should:
+- Emphasize strategic rationale and methodology behind each recommendation
+- Include detailed phasing with clear dependencies between workstreams
+- Present formal review and governance structures
+- Frame deliverables in terms of long-term brand and business impact
+- Use language that conveys thoughtful planning: "strategic framework", "phased approach", "stakeholder alignment"
+- Include robust reporting and measurement sections
+- Emphasize proven methodologies and industry best practices`,
+    waysOfWorking: `WAYS OF WORKING — ARCHITECT CLIENT
+Governance & Process:
+- Formal kickoff with comprehensive briefing and stakeholder alignment session
+- Structured governance model: Steering committee reviews at phase gates, working team reviews bi-weekly
+- All strategic recommendations presented in formal deck format with data rationale
+- Phased work plans with clear dependencies — each phase has defined entry/exit criteria before proceeding
+- Change requests require written submission and formal impact assessment before approval
+
+Communication Cadence:
+- Bi-weekly status reports with progress against milestones, budget tracking, and risk register
+- Monthly strategic review meetings with senior stakeholders
+- Quarterly business reviews assessing program-level impact against objectives
+- All deliverables accompanied by strategic rationale documentation
+
+Approval & Decision Flow:
+- Defined approval hierarchy: day-to-day decisions via designated point of contact, strategic decisions via steering committee
+- Client provides consolidated feedback representing unified organizational direction within agreed windows
+- Formal sign-off required at each phase gate before subsequent work commences
+
+Reporting & Documentation:
+- Comprehensive project documentation maintained throughout engagement
+- Post-phase retrospectives with lessons learned and optimization recommendations
+- Final engagement report summarizing outcomes against stated objectives`,
+    pricingGuidance: `PRICING APPROACH — ARCHITECT CLIENT
+- Frame fees as investment in strategic foundation and long-term brand building
+- Present comprehensive, all-inclusive phase pricing — Architects prefer clarity over modular á la carte
+- Emphasize the value of thorough upfront strategy to prevent costly rework downstream
+- Structure payments around phase gates and milestone approvals
+- Include detailed assumptions section — Architects want to understand what underlies the pricing
+- Where applicable, present multi-year or programmatic pricing that rewards sustained commitment
+- Include rate card for additional work but position it as exception, not expectation`
+  },
+  visionary: {
+    id: 'visionary',
+    title: 'Visionary',
+    emoji: '✨',
+    short: 'Creative & Bold',
+    description: 'Prioritizes authentic brand expression, breakthrough ideas, and bold creative risks.',
+    boostCategories: ['brand', 'creative_production', 'creative_campaigns', 'influencer', 'content_ideation'],
+    boostServices: [
+      'Creative Platform Development', 'Big Idea Generation', 'Experiential Concepts',
+      'Tone of Voice', 'Manifesto', 'Visual Identity System', 'Logo/Wordmark Development',
+      'Graphic Design', 'Video Production', 'Animation & Motion Graphics',
+      'Influencer Strategy', 'Content Strategy'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: VISIONARY
+This client values creative breakthrough and authentic expression. The SOW should:
+- Lead with creative ambition and the opportunity for breakthrough work
+- Frame services as collaborative creative partnerships, not just deliverables
+- Emphasize creative exploration phases and concept development
+- Lean toward creative retainers and retained creative services for ongoing inspiration
+- Use language that conveys creative ambition: "breakthrough concepts", "authentic expression", "creative exploration"
+- Include creative workshops and collaborative ideation sessions
+- Describe revision processes as "creative refinement" rather than correction cycles
+- Emphasize brand storytelling and cultural relevance`,
+    waysOfWorking: `WAYS OF WORKING — VISIONARY CLIENT
+Creative Partnership Model:
+- Immersive kickoff: Deep-dive brand immersion session including culture, mission, aesthetic references, and creative ambitions
+- Collaborative creative workshops at key moments — Agency brings provocative stimulus; Client brings brand truth
+- Creative exploration phase built into every engagement before execution begins — space to ideate without constraint
+- Concept presentations as storytelling moments: show the journey from insight to idea, not just final output
+- Creative refinement rounds (not "revisions") — iterative evolution toward breakthrough, not correction cycles
+
+Communication Cadence:
+- Regular creative check-ins: informal, visual, collaborative — share mood boards, references, work-in-progress
+- Status updates focused on creative narrative and brand journey, not just task completion
+- Quarterly inspiration sessions: Agency proactively brings cultural trends, competitive creative, and breakthrough opportunities
+- Open creative dialogue encouraged between sessions — this is a partnership, not a vendor relationship
+
+Approval & Decision Flow:
+- Creative direction established collaboratively at outset — shared vision document as ongoing reference
+- Client empowered to make bold creative decisions quickly — minimize approval layers that dilute ideas
+- Feedback framed as creative direction, not prescriptive edits: "we want it to feel more…" not "change the font to…"
+- Agency retains creative recommendation authority — Client trusts Agency to push boundaries while respecting brand truth
+
+Reporting & Documentation:
+- Portfolio-style creative reviews showcasing body of work and brand evolution
+- Impact measured through brand expression metrics: distinctiveness, cultural relevance, creative recognition
+- End-of-engagement creative retrospective: what we built, what we learned, where the brand goes next`,
+    pricingGuidance: `PRICING APPROACH — VISIONARY CLIENT
+- Frame fees as investment in creative partnership and brand differentiation
+- Lean toward creative retainers and T&M with minimum commitment — Visionaries need ongoing creative access, not one-off projects
+- Include dedicated creative exploration / concept development budgets as line items — this isn't overhead, it's the work
+- Structure retained creative services with monthly creative commitment rather than rigid deliverable counts
+- Position premium pricing confidently — breakthrough creative commands premium investment
+- For project work, include concept development phase pricing separately from production execution
+- Build in flexibility for inspiration-driven pivots without triggering change orders for every creative evolution`
+  },
+  accelerator: {
+    id: 'accelerator',
+    title: 'Accelerator',
+    emoji: '📊',
+    short: 'Performance & Data-Driven',
+    description: 'Demands measurable results, data-driven decisions, and performance optimization.',
+    boostCategories: ['paid_media', 'social_media', 'measurement', 'integrated_measurement', 'seo', 'geo'],
+    boostServices: [
+      'Conversion Rate Optimization', 'On-Page Optimization', 'SEO Reporting',
+      'Analytics Strategy & Measurement Framework', 'Integrated Dashboard Development', 'Attribution Modeling', 'Marketing ROI Framework', 'KPI Development',
+      'Paid Strategy', 'Paid Media Reporting', 'Campaign Setup & Management',
+      'SEO Strategy & Audit', 'Reporting'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: ACCELERATOR
+This client values measurable performance and data-driven optimization. The SOW should:
+- Lead with KPIs, success metrics, and measurable outcomes for every service
+- Include robust measurement frameworks and reporting cadences
+- Emphasize performance marketing, A/B testing, and optimization cycles
+- Include dashboard development and real-time performance visibility
+- Use language that conveys accountability: "measurable outcomes", "KPI targets", "data-driven optimization"
+- Frame creative work in terms of conversion impact and performance metrics
+- Include regular performance review cadences (weekly/monthly)
+- Define clear benchmarks and improvement targets within 90-day windows`,
+    waysOfWorking: `WAYS OF WORKING — ACCELERATOR CLIENT
+Performance-Driven Operations:
+- Data-first kickoff: Establish baseline metrics, define KPIs, agree on measurement framework and attribution model before work begins
+- 90-day goal cycles: All work structured around quarterly performance targets with mid-cycle optimization checkpoints
+- Test-measure-optimize loop built into every workstream — no creative or strategy ships without a hypothesis and success metric
+- Weekly optimization cadence: Agency reviews performance data and makes tactical adjustments within pre-approved parameters
+- Continuous A/B testing protocol: systematic testing calendar for creative, messaging, audiences, and channels
+
+Communication Cadence:
+- Real-time performance dashboards with Client access — no waiting for reports to see what's working
+- Weekly performance pulse: brief data-driven update on key metrics, wins, and optimization actions taken
+- Monthly deep-dive performance reviews with trend analysis, test results, and next optimization priorities
+- Quarterly strategic reviews connecting performance data to business outcomes and adjusting targets
+
+Approval & Decision Flow:
+- Pre-approved optimization parameters: Agency authorized to make tactical changes (bid adjustments, creative rotation, audience refinement) within defined boundaries without per-change approval
+- Strategic pivots (new channels, significant budget reallocation, messaging overhaul) require Client approval with data justification
+- Decisions backed by data — Agency presents options with projected performance impact; Client decides based on numbers
+- Rapid approval process: 24-48 hour turnaround on optimization recommendations to maintain momentum
+
+Reporting & Documentation:
+- Automated performance dashboards updated daily/weekly
+- Monthly performance reports with clear KPI tracking, trend analysis, and actionable recommendations
+- Test log documenting all experiments, hypotheses, results, and learnings
+- Quarterly business impact assessment connecting marketing performance to revenue and growth metrics`,
+    pricingGuidance: `PRICING APPROACH — ACCELERATOR CLIENT
+- Frame fees in terms of performance investment and measurable return
+- Include measurement and analytics setup as a foundational line item — not optional, essential
+- Structure ongoing services around optimization cycles with clear performance benchmarks
+- Consider performance review cadences as part of the service value, not administrative overhead
+- Present pricing with associated KPIs: "This investment targets [X] improvement in [metric] within [timeframe]"
+- Include dashboard development and reporting infrastructure in the initial scope — Accelerators need visibility from day one
+- For retainers, emphasize efficiency gains over time: optimization drives more value from the same investment
+- Budget for systematic A/B testing — position it as essential to performance improvement, not discretionary`
+  },
+  entrepreneur: {
+    id: 'entrepreneur',
+    title: 'Entrepreneur',
+    emoji: '🚀',
+    short: 'Fast & Action-Oriented',
+    description: 'Needs flexible, action-oriented partnerships with quick wins at entrepreneurial pace.',
+    boostCategories: ['gtm', 'paid_media', 'social_media', 'creative_campaigns', 'content_ideation'],
+    boostServices: [
+      'Go-to-Market Strategy', 'Launch Planning', 'Channel Strategy',
+      'Landing Page Development', 'On-Page Optimization',
+      'Creative Platform Development', 'Campaign Asset Creation',
+      'Paid Strategy', 'Audience Development & Targeting',
+      'Content Strategy', 'Social Content Creation (Reactive)'
+    ],
+    sowGuidance: `CLIENT FIT ARCHETYPE: ENTREPRENEUR
+This client values speed, flexibility, and quick wins. The SOW should:
+- Emphasize fast starts with rapid hypothesis-driven strategy
+- Structure work in short sprints rather than long phases
+- Include A/B testing and test-and-learn approaches for creative platforms and paid media
+- Prioritize quick wins that demonstrate value early
+- Use language that conveys momentum: "rapid deployment", "test and learn", "sprint-based delivery"
+- Build in flexibility for pivoting based on early results
+- Include lightweight reporting focused on actionable insights over comprehensive analysis
+- Emphasize getting to market quickly with creative assets across paid media and social`,
+    waysOfWorking: `WAYS OF WORKING — ENTREPRENEUR CLIENT
+Sprint-Based Partnership:
+- Rapid-start kickoff: Abbreviated onboarding (1-2 sessions max) focused on immediate priorities and first sprint definition
+- Work structured in 2-4 week sprints with defined deliverables, hypotheses, and success criteria per sprint
+- Hypothesis-driven approach: "We believe [X] will achieve [Y] — let's test it" rather than months of upfront strategy
+- Built-in pivot points at sprint boundaries — shift priorities based on what's working without formal change orders
+- MVP-first mentality: Launch with good-enough creative, learn from real-world data, refine in subsequent sprints
+
+Communication Cadence:
+- Quick-touch check-ins: 15-30 minute weekly syncs focused on decisions, blockers, and next actions — no lengthy presentations
+- Real-time communication channel (Slack/Teams) for day-to-day questions and quick approvals
+- Sprint retrospectives: brief review of what shipped, what we learned, what's next
+- Monthly strategic pulse: lightweight assessment of overall direction and priorities (not a formal review)
+
+Approval & Decision Flow:
+- Streamlined approvals: single decision-maker with authority to approve on the spot
+- Async approval workflow for creative and content — share for review, approved unless feedback within 24-48 hours
+- Agency empowered to make execution decisions within sprint scope without per-item approval
+- Pivot decisions made quickly at sprint boundaries — no committee required
+- "Good enough to ship" standard for initial launches; perfection is the enemy of progress
+
+Reporting & Documentation:
+- Lightweight sprint reports: what shipped, key metrics, learnings, next sprint priorities (1-2 pages max)
+- Action-oriented dashboards showing what's working and what to do about it
+- Monthly summary connecting sprint outputs to business growth metrics
+- Documentation kept lean — enough to make decisions, not enough to slow things down`,
+    pricingGuidance: `PRICING APPROACH — ENTREPRENEUR CLIENT
+- Frame fees around speed-to-value and quick wins that demonstrate ROI early
+- Structure pricing in sprint-based phases: small initial commitment that scales based on results
+- Present a "Phase 1 Fast Start" with lower entry point, followed by expansion phases tied to early wins
+- Lean toward T&M or retainer models that flex with changing priorities — Entrepreneurs hate paying for scope they've outgrown
+- Include swap-in/swap-out provisions: trade equivalent deliverables without change orders as priorities shift
+- Keep proposal modular — let client add services as they grow rather than requiring large upfront commitment
+- Position pricing as investment in velocity: "Get to market in [X] weeks rather than [Y] months"
+- Budget for test-and-learn: allocate portion of investment explicitly for experimentation across creative and channels`
+  }
 };
 
 // ============================================================================
@@ -397,32 +429,136 @@ const formatPricingForService = (service) => {
 // ============================================================================
 const SOW_BEST_PRACTICES = `
 AGENCY SOW QUALITY STANDARDS — ANTENNA GROUP
+For use in all SOW generation, review, and quality assessment.
 
-REQUIRED SECTIONS: Project Overview, Objectives, Scope of Work, Out of Scope & Exclusions, Deliverables (with specs/quantities), Acceptance Criteria (with review window + deemed acceptance), Timeline & Milestones, Roles & Responsibilities (BOTH parties), Assumptions (with consequences), Change Management Process, Fees & Payment Terms, Termination Provisions.
+================================================================================
+REQUIRED SECTIONS (every SOW must include ALL of these)
+================================================================================
+1. PROJECT OVERVIEW & BACKGROUND — context, business need, parties involved, high-level success
+2. OBJECTIVES — specific, measurable goals aligned to client business objectives
+3. SCOPE OF WORK — all tasks with quantities, frequencies, formats, methodologies
+4. OUT OF SCOPE & EXCLUSIONS — explicitly list what is NOT included (critical for scope creep prevention)
+5. DELIVERABLES — each with format, quantity, quality standards, and dependencies
+6. ACCEPTANCE CRITERIA — objective conditions, review window, deemed acceptance on non-response
+7. TIMELINE & MILESTONES — specific dates, dependencies, client review cycles built in
+8. ROLES & RESPONSIBILITIES — BOTH parties explicitly; client obligations with timeframes and consequences
+9. ASSUMPTIONS — conditions assumed true, with consequence if each assumption proves false
+10. CHANGE MANAGEMENT PROCESS — written approval required before scope changes proceed
+11. FEES & PAYMENT TERMS — fee structure, schedule, late payment provisions, rate for OOS work
+12. TERMINATION PROVISIONS — notice period, payment on termination, kill fee, transition obligations
 
-CRITICAL LANGUAGE RULES:
-- Replace "unlimited revisions" → "up to X rounds of revisions"
-- Replace "as needed" → specify with "up to X hours/items"
-- Replace "reasonable" → define specifically
-- Replace "ongoing" → add time boundary
-- Flag: "support", "assistance", "management" without defined activities
-- Use "up to" language for all quantities (sets ceiling, not floor)
-- Active voice: "Agency will deliver..." not "Deliverables will be provided"
-- Client obligations MUST have timeframes AND consequences for non-compliance
-- Consolidated feedback requirement: "Client will consolidate all stakeholder feedback into a single submission per revision round"
-- Deemed acceptance: "If Client does not respond within X business days, deliverable is deemed accepted"
+================================================================================
+CRITICAL LANGUAGE RULES
+================================================================================
+VAGUE LANGUAGE TO REPLACE:
+- "Unlimited revisions" → "up to X rounds of revisions of decreasing complexity"
+- "As needed" → "up to X hours/items per [period]"
+- "Reasonable" → define specifically (e.g., "within 5 business days")
+- "Ongoing" → add time boundary or specify "for the term of this agreement"
+- "Best efforts" → specify measurable standard
+- "Standard" or "typical" → define explicitly
+- "Support / assistance / management / coordination" → specify activities, frequency, limits
+- "Including but not limited to" → use only to illustrate, never to expand scope
+- "Until client is satisfied" → NEVER use; tie completion to objective criteria
 
-CONTRACT TYPES:
-- Fixed Fee: exhaustive scope, revision limits, strong assumptions, change order process required
-- Retainer: term commitment, utilization management, rollover policy, overage handling, monthly fee
-- T&M: rate schedule, estimate (NOT cap), notification thresholds, reporting requirements
-- T&M with Cap: all T&M elements + scope-cap linkage, notification thresholds, work stoppage rights
+REQUIRED LANGUAGE PATTERNS:
+- Quantities: "up to X" (sets ceiling, not floor; no refund for unused capacity)
+- Timeframes: "within X business days of [trigger event]"
+- Responsibility: "Agency will deliver..." / "Client will provide..." (active voice, clear subject)
+- Revision definition: "A round of revisions = one consolidated set of feedback from Client's designated approver"
+- Deemed acceptance: "If Client does not respond within [X] business days, deliverable is deemed accepted"
+- Client consequence: "If Client fails to [obligation] within [timeframe], Agency may [adjust timeline / pause work / adjust fee]"
+- Feedback consolidation: "Client will consolidate all stakeholder feedback into a single submission per revision round. Multiple separate submissions count as separate rounds."
 
-HIGH PRIORITY FLAGS:
-✗ No exclusions section | ✗ No client obligations | ✗ No revision limits | ✗ No change order process
-✗ No assumptions | ✗ No acceptance criteria | ✗ "Unlimited" anything | ✗ No termination protection
-✗ Payment not tied to milestones | ✗ No consequences for client non-performance
+================================================================================
+CONTRACT TYPE REQUIREMENTS
+================================================================================
+FIXED FEE:
+- All deliverables listed with specs, quantities, revision limits
+- All exclusions explicitly stated
+- Assumptions documented with consequences for each
+- Change order process required — written approval before any OOS work
+- Acceptance criteria and final payment trigger defined
+- Client obligations with consequences (delays may require schedule/fee adjustment)
+
+RETAINER:
+- Minimum term commitment and monthly fee clearly stated
+- Services included explicitly enumerated; excluded services listed
+- Monthly allocation (hours or deliverables) quantified
+- Rollover policy explicit: no rollover (use it or lose it), limited rollover, or quarterly true-up
+- Overage rate and pre-approval process defined
+- Notification threshold when approaching allocation
+- Early termination fee and notice period
+
+TIME & MATERIALS:
+- Rate schedule for all roles with billing increment specified
+- Initial estimate clearly labeled as estimate (NOT cap)
+- Notification thresholds (e.g., at 75% of estimate)
+- Time reporting frequency and content defined
+- Intended objectives and boundaries stated
+
+T&M WITH CAP:
+- All T&M requirements above, PLUS:
+- Cap explicitly tied to defined scope
+- Work stoppage rights when approaching cap
+- Cap adjustment triggers: scope changes, assumption failures, client-caused delays
+- Inclusions and exclusions from cap specified
+
+================================================================================
+SCOPE CREEP PREVENTION
+================================================================================
+EXCLUSIONS SECTION must address common adjacent services:
+- Rush fees and expedited timelines
+- Additional revision rounds beyond stated limits
+- Crisis communications (if not explicitly included)
+- Paid media spend (if not included)
+- Event staffing / on-site support
+- Travel outside defined geography
+- Third-party vendor management
+- Photography, video, translation, legal review
+- Regulatory compliance verification
+
+STOP WORK PROVISION pattern:
+"If Client fails to make payment when due, or fails to respond to requests within [X] business days, Agency may stop work upon written notice until Client cures the failure. Stopping work does not limit Agency's right to terminate. Timeline will adjust accordingly."
+
+CHANGE ORDER PROCESS:
+- All scope additions require written approval BEFORE work proceeds
+- Include impact assessment step (timeline + fee)
+- No verbal authorizations; email confirmation minimum
+- Reference rate schedule for additional work
+
+================================================================================
+HIGH PRIORITY FLAGS (✗ = missing critical element)
+================================================================================
+CRITICAL:
+✗ No exclusions section
+✗ No client obligations section (or obligations without timeframes/consequences)
+✗ No revision limits or "unlimited revisions" language
+✗ No change order process
+✗ No assumptions section
+✗ No acceptance criteria
+✗ "Unlimited" anything in scope
+✗ No termination protection / no early termination fee
+✗ Payment not tied to milestones
+✗ No consequences for client non-performance
+✗ Scope described with vague verbs: "support", "assist", "manage" without specifics
+
+MODERATE:
+⚠ Acceptance criteria incomplete or subjective
+⚠ Client review windows not specified
+⚠ No deemed acceptance provision
+⚠ Vague timeline (no specific dates or milestones)
+⚠ Assumptions stated without consequences
+⚠ Passive voice obscuring responsibility
+⚠ Inconsistent or undefined terminology
+
+SERVICE-SPECIFIC REQUIREMENTS:
+PR/COMMS: specify proactive pitches/period, media list size, reporting format, reactive handling (in/out), crisis exclusion
+PAID MEDIA: separate media spend from agency fees, ad account ownership, optimization frequency, reporting cadence
+CREATIVE/BRANDING: concepts at each stage, revision rounds per phase, file formats, usage rights, stock imagery
+INTEGRATED: boundaries between service lines, handoff points, who leads strategy vs execution, single vs separate reporting
 `;
+
 
 // ============================================================================
 // API CALL UTILITY
@@ -977,32 +1113,42 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
     return 'upcoming';
   };
   return (
-    <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-6 py-3">
-        <div className="flex items-center gap-2 mb-1">
-          <Building2 className="w-3.5 h-3.5 text-gray-500" />
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{opportunity?.companyName}</span>
+    <div className="border-b border-gray-200/80" style={{ backgroundColor: '#E8E6E1' }}>
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Company breadcrumb */}
+        <div className="flex items-center gap-2 pt-3 pb-2">
+          <span className="text-xs text-gray-400">Opportunity</span>
+          <ChevronRight className="w-3 h-3 text-gray-300" />
+          <span className="text-xs font-bold text-[#12161E]">{opportunity?.companyName}</span>
           {opportunity?.proposalStatus && currentStage === 'proposal' && <StatusBadge status={opportunity.proposalStatus} />}
         </div>
-        <div className="flex items-center gap-0">
+        {/* Tab row — exactly like Compass nav */}
+        <div className="flex items-center gap-1">
           {PIPELINE_STAGES.map((stage, idx) => {
             const status = getStageStatus(stage.id);
             const isClickable = status === 'complete' || status === 'active';
             return (
-              <React.Fragment key={stage.id}>
-                <button
-                  onClick={() => isClickable && onStageClick && onStageClick(stage.id)}
-                  disabled={!isClickable}
-                  title={status === 'locked' ? 'Not available for your role' : ''}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${status === 'active' ? 'bg-[#12161E] text-white' : status === 'complete' ? 'text-gray-700 hover:bg-gray-100 cursor-pointer' : status === 'locked' ? 'text-gray-300 cursor-not-allowed opacity-50' : 'text-gray-400 cursor-default'}`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${status === 'active' ? 'bg-white text-[#12161E]' : status === 'complete' ? 'bg-green-500 text-white' : status === 'locked' ? 'bg-gray-100 text-gray-300' : 'bg-gray-200 text-gray-400'}`}>
-                    {status === 'complete' ? '✓' : status === 'locked' ? '🔒' : stage.number}
-                  </span>
-                  {stage.label}
-                </button>
-                {idx < PIPELINE_STAGES.length - 1 && <div className={`w-6 h-0.5 ${status === 'complete' ? 'bg-green-400' : 'bg-gray-200'}`} />}
-              </React.Fragment>
+              <button
+                key={stage.id}
+                onClick={() => isClickable && onStageClick && onStageClick(stage.id)}
+                disabled={!isClickable}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all -mb-px
+                  ${status === 'active'
+                    ? 'bg-white border-[#12161E] text-[#12161E]'
+                    : status === 'complete'
+                    ? 'border-transparent text-gray-500 hover:text-gray-700 cursor-pointer hover:border-gray-300'
+                    : status === 'locked'
+                    ? 'border-transparent text-gray-300 cursor-not-allowed'
+                    : 'border-transparent text-gray-300 cursor-default'}`}
+              >
+                {status === 'complete'
+                  ? <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center"><span className="text-white text-[9px] font-black">✓</span></span>
+                  : status === 'locked'
+                  ? <Lock className="w-3.5 h-3.5" />
+                  : <span className={`w-5 h-5 rounded-full text-xs font-black flex items-center justify-center ${status === 'active' ? 'bg-[#E8FF00] text-[#12161E]' : 'bg-gray-200 text-gray-400'}`}>{idx + 1}</span>
+                }
+                {stage.label}
+              </button>
             );
           })}
         </div>
@@ -1389,70 +1535,82 @@ function ServiceCard({ trigger, selectedServices, onToggleService, onToggleBundl
 
   const { bundles, standalone } = organizeServices();
   const isBundleSelected = (bundle) => bundle.services.every(s => selectedServices.includes(s.name));
-  const fmtPricing = (p) => {
-    if (!p) return null;
-    const fmtC = (n) => n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
-    const term = p.termLow && p.termHigh ? (p.termLow === p.termHigh ? (p.termLow === 52 ? 'Annual' : `${p.termLow}w`) : `${p.termLow}-${p.termHigh}w`) : null;
-    const budget = p.budgetLow && p.budgetHigh ? `${fmtC(p.budgetLow)}-${fmtC(p.budgetHigh)}` : null;
-    return { term, budget, note: p.note };
+
+  const formatPricing = (pricing) => {
+    if (!pricing) return null;
+    const fc = (n) => n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
+    const term = pricing.termLow && pricing.termHigh ? (pricing.termLow === pricing.termHigh ? (pricing.termLow === 52 ? 'Annual' : `${pricing.termLow}w`) : `${pricing.termLow}–${pricing.termHigh}w`) : null;
+    const budget = pricing.budgetLow && pricing.budgetHigh ? `${fc(pricing.budgetLow)}–${fc(pricing.budgetHigh)}` : null;
+    return { term, budget };
   };
 
   return (
-    <div className={`border-2 rounded-xl overflow-hidden transition-all ${selectedCount > 0 ? 'border-gray-900 bg-gray-50' : 'border-gray-200 bg-white'}`}>
-      <button onClick={() => setIsExpanded(!isExpanded)} className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-        <div className="flex items-center gap-3 text-left">
-          {isExpanded ? <ChevronDown className="w-4 h-4 flex-shrink-0" /> : <ChevronRight className="w-4 h-4 flex-shrink-0" />}
-          <div><p className="font-semibold text-gray-900">{trigger.category}</p><p className="text-sm text-gray-500">{trigger.description}</p></div>
+    <div className={`rounded-xl border transition-all overflow-hidden ${selectedCount > 0 ? 'border-[#12161E]' : 'border-gray-200 bg-white'}`}>
+      {/* Header */}
+      <button onClick={() => setIsExpanded(!isExpanded)} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors">
+        <div className="flex items-center gap-3">
+          {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+          <div className="text-left">
+            <p className="font-bold text-[#12161E] text-sm">{trigger.category}</p>
+            <p className="text-xs text-gray-400">{trigger.description}</p>
+          </div>
         </div>
-        {selectedCount > 0 && <span className="px-2.5 py-1 bg-gray-900 text-white text-xs rounded-full font-medium flex-shrink-0">{selectedCount} selected</span>}
+        {selectedCount > 0 && (
+          <span className="px-2.5 py-1 bg-[#12161E] text-white text-xs rounded-full font-bold flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" />{selectedCount}
+          </span>
+        )}
       </button>
 
       {isExpanded && (
-        <div className="px-5 pb-4 border-t border-gray-100 pt-3 space-y-3">
-          {bundles.map(bundle => {
+        <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-2 bg-white">
+          {/* Bundles */}
+          {bundles.map((bundle) => {
             const bundleSelected = isBundleSelected(bundle);
-            const pi = fmtPricing(bundle.pricing);
+            const p = formatPricing(bundle.pricing);
             return (
-              <div key={bundle.name}>
+              <div key={bundle.name} className={`rounded-lg border p-3 transition-all ${bundleSelected ? 'border-[#12161E] bg-gray-50' : 'border-gray-100'}`}>
                 <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={bundleSelected} onChange={() => onToggleBundle(bundle.services.map(s => s.name), !bundleSelected)} className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
-                  <div className="w-full">
-                    <span className="text-sm font-medium text-gray-900">{bundle.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">({bundle.services.length} services)</span>
-                    {bundleSelected && pi && (
-                      <div className="mt-1 flex gap-2 flex-wrap">
-                        {pi.term && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">⏱ {pi.term}</span>}
-                        {pi.budget && <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">💰 {pi.budget}</span>}
-                        {pi.note && <span className="text-xs text-gray-500 italic">{pi.note}</span>}
+                  <input type="checkbox" checked={bundleSelected} onChange={() => onToggleBundle(bundle.services.map(s => s.name), !bundleSelected)}
+                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#12161E] focus:ring-[#12161E]" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-[#12161E]">{bundle.name}</span>
+                      <span className="text-xs text-gray-400">({bundle.services.length} services)</span>
+                      {p?.budget && <span className="text-xs px-2 py-0.5 bg-[#E8FF00] text-[#12161E] rounded font-bold">{p.budget}</span>}
+                      {p?.term && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">{p.term}</span>}
+                    </div>
+                    {bundleSelected && (
+                      <div className="mt-2 grid grid-cols-2 gap-1">
+                        {bundle.services.map(svc => (
+                          <div key={svc.name} className="flex items-center gap-1.5 text-xs text-gray-500">
+                            <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
+                            <span className="truncate">{svc.name}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
                 </label>
-                {bundleSelected && (
-                  <div className="ml-7 mt-1 pl-3 border-l-2 border-gray-200 space-y-0.5">
-                    {bundle.services.map(svc => <div key={svc.name} className="flex items-center gap-2 text-xs text-gray-500 py-0.5"><Check className="w-3 h-3 text-green-500" />{svc.name}</div>)}
-                  </div>
-                )}
               </div>
             );
           })}
+          {/* Standalone services */}
           {standalone.map(({ name, service }) => {
-            const pi = formatPricingForService(service);
+            const isSelected = selectedServices.includes(name);
+            const p = formatPricing(service.pricing);
+            const isConditional = service.recommend === 'conditional';
             return (
-              <label key={name} className="flex items-start gap-3 cursor-pointer">
-                <input type="checkbox" checked={selectedServices.includes(name)} onChange={() => onToggleService(name)} className="w-4 h-4 mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
-                <div className="w-full">
-                  <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
-                    <span className="text-sm font-medium text-gray-900">{name}</span>
-                    {service.recommend === 'conditional' && <span className="text-xs text-gray-400 italic">conditional</span>}
+              <label key={name} className={`flex items-start gap-3 cursor-pointer rounded-lg border px-3 py-2.5 transition-all ${isSelected ? 'border-[#12161E] bg-gray-50' : 'border-gray-100 hover:border-gray-300'}`}>
+                <input type="checkbox" checked={isSelected} onChange={() => onToggleService(name)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#12161E] focus:ring-[#12161E]" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-[#12161E]">{name}</span>
+                    {isConditional && <span className="text-[10px] px-1.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-600 rounded font-medium">Conditional</span>}
+                    {p?.budget && isSelected && <span className="text-xs px-2 py-0.5 bg-[#E8FF00] text-[#12161E] rounded font-bold">{p.budget}</span>}
+                    {p?.term && isSelected && <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">{p.term}</span>}
                   </div>
-                  {selectedServices.includes(name) && pi && (
-                    <div className="mt-1 flex gap-2 flex-wrap">
-                      {pi.term && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">⏱ {pi.term}</span>}
-                      {pi.budget && <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">💰 {pi.budget}</span>}
-                      {pi.note && <span className="text-xs text-gray-500 italic">{pi.note}</span>}
-                    </div>
-                  )}
                 </div>
               </label>
             );
@@ -1462,6 +1620,7 @@ function ServiceCard({ trigger, selectedServices, onToggleService, onToggleBundl
     </div>
   );
 }
+
 
 // ============================================================================
 // STAGE 3: PROPOSAL VIEW
@@ -1666,12 +1825,12 @@ Write the proposal in this exact structure:
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 rounded-xl p-1 w-fit">
+      {/* Tabs — Compass style */}
+      <div className="flex gap-1 mb-6 border-b border-gray-200 -mt-2">
         {[{ id: 'services', label: 'Select Services', icon: Layers }, { id: 'proposal', label: 'Proposal Document', icon: FileText }].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${activeTab === tab.id ? 'border-[#12161E] text-[#12161E] bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
             <tab.icon className="w-4 h-4" />{tab.label}
-            {tab.id === 'services' && selectedServices.length > 0 && <span className="w-5 h-5 rounded-full bg-[#12161E] text-white text-[10px] font-bold flex items-center justify-center">{selectedServices.length}</span>}
+            {tab.id === 'services' && selectedServices.length > 0 && <span className="w-5 h-5 rounded-full bg-[#E8FF00] text-[#12161E] text-[10px] font-black flex items-center justify-center">{selectedServices.length}</span>}
           </button>
         ))}
       </div>
@@ -1693,17 +1852,46 @@ Write the proposal in this exact structure:
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-bold text-gray-900 mb-3">Client Archetype</h3>
-              <p className="text-xs text-gray-500 mb-3">Tailors proposal voice and emphasis. Up to 2.</p>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.values(FIT_ARCHETYPES).map(arch => (
-                  <button key={arch.id} onClick={() => toggleArchetype(arch.id)} className={`p-2.5 rounded-xl border-2 text-left transition-all ${selectedArchetypes.includes(arch.id) ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <div className="text-base mb-1">{arch.emoji}</div>
-                    <p className="text-xs font-semibold text-gray-900">{arch.title}</p>
-                    <p className="text-[10px] text-gray-500">{arch.short}</p>
-                  </button>
-                ))}
+              <h3 className="font-bold text-[#12161E] mb-1">Client FIT Archetype</h3>
+              <p className="text-xs text-gray-400 mb-4">Select up to 2. Shapes the proposal's voice, emphasis, and working style.</p>
+              {/* Quadrant visualization — like FIT assessment */}
+              <div className="relative mb-4 rounded-xl overflow-hidden border border-gray-100" style={{ height: '140px', backgroundColor: '#F5F4F1' }}>
+                <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
+                  {Object.values(FIT_ARCHETYPES).map((arch, i) => {
+                    const isSelected = selectedArchetypes.includes(arch.id);
+                    const corners = ['bottom-right','bottom-left','top-right','top-left'];
+                    return (
+                      <button key={arch.id} onClick={() => toggleArchetype(arch.id)}
+                        className={`relative flex flex-col items-center justify-center transition-all ${isSelected ? '' : 'opacity-50 hover:opacity-80'}`}
+                        style={{ backgroundColor: isSelected ? '#E8FF00' : 'transparent' }}>
+                        <span className="text-lg">{arch.emoji}</span>
+                        <span className="text-[10px] font-black text-[#12161E] leading-tight">{arch.title}</span>
+                        {isSelected && <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-[#12161E] flex items-center justify-center"><span className="text-white text-[7px] font-black">✓</span></div>}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Crosshair */}
+                <div className="absolute top-0 left-1/2 bottom-0 w-px bg-gray-300 pointer-events-none" />
+                <div className="absolute left-0 top-1/2 right-0 h-px bg-gray-300 pointer-events-none" />
               </div>
+              {selectedArchetypes.length > 0 && (
+                <div className="space-y-2">
+                  {selectedArchetypes.map(id => {
+                    const arch = FIT_ARCHETYPES[id];
+                    return (
+                      <div key={id} className="p-3 rounded-xl border-2 border-[#12161E] bg-[#12161E]">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span>{arch.emoji}</span>
+                          <span className="text-xs font-black text-white">{arch.title}</span>
+                          <span className="text-[10px] text-gray-400">{arch.short}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-300 leading-relaxed">{arch.description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
@@ -1711,12 +1899,20 @@ Write the proposal in this exact structure:
               <textarea value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={() => onUpdate({ draftNotes })} placeholder="Budget constraints, specific client requests, tone notes..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
             </div>
 
-            {/* Budget Total */}
+            {/* Budget Total — Compass score card style */}
             {pricingTotal && (
-              <div className="bg-[#12161E] rounded-2xl p-5 text-white">
-                <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-[#E8FF00]" /><span className="text-sm font-semibold text-gray-300">Estimated Investment</span></div>
-                <p className="text-2xl font-bold">{pricingTotal.lowFormatted} – {pricingTotal.highFormatted}</p>
-                <p className="text-xs text-gray-400 mt-1">Based on {selectedServices.length} selected services</p>
+              <div className="rounded-2xl overflow-hidden border border-gray-200">
+                <div className="bg-[#12161E] px-5 pt-5 pb-3">
+                  <div className="flex items-center gap-2 mb-1"><DollarSign className="w-3.5 h-3.5 text-[#E8FF00]" /><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Investment</span></div>
+                  <p className="text-3xl font-black text-white leading-none">{pricingTotal.lowFormatted}</p>
+                  <p className="text-sm text-gray-400 mt-1">– {pricingTotal.highFormatted}</p>
+                </div>
+                <div className="bg-gray-900 px-5 py-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">{selectedServices.length} services selected</span>
+                    <span className="text-xs font-bold text-[#E8FF00]">range</span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1819,9 +2015,12 @@ Write the proposal in this exact structure:
 
                 {/* Budget Summary */}
                 {pricingTotal && (
-                  <div className="bg-[#12161E] rounded-2xl p-5 text-white">
-                    <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-[#E8FF00]" /><span className="text-sm text-gray-300">Estimated Investment</span></div>
-                    <p className="text-xl font-bold">{pricingTotal.lowFormatted} – {pricingTotal.highFormatted}</p>
+                  <div className="rounded-2xl overflow-hidden border border-gray-700">
+                    <div className="bg-[#12161E] px-5 pt-4 pb-2">
+                      <div className="flex items-center gap-2 mb-1"><DollarSign className="w-3 h-3 text-[#E8FF00]" /><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Investment</span></div>
+                      <p className="text-2xl font-black text-white">{pricingTotal.lowFormatted}</p>
+                      <p className="text-xs text-gray-500">– {pricingTotal.highFormatted}</p>
+                    </div>
                   </div>
                 )}
 
@@ -2312,57 +2511,53 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-16">
-      {/* Hero */}
-      <div className="text-center mb-16">
-        <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-          SOW Workbench
-          <span className="block text-2xl font-normal text-gray-500 mt-3">v{APP_VERSION}</span>
-        </h1>
-        <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-          From first discovery to signed contract — a complete opportunity pipeline for Antenna Group's business development team.
-        </p>
-      </div>
-
-      {/* Pipeline Overview */}
-      <div className="grid grid-cols-4 gap-4 mb-16">
-        {PIPELINE_STAGES.map((stage, idx) => (
-          <div key={stage.id} className="relative">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
-              <div className="w-10 h-10 bg-[#12161E] rounded-xl flex items-center justify-center mx-auto mb-3">
-                <stage.Icon className="w-5 h-5 text-white" />
-              </div>
-              <div className="w-6 h-6 rounded-full bg-[#E8FF00] flex items-center justify-center mx-auto mb-2">
-                <span className="text-xs font-bold text-[#12161E]">{idx + 1}</span>
-              </div>
-              <h3 className="font-bold text-gray-900 text-sm mb-1">{stage.label}</h3>
-              <p className="text-xs text-gray-500">{stage.description}</p>
-            </div>
-            {idx < PIPELINE_STAGES.length - 1 && (
-              <div className="hidden md:flex absolute top-1/2 -right-2 -translate-y-1/2 z-10">
-                <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center">
-                  <ArrowRight className="w-2.5 h-2.5 text-gray-600" />
-                </div>
-              </div>
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      {/* Hero — editorial left-aligned like Compass */}
+      <div className="mb-12">
+        <div className="flex items-start justify-between flex-wrap gap-6">
+          <div>
+            <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-3">Antenna Group · Internal Tools</p>
+            <h1 className="text-4xl lg:text-5xl font-bold text-[#12161E] leading-tight mb-3">
+              SOW Workbench
+            </h1>
+            <p className="text-lg text-gray-500 max-w-xl leading-relaxed">
+              From first discovery to signed contract — a complete BD pipeline for the Antenna team.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {roleInfo?.canCreateOpportunities !== false && (
+              <AntennaButton onClick={() => setShowCreate(true)} icon={Plus} size="large">
+                New Opportunity
+              </AntennaButton>
+            )}
+            {onOpenReview && (
+              <button onClick={onOpenReview} className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-[#12161E] hover:text-[#12161E] transition-all text-sm">
+                <ShieldCheck className="w-4 h-4" />
+                Review Existing SOW
+              </button>
             )}
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-4 mb-8 flex-wrap">
-        {roleInfo?.canCreateOpportunities !== false && (
-          <AntennaButton onClick={() => setShowCreate(true)} icon={Plus} size="large">
-            New Opportunity
-          </AntennaButton>
-        )}
-        {onOpenReview && (
-          <button onClick={onOpenReview} className="flex items-center gap-3 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-900 hover:text-gray-900 transition-all">
-            <ShieldCheck className="w-5 h-5" />
-            Review Existing SOW
-            <span className="text-xs text-gray-400 font-normal">Senior reviewer</span>
-          </button>
-        )}
+      {/* Pipeline Overview — Compass-style metric pills */}
+      <div className="grid grid-cols-4 gap-3 mb-10">
+        {PIPELINE_STAGES.map((stage, idx) => {
+          const stageCount = opportunities.filter(o => o.currentStage === stage.id).length;
+          const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC'];
+          return (
+            <div key={stage.id} className="bg-white rounded-xl border border-gray-200 p-4 overflow-hidden">
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">{String(idx + 1).padStart(2,'0')}</span>
+                {stageCount > 0 && (
+                  <span className="text-xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>
+                )}
+              </div>
+              <h3 className="font-bold text-[#12161E] text-sm leading-tight mb-0.5">{stage.label}</h3>
+              <p className="text-xs text-gray-400 leading-snug">{stage.description}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Create Modal */}
@@ -2397,60 +2592,97 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
 
       {/* Opportunities List */}
       {opportunities.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-300">
+        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
           <Building2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-400 mb-2">No opportunities yet</h3>
-          <p className="text-sm text-gray-400">Create your first opportunity to get started.</p>
+          <p className="text-sm text-gray-400 mb-6">Create your first opportunity to begin the pipeline.</p>
+          {roleInfo?.canCreateOpportunities !== false && (
+            <AntennaButton onClick={() => setShowCreate(true)} icon={Plus}>New Opportunity</AntennaButton>
+          )}
         </div>
       ) : (
-        <div className="space-y-3">
-          <h3 className="font-bold text-gray-900 text-lg">Active Opportunities ({groupedByStatus.active.length})</h3>
-          {groupedByStatus.active.map(opp => {
-            const progress = getProgress(opp);
-            const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opp.proposalStatus);
-            return (
-              <button key={opp.id} onClick={() => onSelectOpportunity(opp)} className="w-full bg-white rounded-2xl border border-gray-200 hover:border-gray-900 transition-all p-5 text-left group">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-100 group-hover:bg-[#12161E] rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
-                      <Building2 className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase">Active Opportunities ({groupedByStatus.active.length})</h3>
+          </div>
+          {/* Column headers */}
+          <div className="grid grid-cols-12 gap-4 px-4 mb-2">
+            <span className="col-span-5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company</span>
+            <span className="col-span-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
+            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Progress</span>
+            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Status</span>
+          </div>
+          <div className="space-y-1.5">
+            {groupedByStatus.active.map((opp, idx) => {
+              const progress = getProgress(opp);
+              const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opp.proposalStatus);
+              const initials = opp.companyName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+              return (
+                <button key={opp.id} onClick={() => onSelectOpportunity(opp)}
+                  className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-4 items-center">
+                  {/* Company */}
+                  <div className="col-span-5 flex items-center gap-3">
+                    <div className="w-9 h-9 bg-[#12161E] group-hover:bg-[#E8FF00] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                      <span className="text-xs font-black text-white group-hover:text-[#12161E] transition-colors">{initials}</span>
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 text-lg">{opp.companyName}</p>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <span className="text-sm text-gray-500">{opp.industry || 'No industry specified'}</span>
-                        {opp.companyUrl && <span className="text-xs text-gray-400">{opp.companyUrl}</span>}
-                      </div>
+                      <p className="font-bold text-[#12161E] leading-tight">{opp.companyName}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{opp.industry || opp.companyUrl || '—'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right hidden sm:block">
-                      <p className="text-xs text-gray-500 mb-1">{getStageLabel(opp)}</p>
-                      <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#12161E] rounded-full transition-all" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-                    {opp.proposalDraft && statusInfo && (
-                      <span className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>{statusInfo.label}</span>
-                    )}
-                    <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-gray-900 transition-colors flex-shrink-0" />
+                  {/* Stage */}
+                  <div className="col-span-3 hidden sm:block">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border" style={{
+                      backgroundColor: opp.currentStage === 'research' ? '#FFF3E8' :
+                                       opp.currentStage === 'brief' ? '#FEF9EC' :
+                                       opp.currentStage === 'proposal' ? '#EEF5E8' : '#E8EEF5',
+                      color: opp.currentStage === 'research' ? '#C26B1E' :
+                             opp.currentStage === 'brief' ? '#A08018' :
+                             opp.currentStage === 'proposal' ? '#4A7A30' : '#2A5A8A',
+                      borderColor: opp.currentStage === 'research' ? '#F5C89A' :
+                                   opp.currentStage === 'brief' ? '#EDD98A' :
+                                   opp.currentStage === 'proposal' ? '#9DC87A' : '#7AAAC8',
+                    }}>{getStageLabel(opp)}</span>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                  {/* Progress bar — Compass gradient style */}
+                  <div className="col-span-2 hidden sm:block">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#e5e5e5' }}>
+                        <div className="h-full rounded-full transition-all" style={{
+                          width: `${progress}%`,
+                          background: progress < 40 ? 'linear-gradient(90deg, #888 0%, #E8853D 100%)' :
+                                      progress < 70 ? 'linear-gradient(90deg, #E8853D 0%, #6B9E4A 100%)' :
+                                      'linear-gradient(90deg, #6B9E4A 0%, #4A7AAC 100%)'
+                        }} />
+                      </div>
+                      <span className="text-xs font-bold text-gray-500 w-8 text-right">{progress}%</span>
+                    </div>
+                  </div>
+                  {/* Status badge */}
+                  <div className="col-span-2 hidden sm:flex items-center justify-between">
+                    {opp.proposalDraft && statusInfo ? (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>{statusInfo.label}</span>
+                    ) : <span />}
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors" />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
 
           {groupedByStatus.evaporated.length > 0 && (
-            <CollapsibleSection title={`Evaporated (${groupedByStatus.evaporated.length})`} icon={Archive}>
-              <div className="space-y-2">
-                {groupedByStatus.evaporated.map(opp => (
-                  <button key={opp.id} onClick={() => onSelectOpportunity(opp)} className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                    <span className="text-sm text-gray-600 font-medium">{opp.companyName}</span>
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </button>
-                ))}
-              </div>
-            </CollapsibleSection>
+            <div className="mt-6">
+              <CollapsibleSection title={`Evaporated (${groupedByStatus.evaporated.length})`} icon={Archive}>
+                <div className="space-y-1.5">
+                  {groupedByStatus.evaporated.map(opp => (
+                    <button key={opp.id} onClick={() => onSelectOpportunity(opp)} className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                      <span className="text-sm text-gray-500 font-medium">{opp.companyName}</span>
+                      <ChevronRight className="w-4 h-4 text-gray-300" />
+                    </button>
+                  ))}
+                </div>
+              </CollapsibleSection>
+            </div>
           )}
         </div>
       )}
@@ -2644,12 +2876,16 @@ export default function App() {
       {showAdmin && <AdminView currentUser={currentUser} onClose={() => setShowAdmin(false)} />}
 
       {/* Header */}
-      <header className="border-b border-gray-200 sticky top-0 z-20" style={{ backgroundColor: '#E8E6E1' }}>
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button onClick={() => setCurrentView('home')} className="hover:opacity-80 transition-opacity">
-              <AntennaLogo className="h-8" />
-            </button>
+      <header className="border-b border-gray-200/80 sticky top-0 z-20" style={{ backgroundColor: '#E8E6E1' }}>
+        <div className="max-w-6xl mx-auto px-6 py-0">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setCurrentView('home')} className="hover:opacity-80 transition-opacity">
+                <AntennaLogo className="h-7" />
+              </button>
+              <div className="h-5 w-px bg-gray-300" />
+              <span className="text-sm font-semibold text-[#12161E] tracking-tight">SOW Workbench</span>
+            </div>
             <div className="flex items-center gap-3">
               {currentView === 'opportunity' && currentOpportunity && (
                 <button onClick={() => { setCurrentOpportunity(null); setCurrentView('home'); }} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
