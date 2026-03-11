@@ -16,7 +16,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.2.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================

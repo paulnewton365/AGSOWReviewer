@@ -125,5 +125,5 @@ create trigger opportunities_updated_at
 --    Then INSERT into profiles:
 --
 --    insert into public.profiles (id, name, email, role)
---    values ('<auth-user-uuid>', 'Paul Newton', 'paul.newton@antennagroup.com', 'admin');
+--    values ('<auth-user-uuid>', '<your-name>', '<your-email>', 'admin');
 -- ============================================================

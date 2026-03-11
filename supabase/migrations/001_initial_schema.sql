@@ -92,9 +92,8 @@ create policy "users_crud_own_opportunities"
 -- ── Done ─────────────────────────────────────────────────────────────────────
 -- After running this script, create your first admin user:
 --   1. Supabase Dashboard → Authentication → Users → Add User
---      Email: paul.newton@antennagroup.com  |  Password: (your choice)
 --      ✓ "Auto Confirm User"
 --   2. Copy the new user's UUID, then run:
 --
 -- insert into public.profiles (id, name, email, role)
--- values ('<paste-uuid-here>', 'Paul Newton', 'paul.newton@antennagroup.com', 'admin');
+-- values ('<paste-uuid-here>', '<your-name>', '<your-email>', 'admin');
