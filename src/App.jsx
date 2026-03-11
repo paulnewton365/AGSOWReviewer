@@ -83,11 +83,15 @@ const USER_ROLES = {
   },
 };
 
-const createOpportunity = (companyName, companyUrl = '', industry = '') => ({
+const PRACTICES = ['Climate', 'Real Estate', 'Health', 'PA', 'HOWL'];
+
+const createOpportunity = (companyName, companyUrl = '', industry = '', practice = '') => ({
   id: Date.now().toString(),
   companyName,
   companyUrl,
   industry,
+  practice,
+  rid: '',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   currentStage: 'research',
@@ -702,6 +706,13 @@ function LoginView({ onLogin }) {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRequest, setShowRequest] = useState(false);
+  const [reqName, setReqName] = useState('');
+  const [reqEmail, setReqEmail] = useState('');
+  const [reqPractice, setReqPractice] = useState('');
+  const [reqNote, setReqNote] = useState('');
+  const [reqSent, setReqSent] = useState(false);
+  const [reqLoading, setReqLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) return setError('Please enter your email and password.');
@@ -723,7 +734,7 @@ function LoginView({ onLogin }) {
       if (profileError || !profile) return setError('Account not set up correctly. Contact your admin.');
       if (profile.active === false) {
         await supabase.auth.signOut();
-        return setError('Your account has been deactivated. Contact your admin.');
+        return setError('Your account is pending activation. An admin will review your request shortly.');
       }
 
       onLogin({ ...profile, id: data.user.id });
@@ -731,6 +742,38 @@ function LoginView({ onLogin }) {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestAccess = async () => {
+    if (!reqName.trim() || !reqEmail.trim()) return;
+    setReqLoading(true);
+    try {
+      // Store access request in a pending_requests table (or profiles with active=false)
+      // We create an auth user with a random password and mark profile as inactive/pending
+      const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2).toUpperCase() + '!1';
+      const { data, error } = await supabase.functions.invoke('admin-users', {
+        body: {
+          action: 'create',
+          name: reqName.trim(),
+          email: reqEmail.trim().toLowerCase(),
+          password: tempPassword,
+          role: 'growth',
+          active: false,
+          requestNote: reqNote.trim(),
+          practice: reqPractice,
+          isPendingRequest: true,
+        },
+      });
+      if (error || data?.error) {
+        setError(data?.error || error?.message || 'Could not submit request. Contact an admin directly.');
+      } else {
+        setReqSent(true);
+      }
+    } catch (e) {
+      setError('Could not submit request. Please email an admin directly.');
+    } finally {
+      setReqLoading(false);
     }
   };
 
@@ -744,53 +787,102 @@ function LoginView({ onLogin }) {
             <p className="text-gray-500 text-sm">Sign in to access your pipeline</p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Email</label>
-                <input
-                  type="email" value={email} onChange={e => setEmail(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                  placeholder="you@antennagroup.com" autoFocus
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
-                />
+          {!showRequest ? (
+            <>
+              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-1.5">Email</label>
+                    <input
+                      type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                      placeholder="you@antennagroup.com" autoFocus
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-1.5">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        placeholder="••••••••"
+                        className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
+                      />
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+                  </div>
+                )}
+
+                <AntennaButton onClick={handleLogin} loading={loading} loadingText="Signing in..." className="w-full" size="default">
+                  Sign In
+                </AntennaButton>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Password</label>
-                <div className="relative">
-                  <input
-                    type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
-                  />
-                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
-                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+
+              <p className="text-center text-sm text-gray-500 mt-6">
+                Don't have access?{' '}
+                <button onClick={() => setShowRequest(true)} className="font-semibold text-[#12161E] hover:underline">
+                  Request credentials
+                </button>
+              </p>
+            </>
+          ) : reqSent ? (
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-sm">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Request sent!</h3>
+              <p className="text-sm text-gray-500 mb-6">An admin will review your request and activate your account. You'll be able to sign in once approved.</p>
+              <button onClick={() => { setShowRequest(false); setReqSent(false); setReqName(''); setReqEmail(''); setReqNote(''); setReqPractice(''); }} className="text-sm font-semibold text-[#12161E] hover:underline">Back to Sign In</button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">Request Access</h3>
+                <button onClick={() => setShowRequest(false)} className="text-gray-400 hover:text-gray-700"><X className="w-4 h-4" /></button>
+              </div>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Full Name *</label>
+                  <input value={reqName} onChange={e => setReqName(e.target.value)} placeholder="Your name"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Work Email *</label>
+                  <input type="email" value={reqEmail} onChange={e => setReqEmail(e.target.value)} placeholder="you@antennagroup.com"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Practice</label>
+                  <select value={reqPractice} onChange={e => setReqPractice(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900">
+                    <option value="">Select practice...</option>
+                    {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Note (optional)</label>
+                  <input value={reqNote} onChange={e => setReqNote(e.target.value)} placeholder="Why you need access..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900" />
                 </div>
               </div>
+              {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
+              <AntennaButton onClick={handleRequestAccess} loading={reqLoading} loadingText="Sending..." disabled={!reqName.trim() || !reqEmail.trim()} className="w-full">
+                Submit Request
+              </AntennaButton>
+              <p className="text-center text-xs text-gray-400 mt-4">An admin will review and activate your account.</p>
             </div>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-600 text-sm">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
-              </div>
-            )}
-
-            <AntennaButton onClick={handleLogin} loading={loading} loadingText="Signing in..." className="w-full" size="default">
-              Sign In
-            </AntennaButton>
-          </div>
-
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Contact your admin if you need access.
-          </p>
+          )}
         </div>
       </div>
-
-      <footer className="py-6 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()} Antenna Group · <a href="https://antennagroup.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">antennagroup.com</a>
-      </footer>
     </div>
   );
 }
@@ -859,6 +951,7 @@ function AdminView({ currentUser, onClose }) {
   const [editUser, setEditUser] = useState({});
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [adminTab, setAdminTab] = useState('users');
 
   useEffect(() => { loadUsers(); }, []);
 
@@ -867,6 +960,28 @@ function AdminView({ currentUser, onClose }) {
     const { data, error } = await supabase.from('profiles').select('*').order('created_at');
     if (!error && data) setUsers(data);
     setLoading(false);
+  };
+
+  const activeUsers = users.filter(u => u.active !== false);
+  const pendingUsers = users.filter(u => u.active === false);
+
+  const handleActivate = async (user) => {
+    const tempPw = Math.random().toString(36).slice(2) + 'Aa1!';
+    setSaving(true);
+    try {
+      // Set a known temp password and activate
+      const { data, error } = await supabase.functions.invoke('admin-users', {
+        body: { action: 'update-password', userId: user.id, password: tempPw },
+      });
+      if (error || data?.error) return setError(data?.error || error?.message);
+      const { error: updateErr } = await supabase.from('profiles')
+        .update({ active: true })
+        .eq('id', user.id);
+      if (updateErr) return setError(updateErr.message);
+      await loadUsers();
+      alert(`Activated! Temp password: ${tempPw}\nShare with ${user.name} (${user.email})`);
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
   };
 
   const handleCreate = async () => {
@@ -892,20 +1007,16 @@ function AdminView({ currentUser, onClose }) {
     if (!name?.trim() || !email?.trim()) return setError('Name and email are required.');
     setSaving(true);
     try {
-      // Update profile fields
       const { error: profileErr } = await supabase.from('profiles')
         .update({ name: name.trim(), email: email.toLowerCase().trim(), role, active })
         .eq('id', id);
       if (profileErr) return setError(profileErr.message);
-
-      // Update password if provided
       if (newPassword?.trim()) {
         const { data, error: pwErr } = await supabase.functions.invoke('admin-users', {
           body: { action: 'update-password', userId: id, password: newPassword.trim() },
         });
         if (pwErr || data?.error) return setError(data?.error || pwErr.message);
       }
-
       await loadUsers();
       setEditingId(null);
     } catch (e) { setError(e.message); }
@@ -951,9 +1062,59 @@ function AdminView({ currentUser, onClose }) {
           <button onClick={onClose} className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200 bg-gray-50 px-8">
+          {[
+            { id: 'users', label: 'Active Users', count: activeUsers.length },
+            { id: 'pending', label: 'Pending Requests', count: pendingUsers.length, highlight: pendingUsers.length > 0 },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setAdminTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${adminTab === tab.id ? 'border-[#12161E] text-[#12161E]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${tab.highlight ? 'bg-amber-400 text-amber-900' : 'bg-gray-200 text-gray-600'}`}>{tab.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {loading ? (
             <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-gray-400" /></div>
+          ) : adminTab === 'pending' ? (
+            <>
+              <p className="text-sm text-gray-500 mb-6">These users have requested access and are waiting for activation. Review their details and activate or delete.</p>
+              {pendingUsers.length === 0 ? (
+                <div className="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <CheckCircle className="w-10 h-10 text-green-300 mx-auto mb-3" />
+                  <p className="text-gray-400 font-medium">No pending requests</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pendingUsers.map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-5 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <div>
+                        <p className="font-bold text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                        {user.practice && <span className="text-xs px-2 py-0.5 bg-white border border-amber-300 rounded-full text-amber-700 font-medium mt-1 inline-block">{user.practice}</span>}
+                        {user.requestNote && <p className="text-xs text-gray-400 mt-1 italic">"{user.requestNote}"</p>}
+                        <p className="text-xs text-gray-400 mt-1">Requested {new Date(user.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => handleActivate(user)} disabled={saving}
+                          className="px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5" />Activate
+                        </button>
+                        <button onClick={() => handleDelete(user.id)} disabled={saving}
+                          className="px-4 py-2 border border-red-200 text-red-600 rounded-xl text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors">
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <>
               {/* Stats */}
@@ -971,7 +1132,7 @@ function AdminView({ currentUser, onClose }) {
 
               {/* Create User */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Users ({users.length})</h3>
+                <h3 className="text-lg font-bold text-gray-900">Users ({activeUsers.length})</h3>
                 <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">
                   <UserPlus className="w-4 h-4" />{showCreate ? 'Cancel' : 'Add User'}
                 </button>
@@ -1895,6 +2056,21 @@ Write the proposal in this exact structure:
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
+              <h3 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                RID
+                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Required</span>
+              </h3>
+              <p className="text-xs text-gray-400 mb-3">Unique opportunity identifier (e.g. NB9530). Required before proposal generation.</p>
+              <input
+                value={opportunity.rid || ''}
+                onChange={e => onUpdate({ rid: e.target.value.toUpperCase() })}
+                placeholder="e.g. NB9530"
+                maxLength={8}
+                className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-gray-900 outline-none ${(opportunity.rid || '').trim() ? 'border-gray-200 bg-gray-50' : 'border-amber-300 bg-amber-50'}`}
+              />
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h3 className="font-bold text-gray-900 mb-3">Notes for Proposal</h3>
               <textarea value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={() => onUpdate({ draftNotes })} placeholder="Budget constraints, specific client requests, tone notes..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
             </div>
@@ -1937,8 +2113,14 @@ Write the proposal in this exact structure:
             </div>
 
             {selectedServices.length > 0 && (
-              <div className="mt-6">
-                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={false} className="w-full" size="large">
+              <div className="mt-6 space-y-2">
+                {!(opportunity.rid || '').trim() && (
+                  <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs font-medium">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    Enter a RID in the left panel before generating.
+                  </div>
+                )}
+                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={!(opportunity.rid || '').trim()} className="w-full" size="large">
                   Generate Proposal
                 </AntennaButton>
               </div>
@@ -2484,13 +2666,17 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newIndustry, setNewIndustry] = useState('');
+  const [newPractice, setNewPractice] = useState('');
+  const [searchQ, setSearchQ] = useState('');
+  const [filterStage, setFilterStage] = useState('');
+  const [filterPractice, setFilterPractice] = useState('');
 
   const handleCreate = () => {
     if (!newName.trim()) return;
-    const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim());
+    const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim(), newPractice);
     onCreateOpportunity(opp);
     setShowCreate(false);
-    setNewName(''); setNewUrl(''); setNewIndustry('');
+    setNewName(''); setNewUrl(''); setNewIndustry(''); setNewPractice('');
   };
 
   const getStageLabel = (opp) => {
@@ -2505,57 +2691,70 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
     return Math.round(((idx + (opp[opp.currentStage + 'Complete'] ? 1 : 0.5)) / stages.length) * 100);
   };
 
-  const groupedByStatus = {
-    active: opportunities.filter(o => !['evaporated'].includes(o.proposalStatus)),
-    evaporated: opportunities.filter(o => o.proposalStatus === 'evaporated'),
-  };
+  const allActive = opportunities.filter(o => o.proposalStatus !== 'evaporated');
+  const evaporated = opportunities.filter(o => o.proposalStatus === 'evaporated');
+
+  const q = searchQ.toLowerCase().trim();
+  const filtered = allActive.filter(o => {
+    const matchSearch = !q ||
+      o.companyName.toLowerCase().includes(q) ||
+      (o.rid || '').toLowerCase().includes(q) ||
+      (o.practice || '').toLowerCase().includes(q) ||
+      (o.industry || '').toLowerCase().includes(q);
+    const matchStage = !filterStage || o.currentStage === filterStage;
+    const matchPractice = !filterPractice || o.practice === filterPractice;
+    return matchSearch && matchStage && matchPractice;
+  });
+
+  const stagePill = (stageId) => ({
+    research: { bg: '#FFF3E8', color: '#C26B1E', border: '#F5C89A' },
+    brief:    { bg: '#FEF9EC', color: '#A08018', border: '#EDD98A' },
+    proposal: { bg: '#EEF5E8', color: '#4A7A30', border: '#9DC87A' },
+    sow:      { bg: '#E8EEF5', color: '#2A5A8A', border: '#7AAAC8' },
+  }[stageId] || { bg: '#F5F5F5', color: '#666', border: '#DDD' });
+
+  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC'];
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
-      {/* Hero — editorial left-aligned like Compass */}
+      {/* Hero */}
       <div className="mb-12">
         <div className="flex items-start justify-between flex-wrap gap-6">
           <div>
             <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-3">Antenna Group · Internal Tools</p>
-            <h1 className="text-4xl lg:text-5xl font-bold text-[#12161E] leading-tight mb-3">
-              SOW Workbench
-            </h1>
+            <h1 className="text-4xl lg:text-5xl font-bold text-[#12161E] leading-tight mb-3">SOW Workbench</h1>
             <p className="text-lg text-gray-500 max-w-xl leading-relaxed">
-              From first discovery to signed contract — a complete BD pipeline for the Antenna team.
+              We diagnose before we prescribe! This tool helps you identify an opportunity and ensure that we can move fast and recommend the right services to solve our clients' problems.
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {roleInfo?.canCreateOpportunities !== false && (
-              <AntennaButton onClick={() => setShowCreate(true)} icon={Plus} size="large">
-                New Opportunity
-              </AntennaButton>
+              <AntennaButton onClick={() => setShowCreate(true)} icon={Plus} size="large">New Opportunity</AntennaButton>
             )}
             {onOpenReview && (
               <button onClick={onOpenReview} className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-[#12161E] hover:text-[#12161E] transition-all text-sm">
-                <ShieldCheck className="w-4 h-4" />
-                Review Existing SOW
+                <ShieldCheck className="w-4 h-4" />Review Existing SOW
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Pipeline Overview — Compass-style metric pills */}
+      {/* Pipeline stage cards — clickable to filter */}
       <div className="grid grid-cols-4 gap-3 mb-10">
         {PIPELINE_STAGES.map((stage, idx) => {
-          const stageCount = opportunities.filter(o => o.currentStage === stage.id).length;
-          const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC'];
+          const stageCount = allActive.filter(o => o.currentStage === stage.id).length;
+          const isActive = filterStage === stage.id;
           return (
-            <div key={stage.id} className="bg-white rounded-xl border border-gray-200 p-4 overflow-hidden">
+            <button key={stage.id} onClick={() => setFilterStage(isActive ? '' : stage.id)}
+              className={`bg-white rounded-xl border p-4 overflow-hidden text-left transition-all ${isActive ? 'border-[#12161E] ring-2 ring-[#12161E]/20' : 'border-gray-200 hover:border-gray-400'}`}>
               <div className="flex items-start justify-between mb-3">
                 <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">{String(idx + 1).padStart(2,'0')}</span>
-                {stageCount > 0 && (
-                  <span className="text-xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>
-                )}
+                {stageCount > 0 && <span className="text-xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>}
               </div>
               <h3 className="font-bold text-[#12161E] text-sm leading-tight mb-0.5">{stage.label}</h3>
               <p className="text-xs text-gray-400 leading-snug">{stage.description}</p>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -2572,6 +2771,13 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name *</label>
                 <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Owning Practice</label>
+                <select value={newPractice} onChange={e => setNewPractice(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 bg-white">
+                  <option value="">Select practice...</option>
+                  {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website (optional)</label>
@@ -2602,79 +2808,105 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
         </div>
       ) : (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold tracking-widest text-gray-400 uppercase">Active Opportunities ({groupedByStatus.active.length})</h3>
+          {/* Search + Filter bar */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <input
+                value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                placeholder="Search by company, RID, practice, industry..."
+                className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 outline-none placeholder:text-gray-400"
+              />
+              {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><X className="w-3.5 h-3.5" /></button>}
+            </div>
+            <select value={filterPractice} onChange={e => setFilterPractice(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 outline-none text-gray-700">
+              <option value="">All Practices</option>
+              {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+            {(searchQ || filterStage || filterPractice) && (
+              <button onClick={() => { setSearchQ(''); setFilterStage(''); setFilterPractice(''); }} className="text-xs px-3 py-2 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">Clear all</button>
+            )}
+            <span className="text-xs text-gray-400 ml-auto whitespace-nowrap">{filtered.length} of {allActive.length}</span>
           </div>
+
           {/* Column headers */}
-          <div className="grid grid-cols-12 gap-4 px-4 mb-2">
-            <span className="col-span-5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company</span>
-            <span className="col-span-3 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
+          <div className="grid grid-cols-12 gap-3 px-4 mb-2">
+            <span className="col-span-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company</span>
+            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Practice / RID</span>
+            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Progress</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Status</span>
           </div>
-          <div className="space-y-1.5">
-            {groupedByStatus.active.map((opp, idx) => {
-              const progress = getProgress(opp);
-              const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opp.proposalStatus);
-              const initials = opp.companyName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-              return (
-                <button key={opp.id} onClick={() => onSelectOpportunity(opp)}
-                  className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-4 items-center">
-                  {/* Company */}
-                  <div className="col-span-5 flex items-center gap-3">
-                    <div className="w-9 h-9 bg-[#12161E] group-hover:bg-[#E8FF00] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-                      <span className="text-xs font-black text-white group-hover:text-[#12161E] transition-colors">{initials}</span>
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#12161E] leading-tight">{opp.companyName}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{opp.industry || opp.companyUrl || '—'}</p>
-                    </div>
-                  </div>
-                  {/* Stage */}
-                  <div className="col-span-3 hidden sm:block">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border" style={{
-                      backgroundColor: opp.currentStage === 'research' ? '#FFF3E8' :
-                                       opp.currentStage === 'brief' ? '#FEF9EC' :
-                                       opp.currentStage === 'proposal' ? '#EEF5E8' : '#E8EEF5',
-                      color: opp.currentStage === 'research' ? '#C26B1E' :
-                             opp.currentStage === 'brief' ? '#A08018' :
-                             opp.currentStage === 'proposal' ? '#4A7A30' : '#2A5A8A',
-                      borderColor: opp.currentStage === 'research' ? '#F5C89A' :
-                                   opp.currentStage === 'brief' ? '#EDD98A' :
-                                   opp.currentStage === 'proposal' ? '#9DC87A' : '#7AAAC8',
-                    }}>{getStageLabel(opp)}</span>
-                  </div>
-                  {/* Progress bar — Compass gradient style */}
-                  <div className="col-span-2 hidden sm:block">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#e5e5e5' }}>
-                        <div className="h-full rounded-full transition-all" style={{
-                          width: `${progress}%`,
-                          background: progress < 40 ? 'linear-gradient(90deg, #888 0%, #E8853D 100%)' :
-                                      progress < 70 ? 'linear-gradient(90deg, #E8853D 0%, #6B9E4A 100%)' :
-                                      'linear-gradient(90deg, #6B9E4A 0%, #4A7AAC 100%)'
-                        }} />
-                      </div>
-                      <span className="text-xs font-bold text-gray-500 w-8 text-right">{progress}%</span>
-                    </div>
-                  </div>
-                  {/* Status badge */}
-                  <div className="col-span-2 hidden sm:flex items-center justify-between">
-                    {opp.proposalDraft && statusInfo ? (
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>{statusInfo.label}</span>
-                    ) : <span />}
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors" />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
 
-          {groupedByStatus.evaporated.length > 0 && (
+          {filtered.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-200">
+              <p className="text-gray-400 text-sm">No opportunities match your filters.</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {filtered.map((opp) => {
+                const progress = getProgress(opp);
+                const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opp.proposalStatus);
+                const initials = opp.companyName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+                const pill = stagePill(opp.currentStage);
+                return (
+                  <button key={opp.id} onClick={() => onSelectOpportunity(opp)}
+                    className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
+                    {/* Company */}
+                    <div className="col-span-4 flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 bg-[#12161E] group-hover:bg-[#E8FF00] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                        <span className="text-xs font-black text-white group-hover:text-[#12161E] transition-colors">{initials}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-[#12161E] leading-tight truncate">{opp.companyName}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
+                      </div>
+                    </div>
+                    {/* Practice + RID */}
+                    <div className="col-span-2 hidden sm:flex flex-col gap-0.5 min-w-0">
+                      {opp.practice && <span className="text-xs font-semibold text-gray-700 truncate">{opp.practice}</span>}
+                      {opp.rid && <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded w-fit">{opp.rid}</span>}
+                      {!opp.practice && !opp.rid && <span className="text-xs text-gray-300">—</span>}
+                    </div>
+                    {/* Stage */}
+                    <div className="col-span-2 hidden sm:block">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border"
+                        style={{ backgroundColor: pill.bg, color: pill.color, borderColor: pill.border }}>
+                        {getStageLabel(opp)}
+                      </span>
+                    </div>
+                    {/* Progress */}
+                    <div className="col-span-2 hidden sm:block">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#e5e5e5' }}>
+                          <div className="h-full rounded-full transition-all" style={{
+                            width: `${progress}%`,
+                            background: progress < 40 ? 'linear-gradient(90deg,#888,#E8853D)' :
+                                        progress < 70 ? 'linear-gradient(90deg,#E8853D,#6B9E4A)' :
+                                                        'linear-gradient(90deg,#6B9E4A,#4A7AAC)'
+                          }} />
+                        </div>
+                        <span className="text-xs font-bold text-gray-500 w-8 text-right">{progress}%</span>
+                      </div>
+                    </div>
+                    {/* Status */}
+                    <div className="col-span-2 hidden sm:flex items-center justify-between">
+                      {opp.proposalDraft && statusInfo
+                        ? <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>{statusInfo.label}</span>
+                        : <span />}
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {evaporated.length > 0 && (
             <div className="mt-6">
-              <CollapsibleSection title={`Evaporated (${groupedByStatus.evaporated.length})`} icon={Archive}>
+              <CollapsibleSection title={`Evaporated (${evaporated.length})`} icon={Archive}>
                 <div className="space-y-1.5">
-                  {groupedByStatus.evaporated.map(opp => (
+                  {evaporated.map(opp => (
                     <button key={opp.id} onClick={() => onSelectOpportunity(opp)} className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                       <span className="text-sm text-gray-500 font-medium">{opp.companyName}</span>
                       <ChevronRight className="w-4 h-4 text-gray-300" />
@@ -2773,9 +3005,9 @@ export default function App() {
     });
   }, []);
 
-  const selectOpportunity = (opp) => {
+  const selectOpportunity = (opp, goToStage) => {
     setCurrentOpportunity(opp);
-    setCurrentStage(opp.currentStage || 'research');
+    setCurrentStage(goToStage || opp.currentStage || 'research');
     setCurrentView('opportunity');
   };
 
@@ -2865,7 +3097,6 @@ export default function App() {
           </div>
           <SOWReviewView />
         </main>
-        <AppFooter />
       </div>
     );
   }
@@ -2897,7 +3128,6 @@ export default function App() {
                   <ChevronLeft className="w-4 h-4" />Back
                 </button>
               )}
-              <a href="https://www.antennagroup.com" target="_blank" rel="noopener noreferrer" className="hidden sm:block text-sm text-gray-500 hover:text-gray-900 transition-colors">antennagroup.com ↗</a>
               <UserMenu currentUser={currentUser} onLogout={handleLogout} onOpenAdmin={() => setShowAdmin(true)} />
             </div>
           </div>
@@ -2938,48 +3168,6 @@ export default function App() {
             : <div className="max-w-xl mx-auto py-20 text-center"><Lock className="w-10 h-10 text-gray-300 mx-auto mb-4" /><p className="text-gray-500">Your role doesn't include SOW Review access.</p></div>
         )}
       </main>
-
-      <AppFooter />
     </div>
-  );
-}
-
-function AppFooter() {
-  return (
-    <footer className="bg-gray-900 text-white mt-20">
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <h3 className="text-2xl font-semibold mb-8">For conscious brands with the courage to lead</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          <div>
-            <h4 className="font-semibold mb-4 text-gray-400">Our Offices</h4>
-            <ul className="space-y-2 text-sm text-gray-300">
-              {['San Francisco, CA', 'New York, NY', 'Hackensack, NJ', 'Washington, D.C.', 'London, UK', 'Prague, CZ'].map(o => <li key={o}>{o}</li>)}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-gray-400">Social</h4>
-            <ul className="space-y-2 text-sm">
-              {[['LinkedIn', 'https://www.linkedin.com/company/antenna-group'], ['Instagram', 'https://www.instagram.com/antennagroup/'], ['Facebook', 'https://www.facebook.com/AntennaGroup'], ['X', 'https://x.com/antenna_group']].map(([n, u]) => <li key={n}><a href={u} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white">{n}</a></li>)}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-gray-400">Learn</h4>
-            <ul className="space-y-2 text-sm">
-              {[["Let's Chat", 'https://www.antennagroup.com/lets-chat'], ['Work', 'https://www.antennagroup.com/work'], ['Podcast', 'https://www.antennagroup.com/age-of-adoption-podcast'], ['Conscious Compass', 'https://fullyconscious.com']].map(([n, u]) => <li key={n}><a href={u} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white">{n}</a></li>)}
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-gray-400">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              {[['Terms of Use', 'https://www.antennagroup.com/terms'], ['Privacy Policy', 'https://www.antennagroup.com/privacy-policy']].map(([n, u]) => <li key={n}><a href={u} target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white">{n}</a></li>)}
-            </ul>
-          </div>
-        </div>
-        <div className="pt-8 border-t border-gray-800 flex items-center justify-between text-sm text-gray-400 flex-wrap gap-4">
-          <span>© {new Date().getFullYear()} Antenna Group — All Rights Reserved</span>
-          <span className="text-xs">SOW Workbench v{APP_VERSION}</span>
-        </div>
-      </div>
-    </footer>
   );
 }
