@@ -92,17 +92,33 @@ const DEFAULT_ADMIN = {
   active: true,
 };
 
+const PAUL_NEWTON = {
+  id: 'admin-seed-paul',
+  name: 'Paul Newton',
+  email: 'paul.newton@antennagroup.com',
+  password: 'Ember2021',
+  role: 'admin',
+  createdAt: new Date().toISOString(),
+  active: true,
+};
+
+const SEED_USERS = [DEFAULT_ADMIN, PAUL_NEWTON];
+
 const getStoredUsers = () => {
   try {
     const raw = localStorage.getItem('ag_users');
-    if (raw) {
-      const users = JSON.parse(raw);
-      if (users.length > 0) return users;
+    const stored = raw ? JSON.parse(raw) : [];
+    // Merge seed users — add any that don't already exist by ID
+    const merged = [...stored];
+    for (const seed of SEED_USERS) {
+      if (!merged.find(u => u.id === seed.id)) merged.push(seed);
     }
-  } catch {}
-  const users = [DEFAULT_ADMIN];
-  localStorage.setItem('ag_users', JSON.stringify(users));
-  return users;
+    if (merged.length !== stored.length) localStorage.setItem('ag_users', JSON.stringify(merged));
+    return merged;
+  } catch {
+    localStorage.setItem('ag_users', JSON.stringify(SEED_USERS));
+    return SEED_USERS;
+  }
 };
 const saveStoredUsers = (users) => {
   try { localStorage.setItem('ag_users', JSON.stringify(users)); } catch {}
