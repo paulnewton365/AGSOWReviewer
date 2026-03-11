@@ -14,6 +14,7 @@ import {
   AlignmentType, HeadingLevel, BorderStyle, LevelFormat, PageNumber
 } from 'docx';
 import { saveAs } from 'file-saver';
+import { supabase } from './lib/supabase.js';
 
 const APP_VERSION = '3.0.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
@@ -80,69 +81,6 @@ const USER_ROLES = {
     canAccessAdmin: true,
     canCreateOpportunities: true,
   },
-};
-
-const DEFAULT_ADMIN = {
-  id: 'admin-seed-001',
-  name: 'Admin',
-  email: 'admin@antennagroup.com',
-  password: 'antenna2024',
-  role: 'admin',
-  createdAt: new Date().toISOString(),
-  active: true,
-};
-
-const PAUL_NEWTON = {
-  id: 'admin-seed-paul',
-  name: 'Paul Newton',
-  email: 'paul.newton@antennagroup.com',
-  password: 'Ember2021',
-  role: 'admin',
-  createdAt: new Date().toISOString(),
-  active: true,
-};
-
-const SEED_USERS = [DEFAULT_ADMIN, PAUL_NEWTON];
-
-const getStoredUsers = () => {
-  try {
-    const raw = localStorage.getItem('ag_users');
-    const stored = raw ? JSON.parse(raw) : [];
-    // Merge seed users — add any that don't already exist by ID
-    const merged = [...stored];
-    for (const seed of SEED_USERS) {
-      if (!merged.find(u => u.id === seed.id)) merged.push(seed);
-    }
-    if (merged.length !== stored.length) localStorage.setItem('ag_users', JSON.stringify(merged));
-    return merged;
-  } catch {
-    localStorage.setItem('ag_users', JSON.stringify(SEED_USERS));
-    return SEED_USERS;
-  }
-};
-const saveStoredUsers = (users) => {
-  try { localStorage.setItem('ag_users', JSON.stringify(users)); } catch {}
-};
-const getStoredSession = () => {
-  try { const raw = localStorage.getItem('ag_session'); return raw ? JSON.parse(raw) : null; } catch { return null; }
-};
-const saveStoredSession = (user) => {
-  try {
-    if (user) localStorage.setItem('ag_session', JSON.stringify(user));
-    else localStorage.removeItem('ag_session');
-  } catch {}
-};
-const getStoredOpportunitiesForUser = (userId) => {
-  try { const raw = localStorage.getItem(`ag_opps_${userId}`); return raw ? JSON.parse(raw) : []; } catch { return []; }
-};
-const saveStoredOpportunitiesForUser = (userId, opps) => {
-  try { localStorage.setItem(`ag_opps_${userId}`, JSON.stringify(opps)); } catch {}
-};
-const getStoredApiKeyForUser = (userId) => {
-  try { return localStorage.getItem(`ag_apikey_${userId}`) || ''; } catch { return ''; }
-};
-const saveStoredApiKeyForUser = (userId, key) => {
-  try { localStorage.setItem(`ag_apikey_${userId}`, key); } catch {}
 };
 
 const createOpportunity = (companyName, companyUrl = '', industry = '') => ({
@@ -489,7 +427,8 @@ HIGH PRIORITY FLAGS:
 // ============================================================================
 // API CALL UTILITY
 // ============================================================================
-const callClaude = async (apiKey, { system, userMessage, maxTokens = 4000, useWebSearch = false, fileContent = null }) => {
+const callClaude = async ({ system, userMessage, maxTokens = 4000, useWebSearch = false, fileContent = null }) => {
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
   const headers = {
     'Content-Type': 'application/json',
     'x-api-key': apiKey,
@@ -617,19 +556,6 @@ function CollapsibleSection({ title, children, defaultOpen = false, icon: Icon, 
   );
 }
 
-function ApiKeyInput({ apiKey, setApiKey }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="mb-6">
-      <label className="block text-sm font-semibold text-gray-900 mb-2"><div className="flex items-center gap-2"><Key className="w-4 h-4" />Anthropic API Key</div></label>
-      <div className="relative">
-        <input type={show ? 'text' : 'password'} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-ant-api03-..." className="w-full px-4 py-3 pr-12 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
-        <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900">{show ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button>
-      </div>
-      <p className="mt-2 text-xs text-gray-500">Used only in your browser. <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" className="underline">Get a key →</a></p>
-    </div>
-  );
-}
 
 // ============================================================================
 // AUTH: LOGIN VIEW
@@ -641,19 +567,35 @@ function LoginView({ onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) return setError('Please enter your email and password.');
     setLoading(true); setError('');
-    setTimeout(() => {
-      const users = getStoredUsers();
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase().trim() && u.password === password && u.active !== false);
-      if (user) {
-        onLogin(user);
-      } else {
-        setError('Invalid email or password. Please try again.');
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password,
+      });
+      if (authError) return setError('Invalid email or password. Please try again.');
+
+      // Fetch profile for role/name
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError || !profile) return setError('Account not set up correctly. Contact your admin.');
+      if (profile.active === false) {
+        await supabase.auth.signOut();
+        return setError('Your account has been deactivated. Contact your admin.');
       }
+
+      onLogin({ ...profile, id: data.user.id });
+    } catch (e) {
+      setError('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   return (
@@ -773,46 +715,85 @@ function UserMenu({ currentUser, onLogout, onOpenAdmin }) {
 // ADMIN PANEL
 // ============================================================================
 function AdminView({ currentUser, onClose }) {
-  const [users, setUsers] = useState(() => getStoredUsers());
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'growth' });
   const [editingId, setEditingId] = useState(null);
   const [editUser, setEditUser] = useState({});
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const saveAndSync = (updated) => {
-    setUsers(updated);
-    saveStoredUsers(updated);
+  useEffect(() => { loadUsers(); }, []);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at');
+    if (!error && data) setUsers(data);
+    setLoading(false);
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     setError('');
-    if (!newUser.name.trim() || !newUser.email.trim() || !newUser.password.trim()) return setError('Name, email and password are required.');
-    if (users.find(u => u.email.toLowerCase() === newUser.email.toLowerCase())) return setError('A user with that email already exists.');
-    const user = { id: `user-${Date.now()}`, ...newUser, email: newUser.email.toLowerCase(), active: true, createdAt: new Date().toISOString() };
-    saveAndSync([...users, user]);
-    setNewUser({ name: '', email: '', password: '', role: 'growth' });
-    setShowCreate(false);
+    const { name, email, password, role } = newUser;
+    if (!name.trim() || !email.trim() || !password.trim()) return setError('Name, email and password are required.');
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-users', {
+        body: { action: 'create', name: name.trim(), email: email.trim(), password, role },
+      });
+      if (error || data?.error) return setError(data?.error || error.message);
+      await loadUsers();
+      setNewUser({ name: '', email: '', password: '', role: 'growth' });
+      setShowCreate(false);
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
   };
 
-  const handleToggleActive = (id) => {
-    if (id === currentUser.id) return;
-    saveAndSync(users.map(u => u.id === id ? { ...u, active: !u.active } : u));
-  };
-
-  const handleDelete = (id) => {
-    if (id === currentUser.id) return;
-    if (!window.confirm('Delete this user? This cannot be undone.')) return;
-    saveAndSync(users.filter(u => u.id !== id));
-  };
-
-  const handleSaveEdit = (id) => {
+  const handleSaveEdit = async (id) => {
     setError('');
-    if (!editUser.name?.trim() || !editUser.email?.trim()) return setError('Name and email are required.');
-    const conflict = users.find(u => u.email.toLowerCase() === editUser.email.toLowerCase() && u.id !== id);
-    if (conflict) return setError('That email is already in use.');
-    saveAndSync(users.map(u => u.id === id ? { ...u, ...editUser, email: editUser.email.toLowerCase() } : u));
-    setEditingId(null);
+    const { name, email, role, active, newPassword } = editUser;
+    if (!name?.trim() || !email?.trim()) return setError('Name and email are required.');
+    setSaving(true);
+    try {
+      // Update profile fields
+      const { error: profileErr } = await supabase.from('profiles')
+        .update({ name: name.trim(), email: email.toLowerCase().trim(), role, active })
+        .eq('id', id);
+      if (profileErr) return setError(profileErr.message);
+
+      // Update password if provided
+      if (newPassword?.trim()) {
+        const { data, error: pwErr } = await supabase.functions.invoke('admin-users', {
+          body: { action: 'update-password', userId: id, password: newPassword.trim() },
+        });
+        if (pwErr || data?.error) return setError(data?.error || pwErr.message);
+      }
+
+      await loadUsers();
+      setEditingId(null);
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleToggleActive = async (user) => {
+    if (user.id === currentUser.id) return;
+    const { error } = await supabase.from('profiles').update({ active: !user.active }).eq('id', user.id);
+    if (!error) setUsers(prev => prev.map(u => u.id === user.id ? { ...u, active: !u.active } : u));
+  };
+
+  const handleDelete = async (id) => {
+    if (id === currentUser.id) return;
+    if (!window.confirm('Permanently delete this user? This cannot be undone.')) return;
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-users', {
+        body: { action: 'delete', userId: id },
+      });
+      if (error || data?.error) return setError(data?.error || error.message);
+      setUsers(prev => prev.filter(u => u.id !== id));
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
   };
 
   const roleOptions = Object.entries(USER_ROLES).map(([value, info]) => ({ value, label: info.label, description: info.description }));
@@ -835,157 +816,144 @@ function AdminView({ currentUser, onClose }) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 py-6">
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-4 mb-8">
-            {Object.entries(USER_ROLES).map(([role, info]) => {
-              const count = users.filter(u => u.role === role && u.active !== false).length;
-              return (
-                <div key={role} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-                  <p className="text-2xl font-bold text-gray-900">{count}</p>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border mt-1 ${info.color}`}>{info.label}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Create User */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Users ({users.length})</h3>
-            <button
-              onClick={() => setShowCreate(!showCreate)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors"
-            >
-              <UserPlus className="w-4 h-4" />{showCreate ? 'Cancel' : 'Add User'}
-            </button>
-          </div>
-
-          {showCreate && (
-            <div className="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-2xl">
-              <h4 className="font-semibold text-gray-900 mb-4">New User</h4>
-              {error && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">{error}</div>}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Full Name *</label>
-                  <input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="Jane Smith" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Email *</label>
-                  <input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="jane@antennagroup.com" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Password *</label>
-                  <input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Temporary password" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Role *</label>
-                  <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none bg-white">
-                    {roleOptions.map(r => <option key={r.value} value={r.value}>{r.label} — {r.description}</option>)}
-                  </select>
-                </div>
-              </div>
-              <button onClick={handleCreate} className="px-6 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-2">
-                <UserPlus className="w-4 h-4" />Create User
-              </button>
-            </div>
-          )}
-
-          {/* Role Access Guide */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-            <p className="text-xs font-semibold text-blue-800 mb-2">Role Access Summary</p>
-            <div className="grid grid-cols-4 gap-3">
-              {Object.entries(USER_ROLES).map(([role, info]) => (
-                <div key={role} className="text-xs text-blue-700">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-semibold border text-[10px] mb-1 ${info.color}`}>{info.label}</span>
-                  <p className="text-gray-600 leading-snug">{info.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Users Table */}
-          <div className="border border-gray-200 rounded-2xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">User</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Role</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Status</th>
-                  <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Password</th>
-                  <th className="text-right px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {users.map(user => {
-                  const roleInfo = USER_ROLES[user.role] || USER_ROLES.growth;
-                  const isMe = user.id === currentUser.id;
-                  const isEditing = editingId === user.id;
+          {loading ? (
+            <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-gray-400" /></div>
+          ) : (
+            <>
+              {/* Stats */}
+              <div className="grid grid-cols-4 gap-4 mb-8">
+                {Object.entries(USER_ROLES).map(([role, info]) => {
+                  const count = users.filter(u => u.role === role && u.active !== false).length;
                   return (
-                    <tr key={user.id} className={`${isMe ? 'bg-blue-50/40' : 'bg-white'} hover:bg-gray-50 transition-colors`}>
-                      <td className="px-5 py-4">
-                        {isEditing ? (
-                          <div className="space-y-1.5">
-                            <input value={editUser.name || ''} onChange={e => setEditUser({ ...editUser, name: e.target.value })} placeholder="Name" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm" />
-                            <input value={editUser.email || ''} onChange={e => setEditUser({ ...editUser, email: e.target.value })} placeholder="Email" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm" />
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-semibold text-gray-900">{user.name} {isMe && <span className="text-xs text-blue-600">(you)</span>}</p>
-                            <p className="text-xs text-gray-500">{user.email}</p>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        {isEditing ? (
-                          <select value={editUser.role || user.role} onChange={e => setEditUser({ ...editUser, role: e.target.value })} className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm bg-white">
-                            {roleOptions.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                          </select>
-                        ) : (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${roleInfo.color}`}>{roleInfo.label}</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${user.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {user.active !== false ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        {isEditing ? (
-                          <input type="text" value={editUser.password || ''} onChange={e => setEditUser({ ...editUser, password: e.target.value })} placeholder="New password (leave blank to keep)" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm" />
-                        ) : (
-                          <span className="text-xs text-gray-400 font-mono">{'•'.repeat(Math.min(user.password?.length || 8, 10))}</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center justify-end gap-1">
-                          {isEditing ? (
-                            <>
-                              <button onClick={() => handleSaveEdit(user.id)} className="px-3 py-1.5 bg-[#12161E] text-white rounded-lg text-xs font-medium hover:bg-gray-800">Save</button>
-                              <button onClick={() => { setEditingId(null); setError(''); }} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200">Cancel</button>
-                            </>
-                          ) : (
-                            <>
-                              <button onClick={() => { setEditingId(user.id); setEditUser({ name: user.name, email: user.email, role: user.role, password: user.password }); setError(''); }} className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="Edit"><Edit3 className="w-3.5 h-3.5" /></button>
-                              {!isMe && (
-                                <button onClick={() => handleToggleActive(user.id)} className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title={user.active !== false ? 'Deactivate' : 'Activate'}>
-                                  {user.active !== false ? <ToggleRight className="w-3.5 h-3.5 text-green-600" /> : <ToggleLeft className="w-3.5 h-3.5" />}
-                                </button>
-                              )}
-                              {!isMe && (
-                                <button onClick={() => handleDelete(user.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                    <div key={role} className="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                      <p className="text-2xl font-bold text-gray-900">{count}</p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border mt-1 ${info.color}`}>{info.label}</span>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </div>
 
-          {error && !showCreate && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>
+              {/* Create User */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Users ({users.length})</h3>
+                <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">
+                  <UserPlus className="w-4 h-4" />{showCreate ? 'Cancel' : 'Add User'}
+                </button>
+              </div>
+
+              {showCreate && (
+                <div className="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-2xl">
+                  <h4 className="font-semibold text-gray-900 mb-4">New User</h4>
+                  {error && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">{error}</div>}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Full Name *</label><input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="Jane Smith" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" /></div>
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Email *</label><input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="jane@antennagroup.com" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" /></div>
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Password *</label><input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Temporary password" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" /></div>
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Role *</label>
+                      <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none bg-white">
+                        {roleOptions.map(r => <option key={r.value} value={r.value}>{r.label} — {r.description}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <button onClick={handleCreate} disabled={saving} className="px-6 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}Create User
+                  </button>
+                </div>
+              )}
+
+              {/* Role Access Guide */}
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
+                <p className="text-xs font-semibold text-blue-800 mb-2">Role Access Summary</p>
+                <div className="grid grid-cols-4 gap-3">
+                  {Object.entries(USER_ROLES).map(([role, info]) => (
+                    <div key={role} className="text-xs text-blue-700">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-semibold border text-[10px] mb-1 ${info.color}`}>{info.label}</span>
+                      <p className="text-gray-600 leading-snug">{info.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Users Table */}
+              <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">User</th>
+                      <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Role</th>
+                      <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Status</th>
+                      <th className="text-left px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Password</th>
+                      <th className="text-right px-5 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {users.map(user => {
+                      const roleInfo = USER_ROLES[user.role] || USER_ROLES.growth;
+                      const isMe = user.id === currentUser.id;
+                      const isEditing = editingId === user.id;
+                      return (
+                        <tr key={user.id} className={`${isMe ? 'bg-blue-50/40' : 'bg-white'} hover:bg-gray-50 transition-colors`}>
+                          <td className="px-5 py-4">
+                            {isEditing ? (
+                              <div className="space-y-1.5">
+                                <input value={editUser.name || ''} onChange={e => setEditUser({ ...editUser, name: e.target.value })} placeholder="Name" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm" />
+                                <input value={editUser.email || ''} onChange={e => setEditUser({ ...editUser, email: e.target.value })} placeholder="Email" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm" />
+                              </div>
+                            ) : (
+                              <div>
+                                <p className="font-semibold text-gray-900">{user.name} {isMe && <span className="text-xs text-blue-600">(you)</span>}</p>
+                                <p className="text-xs text-gray-500">{user.email}</p>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-5 py-4">
+                            {isEditing ? (
+                              <select value={editUser.role || user.role} onChange={e => setEditUser({ ...editUser, role: e.target.value })} className="px-2 py-1.5 border border-gray-300 rounded-lg text-sm bg-white">
+                                {roleOptions.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                              </select>
+                            ) : (
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${roleInfo.color}`}>{roleInfo.label}</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${user.active !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {user.active !== false ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            {isEditing ? (
+                              <input type="text" value={editUser.newPassword || ''} onChange={e => setEditUser({ ...editUser, newPassword: e.target.value })} placeholder="New password (leave blank to keep)" className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm" />
+                            ) : (
+                              <span className="text-xs text-gray-400 font-mono">••••••••</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex items-center justify-end gap-1">
+                              {isEditing ? (
+                                <>
+                                  <button onClick={() => handleSaveEdit(user.id)} disabled={saving} className="px-3 py-1.5 bg-[#12161E] text-white rounded-lg text-xs font-medium hover:bg-gray-800 disabled:opacity-50 flex items-center gap-1">
+                                    {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Save
+                                  </button>
+                                  <button onClick={() => { setEditingId(null); setError(''); }} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200">Cancel</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button onClick={() => { setEditingId(user.id); setEditUser({ name: user.name, email: user.email, role: user.role, active: user.active, newPassword: '' }); setError(''); }} className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title="Edit"><Edit3 className="w-3.5 h-3.5" /></button>
+                                  {!isMe && <button onClick={() => handleToggleActive(user)} className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors" title={user.active !== false ? 'Deactivate' : 'Activate'}>{user.active !== false ? <ToggleRight className="w-3.5 h-3.5 text-green-600" /> : <ToggleLeft className="w-3.5 h-3.5" />}</button>}
+                                  {!isMe && <button onClick={() => handleDelete(user.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>}
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {error && !showCreate && <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
+            </>
           )}
         </div>
       </div>
@@ -1047,7 +1015,7 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
 // ============================================================================
 // STAGE 1: RESEARCH VIEW
 // ============================================================================
-function ResearchView({ opportunity, onUpdate, apiKey }) {
+function ResearchView({ opportunity, onUpdate }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [companyName, setCompanyName] = useState(opportunity.companyName || '');
@@ -1056,11 +1024,10 @@ function ResearchView({ opportunity, onUpdate, apiKey }) {
   const [additionalContext, setAdditionalContext] = useState('');
 
   const runResearch = async () => {
-    if (!apiKey) return setError('Please enter your API key first.');
     if (!companyName.trim()) return setError('Please enter a company name.');
     setIsLoading(true); setError(null);
     try {
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         useWebSearch: true,
         maxTokens: 6000,
         system: `You are a senior business development researcher at Antenna Group, an integrated marketing and communications agency. Your job is to research prospect companies and produce actionable intelligence that prepares the BD team for an initial discovery call. You are sharp, strategic, and concise. You do NOT produce generic corporate summaries — you produce insight that drives better conversations.`,
@@ -1147,10 +1114,9 @@ Produce your response in this EXACT format:
 
           {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />{error}</div>}
 
-          <AntennaButton onClick={runResearch} loading={isLoading} loadingText="Researching..." icon={Search} disabled={!apiKey || !companyName.trim()} className="w-full" size="large">
+          <AntennaButton onClick={runResearch} loading={isLoading} loadingText="Researching..." icon={Search} disabled={!companyName.trim()} className="w-full" size="large">
             {researchComplete ? 'Re-run Research' : 'Run Company Research'}
           </AntennaButton>
-          {!apiKey && <p className="text-xs text-amber-600 mt-2 text-center">⚠ Enter your API key in settings to enable research</p>}
         </div>
 
         {/* Right: Results */}
@@ -1215,7 +1181,7 @@ Produce your response in this EXACT format:
 // ============================================================================
 // STAGE 2: BRIEF VIEW
 // ============================================================================
-function BriefView({ opportunity, onUpdate, apiKey }) {
+function BriefView({ opportunity, onUpdate }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transcript, setTranscript] = useState(opportunity.transcript || '');
@@ -1224,12 +1190,11 @@ function BriefView({ opportunity, onUpdate, apiKey }) {
   const [editedBrief, setEditedBrief] = useState(opportunity.returnBrief || '');
 
   const generateBrief = async () => {
-    if (!apiKey) return setError('Please enter your API key first.');
     if (!transcript.trim()) return setError('Please paste the call transcript.');
     setIsLoading(true); setError(null);
     const serviceTriggerSummary = SERVICE_TRIGGERS.map(t => `- ${t.category}: ${(t.triggerPatterns.direct || []).slice(0,3).join(', ')}`).join('\n');
     try {
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         maxTokens: 5000,
         system: `You are a senior account strategist at Antenna Group, an integrated marketing and communications agency. Your job is to listen deeply to what clients say and don't say, synthesize their needs, and produce a crisp, strategic Return Brief that demonstrates you truly understand the opportunity. Your writing is warm, direct, and shows genuine intelligence — not corporate jargon.`,
         userMessage: `Analyze this client call transcript and produce a Return Brief.
@@ -1334,7 +1299,7 @@ Then on a new section add:
 
           {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />{error}</div>}
 
-          <AntennaButton onClick={generateBrief} loading={isLoading} loadingText="Generating Brief..." icon={FileText} disabled={!apiKey || !transcript.trim()} className="w-full" size="large">
+          <AntennaButton onClick={generateBrief} loading={isLoading} loadingText="Generating Brief..." icon={FileText} disabled={!transcript.trim()} className="w-full" size="large">
             {opportunity.briefComplete ? 'Regenerate Brief' : 'Generate Return Brief'}
           </AntennaButton>
 
@@ -1509,7 +1474,7 @@ const ENGAGEMENT_TYPES = [
   { value: 'tm_cap', label: 'T&M with Cap', description: 'Hourly with maximum (client request only)' },
 ];
 
-function ProposalView({ opportunity, onUpdate, apiKey }) {
+function ProposalView({ opportunity, onUpdate }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [error, setError] = useState(null);
@@ -1535,12 +1500,11 @@ function ProposalView({ opportunity, onUpdate, apiKey }) {
   const pricingTotal = calculatePricingTotal(selectedServices);
 
   const detectServices = async () => {
-    if (!apiKey) return;
     setIsDetecting(true); setError(null);
     try {
       const context = `${opportunity.returnBrief || ''}\n\n${opportunity.transcript || ''}`.substring(0, 4000);
       const categoryList = SERVICE_TRIGGERS.map(t => `${t.id}: ${t.category} — triggers: ${(t.triggerPatterns.direct || []).concat(t.triggerPatterns.indirect || []).slice(0,4).join(', ')}`).join('\n');
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         maxTokens: 1500,
         system: 'You are a marketing services expert. Identify which service categories are relevant based on context. Return ONLY a JSON array of category IDs.',
         userMessage: `Based on this client context, identify relevant service categories.\n\nCONTEXT:\n${context}\n\nAVAILABLE CATEGORIES:\n${categoryList}\n\nReturn ONLY valid JSON array of category IDs that are relevant, e.g.: ["brand","pr","website"]`
@@ -1564,7 +1528,7 @@ function ProposalView({ opportunity, onUpdate, apiKey }) {
   };
 
   const generateProposal = async () => {
-    if (!apiKey || selectedServices.length === 0) return;
+    if (selectedServices.length === 0) return;
     setIsGenerating(true); setError(null);
     try {
       const servicesText = SERVICE_TRIGGERS.flatMap(t => t.services.filter(s => selectedServices.includes(getServiceName(s))).map(s => {
@@ -1575,7 +1539,7 @@ function ProposalView({ opportunity, onUpdate, apiKey }) {
 
       const archetypeContext = selectedArchetypes.length > 0 ? selectedArchetypes.map(id => FIT_ARCHETYPES[id]?.title + ': ' + FIT_ARCHETYPES[id]?.short).join('; ') : 'Architect: Strategic & Systematic';
 
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         maxTokens: 6000,
         system: `You are a senior business development writer at Antenna Group, an integrated marketing and communications agency that works with conscious brands that have the courage to lead. 
 
@@ -1662,11 +1626,11 @@ Write the proposal in this exact structure:
   };
 
   const iterateProposal = async () => {
-    if (!apiKey || !proposalIteration.trim()) return;
+    if (!proposalIteration.trim()) return;
     setIsIterating(true);
     try {
       const currentDraft = isEditingProposal ? editedProposal : opportunity.proposalDraft;
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         maxTokens: 6000,
         system: `You are refining a proposal for Antenna Group, an integrated marketing agency. Apply the requested changes while maintaining the professional, warm, direct Antenna voice.`,
         userMessage: `Update this proposal based on the following feedback:\n\nFEEDBACK: ${proposalIteration}\n\nCURRENT PROPOSAL:\n${currentDraft}\n\nReturn the complete updated proposal.`
@@ -1762,7 +1726,7 @@ Write the proposal in this exact structure:
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900">{selectedServices.length} Services Selected</h3>
               <div className="flex gap-2">
-                <button onClick={detectServices} disabled={isDetecting || !apiKey || (!opportunity.returnBrief && !opportunity.transcript)} className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-medium hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <button onClick={detectServices} disabled={isDetecting || (!opportunity.returnBrief && !opportunity.transcript)} className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-medium hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                   {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                   {isDetecting ? 'Detecting...' : 'Auto-Detect from Brief'}
                 </button>
@@ -1778,7 +1742,7 @@ Write the proposal in this exact structure:
 
             {selectedServices.length > 0 && (
               <div className="mt-6">
-                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={!apiKey} className="w-full" size="large">
+                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={false} className="w-full" size="large">
                   Generate Proposal
                 </AntennaButton>
               </div>
@@ -1831,7 +1795,7 @@ Write the proposal in this exact structure:
                 <div className="bg-white rounded-2xl border border-gray-200 p-5">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Iterate</h3>
                   <textarea value={proposalIteration} onChange={e => setProposalIteration(e.target.value)} placeholder="Describe what to change... 'Make the investment section clearer', 'Add more about our SEO capabilities', 'Tone down the sales language'..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y" />
-                  <button onClick={iterateProposal} disabled={isIterating || !proposalIteration.trim() || !apiKey} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                  <button onClick={iterateProposal} disabled={isIterating || !proposalIteration.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
                     {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Update Proposal</>}
                   </button>
                 </div>
@@ -1880,7 +1844,7 @@ Write the proposal in this exact structure:
 // ============================================================================
 // STAGE 4: SOW GENERATION VIEW
 // ============================================================================
-function SOWGenerateView({ opportunity, onUpdate, apiKey }) {
+function SOWGenerateView({ opportunity, onUpdate }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isIterating, setIsIterating] = useState(false);
   const [error, setError] = useState(null);
@@ -1892,11 +1856,10 @@ function SOWGenerateView({ opportunity, onUpdate, apiKey }) {
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
   const generateSOW = async () => {
-    if (!apiKey) return setError('Please enter your API key.');
     setIsGenerating(true); setError(null);
     try {
       const servicesText = (opportunity.selectedServices || []).join(', ') || 'Services as outlined in proposal';
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         maxTokens: 12000,
         system: `You are a senior contracts and operations specialist at Antenna Group, an integrated marketing and communications agency. You write Statements of Work that are protective, clear, and professional. You apply the SOW best practices to produce documents that prevent scope creep, establish clear client obligations, and protect both parties.
 
@@ -1934,11 +1897,11 @@ Use markdown formatting. This is a professional legal/business document — form
   };
 
   const iterateSOW = async () => {
-    if (!apiKey || !iterationFeedback.trim()) return;
+    if (!iterationFeedback.trim()) return;
     setIsIterating(true);
     try {
       const current = isEditing ? editedSOW : opportunity.sowDraft;
-      const result = await callClaude(apiKey, {
+      const result = await callClaude({
         maxTokens: 12000,
         system: `You are updating a Statement of Work for Antenna Group. Apply the requested changes while maintaining all SOW quality standards.`,
         userMessage: `Update this SOW based on the following feedback:\n\nFEEDBACK: ${iterationFeedback}\n\nCURRENT SOW:\n${current}\n\nReturn the complete updated SOW.`
@@ -1988,7 +1951,7 @@ Use markdown formatting. This is a professional legal/business document — form
 
           {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}</div>}
 
-          <AntennaButton onClick={generateSOW} loading={isGenerating} loadingText="Generating SOW..." icon={PenTool} disabled={!apiKey} className="w-full">
+          <AntennaButton onClick={generateSOW} loading={isGenerating} loadingText="Generating SOW..." icon={PenTool} disabled={false} className="w-full">
             {opportunity.sowDraft ? 'Regenerate SOW' : 'Generate SOW'}
           </AntennaButton>
 
@@ -1997,7 +1960,7 @@ Use markdown formatting. This is a professional legal/business document — form
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Iterate</h3>
               <textarea value={iterationFeedback} onChange={e => setIterationFeedback(e.target.value)} placeholder="'Add stronger revision limits', 'Update payment to net 45', 'Add a stop work clause'..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
-              <button onClick={iterateSOW} disabled={isIterating || !iterationFeedback.trim() || !apiKey} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+              <button onClick={iterateSOW} disabled={isIterating || !iterationFeedback.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                 {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Update SOW</>}
               </button>
             </div>
@@ -2047,7 +2010,7 @@ Use markdown formatting. This is a professional legal/business document — form
 // ============================================================================
 // STAGE 5: SOW REVIEW VIEW (standalone, no opportunity required)
 // ============================================================================
-function SOWReviewView({ apiKey, onUpdateApiKey }) {
+function SOWReviewView() {
   const [file, setFile] = useState(null);
   const [fileContent, setFileContent] = useState(null);
   const [engagementType, setEngagementType] = useState('');
@@ -2080,7 +2043,7 @@ function SOWReviewView({ apiKey, onUpdateApiKey }) {
   };
 
   const analyzeSOW = async () => {
-    if (!apiKey || !fileContent) return;
+    if (!fileContent) return;
     setIsAnalyzing(true); setError(null); setAnalysis(null);
     try {
       const engLabel = ENGAGEMENT_TYPES.find(t => t.value === engagementType)?.label || 'Not specified';
@@ -2117,7 +2080,7 @@ What's working well: [brief notes]`;
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({
           model: MODEL, max_tokens: 8000,
           messages: [{
@@ -2164,7 +2127,7 @@ What's working well: [brief notes]`;
   };
 
   const generateRevised = async () => {
-    if (!apiKey || !analysis) return;
+    if (!analysis) return;
     setIsDrafting(true);
     try {
       const selectedCritical = (analysis.critical || []).filter((_, i) => selectedRecs.critical.includes(i));
@@ -2173,7 +2136,7 @@ What's working well: [brief notes]`;
       const draftPrompt = `Based on ONLY the selected changes below, create a COMPLETE REVISED VERSION of this SOW. Mark modified sections [REVISED] and new sections [NEW].\n\nCritical fixes:\n${selectedCritical.join('\n\n') || 'None'}\n\nRecommended improvements:\n${selectedRecommended.join('\n\n') || 'None'}\n\nRed flags to replace:\n${selectedRedFlags.join('\n') || 'None'}`;
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
         body: JSON.stringify({
           model: MODEL, max_tokens: 16000,
           messages: [{ role: 'user', content: fileContent.type === 'text' ? `${draftPrompt}\n\n=== ORIGINAL SOW ===\n${fileContent.data}` : [{ type: 'document', source: { type: 'base64', media_type: fileContent.type === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', data: fileContent.data } }, { type: 'text', text: draftPrompt }] }]
@@ -2230,7 +2193,7 @@ What's working well: [brief notes]`;
 
           {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
 
-          <AntennaButton onClick={analyzeSOW} loading={isAnalyzing} loadingText="Analyzing..." icon={Search} disabled={!apiKey || !file || !fileContent} className="w-full">
+          <AntennaButton onClick={analyzeSOW} loading={isAnalyzing} loadingText="Analyzing..." icon={Search} disabled={!file || !fileContent} className="w-full">
             Review SOW
           </AntennaButton>
         </div>
@@ -2317,12 +2280,11 @@ What's working well: [brief notes]`;
 // ============================================================================
 // HOME / DASHBOARD VIEW
 // ============================================================================
-function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, apiKey, setApiKey, currentUser, roleInfo }) {
+function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, currentUser, roleInfo }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newIndustry, setNewIndustry] = useState('');
-  const [showApiKey, setShowApiKey] = useState(!apiKey);
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -2386,22 +2348,6 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           </div>
         ))}
       </div>
-
-      {/* API Key */}
-      {(showApiKey || !apiKey) && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-900 flex items-center gap-2"><Key className="w-4 h-4" />API Key</h3>
-            {apiKey && <button onClick={() => setShowApiKey(false)} className="text-xs text-gray-500 hover:text-gray-900"><X className="w-4 h-4" /></button>}
-          </div>
-          <ApiKeyInput apiKey={apiKey} setApiKey={setApiKey} />
-        </div>
-      )}
-      {apiKey && !showApiKey && (
-        <div className="flex justify-end mb-6">
-          <button onClick={() => setShowApiKey(true)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"><Key className="w-4 h-4" />Update API Key</button>
-        </div>
-      )}
 
       {/* Actions */}
       <div className="flex items-center gap-4 mb-8 flex-wrap">
@@ -2517,19 +2463,42 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
 // ============================================================================
 export default function App() {
   // ---- AUTH ----
-  const [currentUser, setCurrentUser] = useState(() => getStoredSession());
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  const handleLogin = (user) => {
-    saveStoredSession(user);
-    setCurrentUser(user);
-  };
+  // Restore session from Supabase on mount
+  useEffect(() => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles').select('*').eq('id', session.user.id).single();
+        if (profile && profile.active !== false) {
+          setCurrentUser({ ...profile, id: session.user.id });
+        } else {
+          await supabase.auth.signOut();
+        }
+      }
+      setAuthLoading(false);
+    };
+    init();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        setCurrentView('home');
+        setCurrentOpportunity(null);
+        setOpportunities([]);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const handleLogout = () => {
-    saveStoredSession(null);
-    setCurrentUser(null);
-    setCurrentView('home');
-    setCurrentOpportunity(null);
+  const handleLogin = (user) => setCurrentUser(user);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    // onAuthStateChange handles state reset above
   };
 
   // ---- PIPELINE ----
@@ -2537,33 +2506,27 @@ export default function App() {
   const [currentStage, setCurrentStage] = useState('research');
   const [currentOpportunity, setCurrentOpportunity] = useState(null);
 
-  // Per-user API key
-  const [apiKey, setApiKey] = useState(() => currentUser ? getStoredApiKeyForUser(currentUser.id) : '');
+  // Opportunities — stored in Supabase opportunities table
+  const [opportunities, setOpportunities] = useState([]);
 
-  // Per-user opportunities
-  const [opportunities, setOpportunities] = useState(() => currentUser ? getStoredOpportunitiesForUser(currentUser.id) : []);
-
-  // Reload data when user changes
+  // Load user data when user changes
   useEffect(() => {
-    if (currentUser) {
-      setApiKey(getStoredApiKeyForUser(currentUser.id));
-      setOpportunities(getStoredOpportunitiesForUser(currentUser.id));
-      // Reset nav
-      setCurrentView('home');
-      setCurrentOpportunity(null);
-      setCurrentStage('research');
-    }
+    if (!currentUser) return;
+    setCurrentView('home');
+    setCurrentOpportunity(null);
+    setCurrentStage('research');
+
+    supabase
+      .from('opportunities')
+      .select('id, data, created_at, updated_at')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setOpportunities(data.map(r => ({ ...r.data, id: r.id })));
+        }
+      });
   }, [currentUser?.id]);
-
-  // Save API key per user
-  useEffect(() => {
-    if (currentUser && apiKey) saveStoredApiKeyForUser(currentUser.id, apiKey);
-  }, [apiKey, currentUser?.id]);
-
-  // Save opportunities per user
-  useEffect(() => {
-    if (currentUser) saveStoredOpportunitiesForUser(currentUser.id, opportunities);
-  }, [opportunities, currentUser?.id]);
 
   const updateOpportunity = useCallback((updates) => {
     setCurrentOpportunity(prev => {
@@ -2571,6 +2534,9 @@ export default function App() {
       const updated = { ...prev, ...updates, updatedAt: new Date().toISOString() };
       if (updates.currentStage) setCurrentStage(updates.currentStage);
       setOpportunities(prevOpps => prevOpps.map(o => o.id === updated.id ? updated : o));
+      // Persist to Supabase (fire and forget — id is the row pk, rest goes into data)
+      const { id, ...data } = updated;
+      supabase.from('opportunities').update({ data }).eq('id', id);
       return updated;
     });
   }, []);
@@ -2581,14 +2547,25 @@ export default function App() {
     setCurrentView('opportunity');
   };
 
-  const createOpportunityAndSelect = (opp) => {
-    setOpportunities(prev => [opp, ...prev]);
-    setCurrentOpportunity(opp);
+  const createOpportunityAndSelect = async (opp) => {
+    if (!currentUser) return;
+    // Strip any client-generated id — Supabase will assign the real UUID
+    const { id: _ignored, ...oppData } = opp;
+    const { data: row, error } = await supabase
+      .from('opportunities')
+      .insert({ user_id: currentUser.id, data: oppData })
+      .select('id')
+      .single();
+    if (error) { console.error('Failed to create opportunity:', error.message); return; }
+    const newOpp = { ...oppData, id: row.id };
+    setOpportunities(prev => [newOpp, ...prev]);
+    setCurrentOpportunity(newOpp);
     setCurrentStage('research');
     setCurrentView('opportunity');
   };
 
-  const deleteOpportunity = (id) => {
+  const deleteOpportunity = async (id) => {
+    await supabase.from('opportunities').delete().eq('id', id);
     setOpportunities(prev => prev.filter(o => o.id !== id));
     if (currentOpportunity?.id === id) { setCurrentOpportunity(null); setCurrentView('home'); }
   };
@@ -2614,7 +2591,7 @@ export default function App() {
         </div>
       );
     }
-    const props = { opportunity: currentOpportunity, onUpdate: updateOpportunity, apiKey };
+    const props = { opportunity: currentOpportunity, onUpdate: updateOpportunity };
     switch (currentStage) {
       case 'research': return <ResearchView {...props} />;
       case 'brief': return <BriefView {...props} />;
@@ -2624,7 +2601,17 @@ export default function App() {
     }
   };
 
-  // ---- NOT LOGGED IN ----
+  // ---- NOT LOGGED IN / LOADING ----
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#E8E6E1' }}>
+        <div className="text-center">
+          <AntennaLogo className="h-10 mx-auto mb-6 opacity-70" />
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto" />
+        </div>
+      </div>
+    );
+  }
   if (!currentUser) return <LoginView onLogin={handleLogin} />;
 
   // ---- REVIEWER ONLY LAYOUT ----
@@ -2644,7 +2631,7 @@ export default function App() {
               <span className="text-sm font-medium text-amber-800">Reviewer Access — SOW Review Only</span>
             </div>
           </div>
-          <SOWReviewView apiKey={apiKey} onUpdateApiKey={(k) => setApiKey(k)} />
+          <SOWReviewView />
         </main>
         <AppFooter />
       </div>
@@ -2704,8 +2691,6 @@ export default function App() {
             onCreateOpportunity={createOpportunityAndSelect}
             onDeleteOpportunity={deleteOpportunity}
             onOpenReview={roleInfo?.canAccessSOWReview ? () => setCurrentView('sow-review') : null}
-            apiKey={apiKey}
-            setApiKey={setApiKey}
             currentUser={currentUser}
             roleInfo={roleInfo}
           />
@@ -2713,7 +2698,7 @@ export default function App() {
         {currentView === 'opportunity' && renderStageView()}
         {currentView === 'sow-review' && (
           roleInfo?.canAccessSOWReview
-            ? <SOWReviewView apiKey={apiKey} onUpdateApiKey={(k) => setApiKey(k)} />
+            ? <SOWReviewView />
             : <div className="max-w-xl mx-auto py-20 text-center"><Lock className="w-10 h-10 text-gray-300 mx-auto mb-4" /><p className="text-gray-500">Your role doesn't include SOW Review access.</p></div>
         )}
       </main>
