@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.5.0';
+const APP_VERSION = '3.8.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -1349,12 +1349,12 @@ function ResearchView({ opportunity, onUpdate }) {
   const [industry, setIndustry] = useState(opportunity.industry || '');
   const [additionalContext, setAdditionalContext] = useState(opportunity.researchContext || '');
 
-  // Save input fields when user navigates away
+  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
+  const saveRef = useRef({});
+  useEffect(() => { saveRef.current = { companyName, companyUrl, industry, researchContext: additionalContext }; });
   useEffect(() => {
-    return () => {
-      onUpdate({ companyName, companyUrl, industry, researchContext: additionalContext });
-    };
-  }, [companyName, companyUrl, industry, additionalContext]);
+    return () => { onUpdate(saveRef.current); };
+  }, []);
 
   const runResearch = async () => {
     if (!companyName.trim()) return setError('Please enter a company name.');
@@ -1633,7 +1633,7 @@ CRITICAL: Replace each template question above with a version specific to this c
       )}
 
       {researchComplete && (
-        <AntennaButton onClick={() => onUpdate({ currentStage: 'brief' })} icon={ArrowRight} className="w-full">
+        <AntennaButton onClick={() => onUpdate({ currentStage: 'brief', companyName, companyUrl, industry, researchContext: additionalContext })} icon={ArrowRight} className="w-full">
           Proceed to Return Brief →
         </AntennaButton>
       )}
@@ -1655,12 +1655,12 @@ function BriefView({ opportunity, onUpdate }) {
   const [editedBrief, setEditedBrief] = useState(opportunity.returnBrief || '');
   const [showCompass, setShowCompass] = useState(!!(opportunity.compassAssessment));
 
-  // Save all local state when navigating away
+  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
+  const saveRef = useRef({});
+  useEffect(() => { saveRef.current = { transcript, briefNotes, compassAssessment, fitArchetype }; });
   useEffect(() => {
-    return () => {
-      onUpdate({ transcript, briefNotes, compassAssessment, fitArchetype });
-    };
-  }, [transcript, briefNotes, compassAssessment, fitArchetype]);
+    return () => { onUpdate(saveRef.current); };
+  }, []);
 
   const generateBrief = async () => {
     if (!transcript.trim()) return setError('Please paste the call transcript.');
@@ -1927,7 +1927,7 @@ Then on a new section add:
                 </CollapsibleSection>
               )}
 
-              <AntennaButton onClick={() => onUpdate({ currentStage: 'proposal' })} icon={ArrowRight} className="w-full">
+              <AntennaButton onClick={() => onUpdate({ currentStage: 'proposal', transcript, briefNotes, compassAssessment, fitArchetype })} icon={ArrowRight} className="w-full">
                 Proceed to Proposal →
               </AntennaButton>
             </div>
@@ -2072,10 +2072,12 @@ function ProposalView({ opportunity, onUpdate }) {
   const [isIterating, setIsIterating] = useState(false);
   const [activeTab, setActiveTab] = useState('services');
 
-  // Save local state when navigating away
+  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
+  const saveRef = useRef({});
+  useEffect(() => { saveRef.current = { draftNotes }; });
   useEffect(() => {
-    return () => { onUpdate({ draftNotes }); };
-  }, [draftNotes]);
+    return () => { onUpdate(saveRef.current); };
+  }, []);
 
   const selectedServices = opportunity.selectedServices || [];
   const selectedArchetypes = opportunity.selectedArchetypes || [];
@@ -2480,7 +2482,7 @@ Write the proposal in this exact structure:
 
                 {/* Proceed to SOW */}
                 {opportunity.proposalStatus === 'approved' && (
-                  <AntennaButton onClick={() => onUpdate({ currentStage: 'sow' })} icon={ArrowRight} className="w-full">
+                  <AntennaButton onClick={() => onUpdate({ currentStage: 'sow', draftNotes })} icon={ArrowRight} className="w-full">
                     Generate SOW →
                   </AntennaButton>
                 )}
@@ -2506,10 +2508,12 @@ function SOWGenerateView({ opportunity, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSOW, setEditedSOW] = useState(opportunity.sowDraft || '');
 
-  // Save local state when navigating away
+  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
+  const saveRef = useRef({});
+  useEffect(() => { saveRef.current = { sowNotes }; });
   useEffect(() => {
-    return () => { onUpdate({ sowNotes }); };
-  }, [sowNotes]);
+    return () => { onUpdate(saveRef.current); };
+  }, []);
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
@@ -2655,6 +2659,14 @@ Use markdown formatting. This is a professional legal/business document — form
               ) : (
                 <div className="p-5 max-h-[700px] overflow-y-auto">
                   <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{opportunity.sowDraft}</pre>
+                </div>
+              )}
+              {/* Proceed to Handover */}
+              {opportunity.sowDraft && (
+                <div className="px-5 pb-5">
+                  <AntennaButton onClick={() => onUpdate({ currentStage: 'handover', sowNotes })} icon={ArrowRight} className="w-full">
+                    Proceed to Sales Handover →
+                  </AntennaButton>
                 </div>
               )}
             </div>
@@ -2947,10 +2959,12 @@ function HandoverView({ opportunity, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedHandover, setEditedHandover] = useState(opportunity.handoverDraft || '');
 
-  // Save local state when navigating away
+  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
+  const saveRef = useRef({});
+  useEffect(() => { saveRef.current = { handoverNotes }; });
   useEffect(() => {
-    return () => { onUpdate({ handoverNotes }); };
-  }, [handoverNotes]);
+    return () => { onUpdate(saveRef.current); };
+  }, []);
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
@@ -3869,6 +3883,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
       {/* Footer credit */}
       <div className="mt-16 pb-6 text-center">
         <p className="text-xs text-gray-300 tracking-wide">A Mr Newton Production</p>
+        <p className="text-[10px] text-gray-400 mt-0.5">v{APP_VERSION}</p>
       </div>
     </div>
   );
