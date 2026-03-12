@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.1';
+const APP_VERSION = '3.15.2';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3774,16 +3774,36 @@ function PipelineModal({ onClose }) {
     else { setSortCol(col); setSortDir(col === 'Win Probability' || col === 'Budget Forecast' || col === 'Weighted Pipeline Value' ? 'desc' : 'asc'); }
   };
 
-  const totalWeighted = filtered.reduce((sum, r) => sum + (Number(r['Weighted Pipeline Value']) || 0), 0);
-  const totalBudget = filtered.reduce((sum, r) => sum + (Number(r['Budget Forecast']) || 0), 0);
+  // Smartsheet may return numbers as raw values OR as formatted display strings like "$480,000" or "80%"
+  // parseNum strips currency/percent formatting so both cases work
+  const parseNum = (n) => {
+    if (n == null || n === '') return NaN;
+    if (typeof n === 'number') return n;
+    // Strip $, commas, spaces — leaves digits, dot, minus
+    const stripped = String(n).replace(/[$,\s]/g, '');
+    return parseFloat(stripped);
+  };
+  // parsePct handles both "80%" → 0.8 and raw decimal 0.8 → 0.8
+  const parsePct = (n) => {
+    if (n == null || n === '') return NaN;
+    if (typeof n === 'number') return n; // already 0–1 decimal
+    const s = String(n).trim();
+    if (s.endsWith('%')) return parseFloat(s) / 100;
+    return parseFloat(s);
+  };
 
-  const fmt = (n) => n != null && n !== '' && !isNaN(n)
-    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
-    : '—';
+  const totalWeighted = filtered.reduce((sum, r) => sum + (parseNum(r['Weighted Pipeline Value']) || 0), 0);
+  const totalBudget = filtered.reduce((sum, r) => sum + (parseNum(r['Budget Forecast']) || 0), 0);
 
-  const fmtPct = (n) => n != null && n !== '' && !isNaN(n)
-    ? `${Math.round(Number(n) * 100)}%`
-    : '—';
+  const fmt = (n) => {
+    const v = parseNum(n);
+    return !isNaN(v) ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v) : '—';
+  };
+
+  const fmtPct = (n) => {
+    const v = parsePct(n);
+    return !isNaN(v) ? `${Math.round(v * 100)}%` : '—';
+  };
 
   const statusStyle = (s) => {
     switch (s) {
@@ -3926,7 +3946,7 @@ function PipelineModal({ onClose }) {
                       {row['Win Probability'] != null && row['Win Probability'] !== '' ? (
                         <div className="flex items-center justify-end gap-2">
                           <div className="w-12 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                            <div className="h-full rounded-full bg-[#6B9E4A]" style={{ width: `${Math.min(100, Number(row['Win Probability']) * 100)}%` }} />
+                            <div className="h-full rounded-full bg-[#6B9E4A]" style={{ width: `${Math.min(100, parsePct(row['Win Probability']) * 100)}%` }} />
                           </div>
                           <span className="text-xs font-bold text-gray-700 w-8 text-right">{fmtPct(row['Win Probability'])}</span>
                         </div>
