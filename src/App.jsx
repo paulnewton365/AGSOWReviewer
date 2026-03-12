@@ -87,9 +87,20 @@ const USER_ROLES = {
 
 const PRACTICES = ['Climate', 'Real Estate', 'Health', 'PA', 'HOWL'];
 
-const createOpportunity = (companyName, companyUrl = '', industry = '', practice = '') => ({
+// Simple counter for unique opp numbers (stored in localStorage for persistence)
+const getNextOppNumber = () => {
+  try {
+    const next = parseInt(localStorage.getItem('ag_opp_counter') || '0', 10) + 1;
+    localStorage.setItem('ag_opp_counter', String(next));
+    return `OPP-${String(next).padStart(4, '0')}`;
+  } catch { return `OPP-${Date.now().toString().slice(-4)}`; }
+};
+
+const createOpportunity = (companyName, companyUrl = '', industry = '', practice = '', title = '') => ({
   id: Date.now().toString(),
+  oppNumber: getNextOppNumber(),
   companyName,
+  title,
   companyUrl,
   industry,
   practice,
@@ -2981,6 +2992,7 @@ const SMARTSHEET_COLUMNS = [
   { key: 'Workflow Status', label: 'Status' },
   { key: 'Owning Ecosystem', label: 'Ecosystem' },
   { key: 'CONFLICT', label: 'Conflict' },
+  { key: 'Modified', label: 'Date Qualified' },
 ];
 
 function QualificationModal({ onClose }) {
@@ -3196,6 +3208,9 @@ function QualificationModal({ onClose }) {
                         </span>
                       )}
                     </td>
+                    <td className="py-3 px-3 text-xs text-gray-400 whitespace-nowrap">
+                      {row['Modified'] ? new Date(row['Modified']).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -3220,9 +3235,10 @@ function QualificationModal({ onClose }) {
 // ============================================================================
 // HOME / DASHBOARD VIEW
 // ============================================================================
-function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, currentUser, roleInfo }) {
+function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, onOpenQualification, currentUser, roleInfo }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
   const [newIndustry, setNewIndustry] = useState('');
   const [newPractice, setNewPractice] = useState('');
@@ -3232,22 +3248,57 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
 
   const handleCreate = () => {
     if (!newName.trim()) return;
-    const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim(), newPractice);
+    const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim(), newPractice, newTitle.trim());
     onCreateOpportunity(opp);
     setShowCreate(false);
-    setNewName(''); setNewUrl(''); setNewIndustry(''); setNewPractice('');
+    setNewName(''); setNewTitle(''); setNewUrl(''); setNewIndustry(''); setNewPractice('');
   };
 
-  const getStageLabel = (opp) => {
-    const stage = PIPELINE_STAGES.find(s => s.id === opp.currentStage);
-    return stage?.label || 'Research';
-  };
+  const getStageLabel = (opp) => PIPELINE_STAGES.find(s => s.id === opp.currentStage)?.label || 'Research';
 
   const getProgress = (opp) => {
-    const stages = ['research', 'brief', 'proposal', 'sow'];
+    const stages = ['research', 'brief', 'proposal', 'sow', 'handover'];
     const idx = stages.indexOf(opp.currentStage);
-    if (opp.currentStage === 'sow' && opp.sowDraft) return 100;
-    return Math.round(((idx + (opp[opp.currentStage + 'Complete'] ? 1 : 0.5)) / stages.length) * 100);
+    if (opp.currentStage === 'handover' && opp.handoverDraft) return 100;
+    if (opp.currentStage === 'sow' && opp.sowDraft) return 85;
+    return Math.round(((idx + 0.5) / stages.length) * 100);
+  };
+
+  const getBudgetRange = (opp) => {
+    try {
+      const services = opp.selectedServices || [];
+      if (!services.length) return null;
+      let low = 0, high = 0;
+      services.forEach(name => {
+        for (const cat of SERVICE_TRIGGERS) {
+          const svc = cat.services?.find(s => s.name === name);
+          if (svc?.pricing) { low += svc.pricing.budgetLow || 0; high += svc.pricing.budgetHigh || 0; break; }
+        }
+      });
+      if (!low && !high) return null;
+      const fmt = n => n >= 1000000 ? `$${(n/1000000).toFixed(1)}M` : `$${(n/1000).toFixed(0)}K`;
+      return `${fmt(low)}–${fmt(high)}`;
+    } catch { return null; }
+  };
+
+  const exportToExcel = () => {
+    const rows = filtered.map(o => ({
+      'Opp #': o.oppNumber || '',
+      'Company': o.companyName,
+      'Title': o.title || '',
+      'Practice': o.practice || '',
+      'RID': o.rid || '',
+      'Industry': o.industry || '',
+      'Stage': getStageLabel(o),
+      'Progress': `${getProgress(o)}%`,
+      'Budget Range': getBudgetRange(o) || '',
+      'Status': PROPOSAL_STATUSES.find(s => s.value === o.proposalStatus)?.label || '',
+      'Created': new Date(o.createdAt).toLocaleDateString(),
+    }));
+    const header = Object.keys(rows[0] || {});
+    const csv = [header.join(','), ...rows.map(r => header.map(h => `"${(r[h] || '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    saveAs(blob, `AG_Opportunities_${new Date().toISOString().slice(0,10)}.csv`);
   };
 
   const allActive = opportunities.filter(o => o.proposalStatus !== 'evaporated');
@@ -3257,7 +3308,9 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const filtered = allActive.filter(o => {
     const matchSearch = !q ||
       o.companyName.toLowerCase().includes(q) ||
+      (o.title || '').toLowerCase().includes(q) ||
       (o.rid || '').toLowerCase().includes(q) ||
+      (o.oppNumber || '').toLowerCase().includes(q) ||
       (o.practice || '').toLowerCase().includes(q) ||
       (o.industry || '').toLowerCase().includes(q);
     const matchStage = !filterStage || o.currentStage === filterStage;
@@ -3270,48 +3323,61 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
     brief:    { bg: '#FEF9EC', color: '#A08018', border: '#EDD98A' },
     proposal: { bg: '#EEF5E8', color: '#4A7A30', border: '#9DC87A' },
     sow:      { bg: '#E8EEF5', color: '#2A5A8A', border: '#7AAAC8' },
+    handover: { bg: '#F0EBF8', color: '#6B3FA0', border: '#C3A8E8' },
   }[stageId] || { bg: '#F5F5F5', color: '#666', border: '#DDD' });
 
-  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC'];
+  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC', '#9B59B6'];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
+    <div className="max-w-7xl mx-auto px-8 py-12">
+
       {/* Hero */}
-      <div className="mb-12">
-        <div className="flex items-start justify-between flex-wrap gap-6">
-          <div>
-            <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-3">Antenna Group · Internal Tools</p>
-            <h1 className="text-4xl lg:text-5xl font-bold text-[#12161E] leading-tight mb-3">SOW Workbench</h1>
-            <p className="text-lg text-gray-500 max-w-xl leading-relaxed">
-              We diagnose before we prescribe! This tool helps you identify an opportunity and ensure that we can move fast and recommend the right services to solve our clients' problems.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {roleInfo?.canCreateOpportunities !== false && (
-              <AntennaButton onClick={() => setShowCreate(true)} icon={Plus} size="large">New Opportunity</AntennaButton>
-            )}
-            {onOpenReview && (
-              <button onClick={onOpenReview} className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-[#12161E] hover:text-[#12161E] transition-all text-sm">
-                <ShieldCheck className="w-4 h-4" />Review Existing SOW
-              </button>
-            )}
-          </div>
+      <div className="mb-10">
+        <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Antenna Group · Internal Tools</p>
+        <h1 className="text-5xl lg:text-6xl font-black text-[#12161E] leading-none mb-4 tracking-tight">SOW Workbench</h1>
+        <p className="text-base text-gray-500 max-w-2xl leading-relaxed mb-8">
+          We diagnose before we prescribe! This tool helps you identify an opportunity and ensure that we can move fast and recommend the right services to solve our clients' problems.
+        </p>
+        {/* Action buttons — unified style */}
+        <div className="flex flex-wrap gap-3">
+          {roleInfo?.canCreateOpportunities !== false && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-2 px-5 py-3 bg-[#12161E] text-white rounded-xl font-semibold text-sm hover:bg-[#2a3040] transition-all shadow-sm"
+            >
+              <Plus className="w-4 h-4" />New Opportunity
+            </button>
+          )}
+          {onOpenReview && (
+            <button
+              onClick={onOpenReview}
+              className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
+            >
+              <ShieldCheck className="w-4 h-4" />Review Existing SOW
+            </button>
+          )}
+          <button
+            onClick={onOpenQualification}
+            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
+          >
+            <TableProperties className="w-4 h-4" />Check If Your Opportunity Is Qualified
+          </button>
         </div>
       </div>
 
-      {/* Pipeline stage cards — clickable to filter */}
-      <div className="grid grid-cols-4 gap-3 mb-10">
+      {/* Pipeline stage cards — single row of 5 */}
+      <div className="grid grid-cols-5 gap-3 mb-10">
         {PIPELINE_STAGES.map((stage, idx) => {
           const stageCount = allActive.filter(o => o.currentStage === stage.id).length;
           const isActive = filterStage === stage.id;
           return (
             <button key={stage.id} onClick={() => setFilterStage(isActive ? '' : stage.id)}
-              className={`bg-white rounded-xl border p-4 overflow-hidden text-left transition-all ${isActive ? 'border-[#12161E] ring-2 ring-[#12161E]/20' : 'border-gray-200 hover:border-gray-400'}`}>
+              className={`bg-white rounded-xl border p-5 text-left transition-all ${isActive ? 'border-[#12161E] ring-2 ring-[#12161E]/10 shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:shadow-sm'}`}>
               <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">{String(idx + 1).padStart(2,'0')}</span>
-                {stageCount > 0 && <span className="text-xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>}
+                <span className="text-xs font-bold tracking-widest text-gray-300 uppercase">{String(idx + 1).padStart(2,'0')}</span>
+                {stageCount > 0 && <span className="text-2xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>}
               </div>
-              <h3 className="font-bold text-[#12161E] text-sm leading-tight mb-0.5">{stage.label}</h3>
+              <h3 className="font-black text-[#12161E] text-base leading-tight mb-1">{stage.label}</h3>
               <p className="text-xs text-gray-400 leading-snug">{stage.description}</p>
             </button>
           );
@@ -3324,32 +3390,38 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900">New Opportunity</h3>
-              <button onClick={() => setShowCreate(false)} className="text-gray-500 hover:text-gray-900"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name *</label>
-                <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name <span className="text-red-400">*</span></label>
+                <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && newName.trim() && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Assignment Title <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Q3 Integrated Campaign" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Owning Practice</label>
-                <select value={newPractice} onChange={e => setNewPractice(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 bg-white">
+                <select value={newPractice} onChange={e => setNewPractice(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 bg-white text-sm">
                   <option value="">Select practice...</option>
                   {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website (optional)</label>
-                <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry (optional)</label>
-                <input value={newIndustry} onChange={e => setNewIndustry(e.target.value)} placeholder="e.g. Climate Tech" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input value={newIndustry} onChange={e => setNewIndustry(e.target.value)} placeholder="e.g. Climate Tech" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setShowCreate(false)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors">Cancel</button>
-              <AntennaButton onClick={handleCreate} disabled={!newName.trim()} icon={Plus} className="flex-1">Create</AntennaButton>
+              <button onClick={() => setShowCreate(false)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">Cancel</button>
+              <button onClick={handleCreate} disabled={!newName.trim()} className="flex-1 px-4 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2a3040] transition-colors flex items-center justify-center gap-2">
+                <Plus className="w-4 h-4" />Create Opportunity
+              </button>
             </div>
           </div>
         </div>
@@ -3357,44 +3429,59 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
 
       {/* Opportunities List */}
       {opportunities.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
           <Building2 className="w-12 h-12 text-gray-200 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-400 mb-2">No opportunities yet</h3>
           <p className="text-sm text-gray-400 mb-6">Create your first opportunity to begin the pipeline.</p>
           {roleInfo?.canCreateOpportunities !== false && (
-            <AntennaButton onClick={() => setShowCreate(true)} icon={Plus}>New Opportunity</AntennaButton>
+            <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm hover:bg-[#2a3040] transition-colors">
+              <Plus className="w-4 h-4" />New Opportunity
+            </button>
           )}
         </div>
       ) : (
         <div>
+          {/* Section title + search row */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-[#12161E]">Opportunities</h2>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span>{filtered.length} of {allActive.length}</span>
+            </div>
+          </div>
+
           {/* Search + Filter bar */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="relative flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 value={searchQ} onChange={e => setSearchQ(e.target.value)}
-                placeholder="Search by company, RID, practice, industry..."
-                className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 outline-none placeholder:text-gray-400"
+                placeholder="Search company, title, RID, practice..."
+                className="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#12161E] outline-none placeholder:text-gray-400"
               />
               {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><X className="w-3.5 h-3.5" /></button>}
             </div>
-            <select value={filterPractice} onChange={e => setFilterPractice(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 outline-none text-gray-700">
+            <select value={filterPractice} onChange={e => setFilterPractice(e.target.value)} className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#12161E] outline-none text-gray-700">
               <option value="">All Practices</option>
               {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             {(searchQ || filterStage || filterPractice) && (
-              <button onClick={() => { setSearchQ(''); setFilterStage(''); setFilterPractice(''); }} className="text-xs px-3 py-2 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">Clear all</button>
+              <button onClick={() => { setSearchQ(''); setFilterStage(''); setFilterPractice(''); }} className="text-xs px-3 py-2.5 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">Clear</button>
             )}
-            <span className="text-xs text-gray-400 ml-auto whitespace-nowrap">{filtered.length} of {allActive.length}</span>
+            {filtered.length > 0 && (
+              <button onClick={exportToExcel} className="ml-auto flex items-center gap-1.5 text-xs px-3 py-2.5 border border-gray-200 bg-white rounded-xl text-gray-600 hover:border-[#12161E] hover:text-[#12161E] transition-all font-medium">
+                <Download className="w-3.5 h-3.5" />Export to Excel
+              </button>
+            )}
           </div>
 
           {/* Column headers */}
           <div className="grid grid-cols-12 gap-3 px-4 mb-2">
-            <span className="col-span-4 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company</span>
+            <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Opp #</span>
+            <span className="col-span-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company & Title</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Practice / RID</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Progress</span>
-            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Status</span>
+            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Budget</span>
           </div>
 
           {filtered.length === 0 ? (
@@ -3405,20 +3492,27 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             <div className="space-y-1.5">
               {filtered.map((opp) => {
                 const progress = getProgress(opp);
-                const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opp.proposalStatus);
+                const budget = getBudgetRange(opp);
                 const initials = opp.companyName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
                 const pill = stagePill(opp.currentStage);
                 return (
                   <button key={opp.id} onClick={() => onSelectOpportunity(opp)}
                     className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
-                    {/* Company */}
-                    <div className="col-span-4 flex items-center gap-3 min-w-0">
+                    {/* Opp # */}
+                    <div className="col-span-1">
+                      <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-600 transition-colors">{opp.oppNumber || '—'}</span>
+                    </div>
+                    {/* Company + Title */}
+                    <div className="col-span-3 flex items-center gap-3 min-w-0">
                       <div className="w-9 h-9 bg-[#12161E] group-hover:bg-[#E8FF00] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
                         <span className="text-xs font-black text-white group-hover:text-[#12161E] transition-colors">{initials}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-[#12161E] leading-tight truncate">{opp.companyName}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
+                        <p className="font-bold text-[#12161E] leading-tight truncate text-sm">{opp.companyName}</p>
+                        {opp.title
+                          ? <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.title}</p>
+                          : <p className="text-xs text-gray-300 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
+                        }
                       </div>
                     </div>
                     {/* Practice + RID */}
@@ -3445,15 +3539,15 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                                                         'linear-gradient(90deg,#6B9E4A,#4A7AAC)'
                           }} />
                         </div>
-                        <span className="text-xs font-bold text-gray-500 w-8 text-right">{progress}%</span>
+                        <span className="text-xs font-bold text-gray-400 w-8 text-right">{progress}%</span>
                       </div>
                     </div>
-                    {/* Status */}
+                    {/* Budget + arrow */}
                     <div className="col-span-2 hidden sm:flex items-center justify-between">
-                      {opp.proposalDraft && statusInfo
-                        ? <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>{statusInfo.label}</span>
-                        : <span />}
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors" />
+                      {budget
+                        ? <span className="text-xs font-semibold text-gray-700">{budget}</span>
+                        : <span className="text-xs text-gray-300">—</span>}
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors flex-shrink-0 ml-2" />
                     </div>
                   </button>
                 );
@@ -3467,7 +3561,10 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                 <div className="space-y-1.5">
                   {evaporated.map(opp => (
                     <button key={opp.id} onClick={() => onSelectOpportunity(opp)} className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <span className="text-sm text-gray-500 font-medium">{opp.companyName}</span>
+                      <div>
+                        <span className="text-sm text-gray-500 font-medium">{opp.companyName}</span>
+                        {opp.title && <span className="text-xs text-gray-400 ml-2">{opp.title}</span>}
+                      </div>
                       <ChevronRight className="w-4 h-4 text-gray-300" />
                     </button>
                   ))}
@@ -3477,6 +3574,11 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           )}
         </div>
       )}
+
+      {/* Footer credit */}
+      <div className="mt-16 pb-6 text-center">
+        <p className="text-xs text-gray-300 tracking-wide">A Mr Newton Production</p>
+      </div>
     </div>
   );
 }
@@ -3694,7 +3796,7 @@ export default function App() {
                 onClick={() => setShowQualification(true)}
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#12161E] hover:text-[#12161E] transition-all"
               >
-                <TableProperties className="w-3.5 h-3.5" />Qualification Board
+                <TableProperties className="w-3.5 h-3.5" />Qualified?
               </button>
               <UserMenu currentUser={currentUser} onLogout={handleLogout} onOpenAdmin={() => setShowAdmin(true)} />
             </div>
@@ -3725,6 +3827,7 @@ export default function App() {
             onCreateOpportunity={createOpportunityAndSelect}
             onDeleteOpportunity={deleteOpportunity}
             onOpenReview={roleInfo?.canAccessSOWReview ? () => setCurrentView('sow-review') : null}
+            onOpenQualification={() => setShowQualification(true)}
             currentUser={currentUser}
             roleInfo={roleInfo}
           />

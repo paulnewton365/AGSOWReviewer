@@ -61,6 +61,7 @@ serve(async (req) => {
       'Workflow Status',
       'Owning Ecosystem',
       'CONFLICT',
+      'Modified',
     ];
 
     // Transform rows into flat objects
@@ -72,6 +73,8 @@ serve(async (req) => {
           obj[colName] = cell.displayValue ?? cell.value ?? null;
         }
       }
+      // Add row-level modified date
+      if (row.modifiedAt) obj['Modified'] = row.modifiedAt;
       return obj;
     }).filter((row: Record<string, any>) =>
       // Only include rows that have at least a client name
