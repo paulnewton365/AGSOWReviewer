@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.14.0';
+const APP_VERSION = '3.15.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -2395,273 +2395,272 @@ Antenna Group | www.antennagroup.com`
 
   const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opportunity.proposalStatus) || PROPOSAL_STATUSES[0];
 
+  const [showServices, setShowServices] = useState(!opportunity.proposalDraft);
+
+  // When a proposal is generated, flip to showing it
+  const wrappedGenerate = async () => {
+    await generateProposal();
+    setShowServices(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
-        <div>
-          <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Proposal</h2>
-          <p className="text-gray-500">Build the service scope, generate a proposal, and track its progress.</p>
+
+      {/* Page header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center flex-shrink-0">
+          <Sparkles className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-gray-900">Proposal</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Configure the scope, generate your proposal, then refine and track it.</p>
         </div>
         {opportunity.proposalDraft && (
-          <div className="flex flex-col items-end gap-2">
-            <span className="text-xs text-gray-500 font-medium">Proposal Status</span>
-            <select value={opportunity.proposalStatus || 'draft'} onChange={e => onUpdate({ proposalStatus: e.target.value })}
-              className={`px-4 py-2 rounded-lg border-2 text-sm font-semibold cursor-pointer focus:outline-none ${statusInfo.border} ${statusInfo.bg} ${statusInfo.text}`}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-gray-500">Status</span>
+            <select
+              value={opportunity.proposalStatus || 'draft'}
+              onChange={e => onUpdate({ proposalStatus: e.target.value })}
+              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-semibold cursor-pointer focus:outline-none ${statusInfo.border} ${statusInfo.bg} ${statusInfo.text}`}>
               {PROPOSAL_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
         )}
       </div>
 
-      {/* Tabs — Compass style */}
-      <div className="flex gap-1 mb-6 border-b border-gray-200 -mt-2">
-        {[{ id: 'services', label: 'Select Services', icon: Layers }, { id: 'proposal', label: 'Proposal Document', icon: FileText }].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-5 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px ${activeTab === tab.id ? 'border-[#12161E] text-[#12161E] bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-            <tab.icon className="w-4 h-4" />{tab.label}
-            {tab.id === 'services' && selectedServices.length > 0 && <span className="w-5 h-5 rounded-full bg-[#E8FF00] text-[#12161E] text-[10px] font-black flex items-center justify-center">{selectedServices.length}</span>}
-          </button>
-        ))}
-      </div>
+      <div className="grid lg:grid-cols-3 gap-8">
 
-      {activeTab === 'services' && (
-        <div>
-          {/* Budget Total Banner — always visible when services selected */}
+        {/* ── LEFT PANEL: always-visible settings + generate CTA ── */}
+        <div className="space-y-5">
+
+          {/* Budget total */}
           {pricingTotal && (
-            <div className="flex items-center justify-between bg-[#12161E] rounded-2xl px-6 py-4 mb-6">
-              <div className="flex items-center gap-3">
-                <DollarSign className="w-5 h-5 text-[#E8FF00]" />
-                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Investment</p>
-                  <p className="text-2xl font-black text-white leading-none mt-0.5">{pricingTotal.lowFormatted} <span className="text-gray-400 text-base font-normal">– {pricingTotal.highFormatted}</span></p>
-                </div>
+            <div className="bg-[#12161E] rounded-2xl px-5 py-4">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="w-3.5 h-3.5 text-[#E8FF00]" />
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Investment</span>
               </div>
-              <div className="text-right">
-                <span className="text-xs text-gray-500">{selectedServices.length} service{selectedServices.length !== 1 ? 's' : ''} selected</span>
-                <p className="text-xs text-[#E8FF00] font-bold mt-0.5">estimated range</p>
+              <p className="text-2xl font-black text-white leading-none">{pricingTotal.lowFormatted}</p>
+              <p className="text-sm text-gray-400 mt-0.5">— {pricingTotal.highFormatted}</p>
+              <p className="text-xs text-gray-500 mt-2">{selectedServices.length} service{selectedServices.length !== 1 ? 's' : ''} · {ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label}</p>
+            </div>
+          )}
+
+          {/* Engagement Type */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="font-bold text-gray-900 mb-3">Engagement Type</h3>
+            <div className="space-y-2">
+              {ENGAGEMENT_TYPES.map(et => (
+                <label key={et.value} className={`flex items-center gap-3 p-2.5 rounded-lg border-2 cursor-pointer transition-all ${draftEngagementType === et.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input type="radio" name="engagementType" value={et.value} checked={draftEngagementType === et.value} onChange={() => setDraftEngagementType(et.value)} className="text-gray-900 flex-shrink-0" />
+                  <div><p className="text-sm font-semibold text-gray-900">{et.label}</p><p className="text-xs text-gray-500">{et.description}</p></div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* RID */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+              RID <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Required</span>
+            </h3>
+            <p className="text-xs text-gray-400 mb-3">NB + up to 4 digits, e.g. NB9530</p>
+            <input
+              value={opportunity.rid || ''}
+              onChange={e => {
+                let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (!val.startsWith('NB') && val.length > 0) val = 'NB' + val.replace(/^N?B?/, '');
+                if (val.length > 6) val = val.slice(0, 6);
+                onUpdate({ rid: val });
+              }}
+              placeholder="e.g. NB9530"
+              maxLength={6}
+              className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-gray-900 outline-none ${
+                !opportunity.rid ? 'border-amber-300 bg-amber-50'
+                : /^NB[A-Z0-9]{1,4}$/.test(opportunity.rid) ? 'border-green-300 bg-green-50'
+                : 'border-red-300 bg-red-50'}`}
+            />
+            {opportunity.rid && !/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid) && (
+              <p className="mt-1.5 text-xs text-red-500">Must start with NB, 3–6 characters total</p>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="font-bold text-gray-900 mb-3">Notes for Proposal</h3>
+            <textarea
+              value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={saveProposalInputs}
+              placeholder="Budget constraints, specific requests, tone notes, things to emphasise or avoid..."
+              className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[90px] resize-y" />
+          </div>
+
+          {/* FIT */}
+          {(opportunity.fitArchetypes || []).length > 0 && (
+            <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">FIT from Return Brief</p>
+              <div className="flex flex-wrap gap-2">
+                {(opportunity.fitArchetypes || []).map(id => {
+                  const a = FIT_ARCHETYPES[id];
+                  return a ? (
+                    <div key={id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200">
+                      <span>{a.emoji}</span><span className="text-xs font-bold text-gray-700">{a.title}</span>
+                    </div>
+                  ) : null;
+                })}
               </div>
             </div>
           )}
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left: Settings — Engagement Type, RID, Notes only */}
-            <div className="space-y-5">
-              <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                <h3 className="font-bold text-gray-900 mb-4">Engagement Type</h3>
-                <div className="space-y-2">
-                  {ENGAGEMENT_TYPES.map(et => (
-                    <label key={et.value} className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${draftEngagementType === et.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                      <input type="radio" name="engagementType" value={et.value} checked={draftEngagementType === et.value} onChange={() => setDraftEngagementType(et.value)} className="text-gray-900" />
-                      <div><p className="text-sm font-semibold text-gray-900">{et.label}</p><p className="text-xs text-gray-500">{et.description}</p></div>
-                    </label>
-                  ))}
+          {/* ── GENERATE CTA ── always visible when services selected */}
+          {selectedServices.length > 0 && (
+            <div className="space-y-2 pt-1">
+              {!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || '')) && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />Enter a valid RID above first
+                </div>
+              )}
+              <AntennaButton
+                onClick={wrappedGenerate}
+                loading={isGenerating}
+                loadingText="Generating…"
+                icon={Sparkles}
+                disabled={!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || ''))}
+                className="w-full"
+                size="large">
+                {opportunity.proposalDraft ? 'Regenerate Proposal' : 'Generate Proposal'}
+              </AntennaButton>
+              {opportunity.proposalDraft && (
+                <button
+                  onClick={() => setShowServices(s => !s)}
+                  className="w-full text-xs text-center py-2 text-gray-500 hover:text-gray-800 transition-colors">
+                  {showServices ? 'Hide service list ↑' : 'Edit services ↓'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Proceed to SOW */}
+          {opportunity.proposalStatus === 'approved' && (
+            <AntennaButton onClick={() => onUpdate({
+              currentStage: 'sow',
+              draftNotes,
+              selectedServices: opportunity.selectedServices,
+              selectedArchetypes: opportunity.selectedArchetypes,
+              draftEngagementType: opportunity.draftEngagementType,
+              proposalDraft: opportunity.proposalDraft,
+              proposalStatus: opportunity.proposalStatus,
+            })} icon={ArrowRight} className="w-full">
+              Generate SOW →
+            </AntennaButton>
+          )}
+        </div>
+
+        {/* ── RIGHT PANEL: services OR proposal ── */}
+        <div className="lg:col-span-2 space-y-4">
+
+          {/* ── SERVICE SELECTION ── shown until proposal generated, toggleable after */}
+          {(showServices || !opportunity.proposalDraft) && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900">
+                  {selectedServices.length === 0 ? 'Select Services' : `${selectedServices.length} Service${selectedServices.length !== 1 ? 's' : ''} Selected`}
+                </h3>
+                <div className="flex gap-2">
+                  <button onClick={detectServices} disabled={isDetecting || (!opportunity.returnBrief && !opportunity.transcript)}
+                    className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-medium hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                    {isDetecting ? 'Detecting…' : 'Auto-Detect'}
+                  </button>
+                  {selectedServices.length > 0 && (
+                    <button onClick={() => onUpdate({ selectedServices: [] })} className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">Clear All</button>
+                  )}
+                </div>
+              </div>
+              {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">{error}</div>}
+              <div className="space-y-3">
+                {SERVICE_TRIGGERS.map(trigger => (
+                  <ServiceCard key={trigger.id} trigger={trigger} selectedServices={selectedServices} onToggleService={toggleService} onToggleBundle={toggleBundle} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── PROPOSAL DOCUMENT ── */}
+          {!showServices && opportunity.proposalDraft && (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              {/* Toolbar */}
+              <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3 bg-gray-50">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  <span className="font-semibold text-gray-900 text-sm">Proposal Draft</span>
+                  <StatusBadge status={opportunity.proposalStatus || 'draft'} />
+                  {isEditingProposal && <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">Editing</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  {!isEditingProposal && <CopyButton text={opportunity.proposalDraft} />}
+                  {!isEditingProposal && (
+                    <button onClick={() => downloadDocx(opportunity.proposalDraft, `${opportunity.companyName}_Proposal.docx`, { title: `Proposal: ${opportunity.companyName}`, client: opportunity.companyName })}
+                      className="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-100 flex items-center gap-1.5 transition-colors">
+                      <Download className="w-3 h-3" />Download
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setIsEditingProposal(!isEditingProposal); setEditedProposal(opportunity.proposalDraft); }}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+                      isEditingProposal ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#12161E] text-white hover:bg-gray-800'}`}>
+                    <Edit3 className="w-3 h-3" />{isEditingProposal ? 'Cancel' : 'Edit'}
+                  </button>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                <h3 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
-                  RID
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Required</span>
-                </h3>
-                <p className="text-xs text-gray-400 mb-3">Format: NB followed by up to 4 digits (e.g. NB9530). Required before generating.</p>
-                <input
-                  value={opportunity.rid || ''}
-                  onChange={e => {
-                    let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                    if (!val.startsWith('NB') && val.length > 0) val = 'NB' + val.replace(/^N?B?/, '');
-                    if (val.length > 6) val = val.slice(0, 6);
-                    onUpdate({ rid: val });
-                  }}
-                  placeholder="e.g. NB9530"
-                  maxLength={6}
-                  className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-gray-900 outline-none ${
-                    !opportunity.rid
-                      ? 'border-amber-300 bg-amber-50'
-                      : /^NB[A-Z0-9]{1,4}$/.test(opportunity.rid)
-                      ? 'border-green-300 bg-green-50'
-                      : 'border-red-300 bg-red-50'
-                  }`}
-                />
-                {opportunity.rid && !/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid) && (
-                  <p className="mt-1.5 text-xs text-red-500">Must start with NB and be 3-6 characters total</p>
-                )}
-              </div>
+              {/* Document body */}
+              {isEditingProposal ? (
+                <div className="p-5">
+                  <textarea value={editedProposal} onChange={e => setEditedProposal(e.target.value)}
+                    className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[600px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-gray-900 outline-none bg-gray-50" />
+                  <div className="mt-3 flex gap-3">
+                    <button onClick={() => { onUpdate({ proposalDraft: editedProposal }); setIsEditingProposal(false); }}
+                      className="px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
+                    <button onClick={() => setIsEditingProposal(false)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
+                    <CopyButton text={editedProposal} />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-sans">{opportunity.proposalDraft}</pre>
+                </div>
+              )}
 
-              <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                <h3 className="font-bold text-gray-900 mb-3">Notes for Proposal</h3>
-                <textarea value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={saveProposalInputs} placeholder="Budget constraints, specific client requests, tone notes, things to emphasise or avoid..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y" />
-              </div>
-
-              {/* FIT context from brief — read-only display if set */}
-              {(opportunity.fitArchetypes || []).length > 0 && (
-                <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">FIT from Return Brief</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(opportunity.fitArchetypes || []).map(id => {
-                      const a = FIT_ARCHETYPES[id];
-                      return a ? (
-                        <div key={id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200">
-                          <span>{a.emoji}</span>
-                          <span className="text-xs font-bold text-gray-700">{a.title}</span>
-                        </div>
-                      ) : null;
-                    })}
+              {/* Refine strip — inline below document */}
+              {!isEditingProposal && (
+                <div className="border-t border-gray-100 px-5 py-4 bg-gray-50">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Refine this proposal</p>
+                  <div className="flex gap-3">
+                    <textarea value={proposalIteration} onChange={e => setProposalIteration(e.target.value)}
+                      placeholder="Describe what to change… e.g. 'Make the investment section clearer', 'Add more on our SEO approach', 'Soften the tone'"
+                      className="flex-1 text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[70px] resize-y" />
+                    <button onClick={iterateProposal} disabled={isIterating || !proposalIteration.trim()}
+                      className="self-end px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap">
+                      {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating…</> : <><RefreshCw className="w-4 h-4" />Apply</>}
+                    </button>
                   </div>
                 </div>
               )}
             </div>
+          )}
 
-            {/* Right: Services */}
-            <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">{selectedServices.length} Services Selected</h3>
-              <div className="flex gap-2">
-                <button onClick={detectServices} disabled={isDetecting || (!opportunity.returnBrief && !opportunity.transcript)} className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-sm font-medium hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                  {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                  {isDetecting ? 'Detecting...' : 'Auto-Detect from Brief'}
-                </button>
-                {selectedServices.length > 0 && <button onClick={() => onUpdate({ selectedServices: [] })} className="px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">Clear All</button>}
-              </div>
-            </div>
-            {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">{error}</div>}
-            <div className="space-y-3">
-              {SERVICE_TRIGGERS.map(trigger => (
-                <ServiceCard key={trigger.id} trigger={trigger} selectedServices={selectedServices} onToggleService={toggleService} onToggleBundle={toggleBundle} />
-              ))}
-            </div>
-
-            {selectedServices.length > 0 && (
-              <div className="mt-6 space-y-2">
-                {!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || '')) && (
-                  <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs font-medium">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    Enter a valid RID (e.g. NB9530) in the left panel before generating.
-                  </div>
-                )}
-                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || ''))} className="w-full" size="large">
-                  Generate Proposal
-                </AntennaButton>
-              </div>
-            )}
-          </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'proposal' && (
-        <div>
-          {!opportunity.proposalDraft ? (
-            <div className="text-center py-20">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6 mx-auto"><Sparkles className="w-10 h-10 text-gray-300" /></div>
-              <h3 className="text-lg font-semibold text-gray-400 mb-2">No proposal generated yet</h3>
-              <p className="text-sm text-gray-400 mb-6">Select services in the Services tab, then generate your proposal.</p>
-              <button onClick={() => setActiveTab('services')} className="px-6 py-3 bg-[#12161E] text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors">← Select Services</button>
-            </div>
-          ) : (
-            <div className="grid lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-4">
-                {/* Proposal Document */}
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold text-gray-900">Proposal Document</span>
-                      <StatusBadge status={opportunity.proposalStatus || 'draft'} />
-                      {isEditingProposal && <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">Editing</span>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {!isEditingProposal && <CopyButton text={opportunity.proposalDraft} />}
-                      <button
-                        onClick={() => { setIsEditingProposal(!isEditingProposal); setEditedProposal(opportunity.proposalDraft); }}
-                        className={`text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
-                          isEditingProposal ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#12161E] text-white hover:bg-gray-800'
-                        }`}>
-                        <Edit3 className="w-3 h-3" />{isEditingProposal ? 'Cancel Edit' : 'Edit Proposal'}
-                      </button>
-                      {!isEditingProposal && (
-                        <button onClick={() => downloadDocx(opportunity.proposalDraft, `${opportunity.companyName}_Proposal.docx`, { title: `Proposal: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"><Download className="w-3 h-3" />Download</button>
-                      )}
-                    </div>
-                  </div>
-                  {isEditingProposal ? (
-                    <div className="p-5">
-                      <p className="text-xs text-gray-500 mb-3">Edit the proposal below. Changes are saved when you click Save.</p>
-                      <textarea value={editedProposal} onChange={e => setEditedProposal(e.target.value)} className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[600px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-gray-900 outline-none bg-gray-50" />
-                      <div className="mt-3 flex gap-3">
-                        <button onClick={() => { onUpdate({ proposalDraft: editedProposal }); setIsEditingProposal(false); }} className="px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
-                        <button onClick={() => setIsEditingProposal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
-                        <CopyButton text={editedProposal} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-6 max-h-[700px] overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-sans">{opportunity.proposalDraft}</pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right sidebar */}
-              <div className="space-y-4">
-                {/* Investment summary — matches banner total exactly */}
-                {pricingTotal && (
-                  <div className="rounded-2xl overflow-hidden border border-gray-200">
-                    <div className="bg-[#12161E] px-5 pt-5 pb-4">
-                      <div className="flex items-center gap-2 mb-2"><DollarSign className="w-3.5 h-3.5 text-[#E8FF00]" /><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Investment Range</span></div>
-                      <p className="text-2xl font-black text-white leading-none">{pricingTotal.lowFormatted}</p>
-                      <p className="text-sm text-gray-400 mt-1">– {pricingTotal.highFormatted}</p>
-                      <p className="text-xs text-gray-500 mt-2">{selectedServices.length} services | {ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Iterate */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Refine Proposal</h3>
-                  <textarea value={proposalIteration} onChange={e => setProposalIteration(e.target.value)} placeholder="Describe what to change... e.g. 'Make the investment section clearer', 'Add more about our SEO approach', 'Soften the tone'" className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y" />
-                  <button onClick={iterateProposal} disabled={isIterating || !proposalIteration.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
-                    {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Apply Changes</>}
-                  </button>
-                </div>
-
-                {/* Regenerate */}
-                <button onClick={() => generateProposal()} disabled={isGenerating} className="w-full px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:border-gray-900 hover:text-gray-900 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                  {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</> : <><Sparkles className="w-4 h-4" />Regenerate Proposal</>}
-                </button>
-
-                {/* Status */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                  <h3 className="font-bold text-gray-900 mb-3">Proposal Status</h3>
-                  <div className="space-y-2">
-                    {PROPOSAL_STATUSES.map(s => (
-                      <button key={s.value} onClick={() => onUpdate({ proposalStatus: s.value })} className={`w-full text-left px-3 py-2 rounded-lg border transition-all text-sm font-medium ${opportunity.proposalStatus === s.value ? `${s.bg} ${s.text} ${s.border} border-2` : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Proceed to SOW */}
-                {opportunity.proposalStatus === 'approved' && (
-                  <AntennaButton onClick={() => onUpdate({
-                    currentStage: 'sow',
-                    draftNotes,
-                    selectedServices: opportunity.selectedServices,
-                    selectedArchetypes: opportunity.selectedArchetypes,
-                    draftEngagementType: opportunity.draftEngagementType,
-                    proposalDraft: opportunity.proposalDraft,
-                    proposalStatus: opportunity.proposalStatus,
-                  })} icon={ArrowRight} className="w-full">
-                    Generate SOW →
-                  </AntennaButton>
-                )}
-              </div>
+          {/* Empty state — no services selected yet */}
+          {selectedServices.length === 0 && (
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+              <Layers className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+              <p className="text-gray-400 font-medium">Select services above to get started</p>
+              <p className="text-xs text-gray-300 mt-1">Or use Auto-Detect to pull from the Return Brief</p>
             </div>
           )}
+
         </div>
-      )}
+      </div>
     </div>
   );
 }
