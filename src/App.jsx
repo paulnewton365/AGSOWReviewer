@@ -1292,7 +1292,7 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
   };
   return (
     <div className="border-b border-gray-200/80" style={{ backgroundColor: '#E8E6E1' }}>
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-8">
         {/* Company breadcrumb */}
         <div className="flex items-center gap-2 pt-3 pb-2">
           <span className="text-xs text-gray-400">Opportunity</span>
@@ -1345,56 +1345,144 @@ function ResearchView({ opportunity, onUpdate }) {
   const [companyName, setCompanyName] = useState(opportunity.companyName || '');
   const [companyUrl, setCompanyUrl] = useState(opportunity.companyUrl || '');
   const [industry, setIndustry] = useState(opportunity.industry || '');
-  const [additionalContext, setAdditionalContext] = useState('');
+  const [additionalContext, setAdditionalContext] = useState(opportunity.researchContext || '');
+
+  // Save input fields when user navigates away
+  useEffect(() => {
+    return () => {
+      onUpdate({ companyName, companyUrl, industry, researchContext: additionalContext });
+    };
+  }, [companyName, companyUrl, industry, additionalContext]);
 
   const runResearch = async () => {
     if (!companyName.trim()) return setError('Please enter a company name.');
     setIsLoading(true); setError(null);
+
+    // Save inputs immediately
+    onUpdate({ companyName, companyUrl, industry, researchContext: additionalContext });
+
+    const assignmentTitle = opportunity.title || 'Not specified';
+    const owningPractice = opportunity.practice || 'Not specified';
+
     try {
       const result = await callClaude({
         useWebSearch: true,
-        maxTokens: 6000,
-        system: `You are a senior business development researcher at Antenna Group, an integrated marketing and communications agency. Your job is to research prospect companies and produce actionable intelligence that prepares the BD team for an initial discovery call. You are sharp, strategic, and concise. You do NOT produce generic corporate summaries — you produce insight that drives better conversations.`,
-        userMessage: `Research this company thoroughly and produce a structured intelligence brief.
+        maxTokens: 4000,
+        system: `You are a senior new business strategist at Antenna Group, an integrated PR and marketing agency specializing in Brand Strategy, Creative Strategy, Creative Production, Public Relations, Social & Influencer Marketing, and Performance Marketing.
+Your job is to prepare a business development professional for an intake call with a prospective client. You MUST use web search to research the company before generating any output.
 
-COMPANY: ${companyName}
-WEBSITE: ${companyUrl || 'Search for it'}
-INDUSTRY: ${industry || 'Identify from research'}
-ADDITIONAL CONTEXT: ${additionalContext || 'None provided'}
+RESEARCH — search for and assess:
+1. What the company does and their value proposition
+2. Website: messaging clarity, design quality, brand expression
+3. Earned media: coverage volume, outlet quality, recency
+4. Social presence: platform activity, content quality
+5. Business signals: growth indicators, recent announcements, competitive position
 
-Produce your response in this EXACT format:
+OUTPUT RULES — apply these to everything you write:
+- Write for a smart person in a hurry
+- No fluff, no filler sentences, no restating the obvious
+- Every sentence must earn its place
+- The entire response should fit on one printed page`,
+        userMessage: `Prepare a client snapshot and intake questions for the following prospect:
 
-## COMPANY OVERVIEW
-[3-4 sentences: what they do, who they serve, their scale/stage, notable facts]
+**Company Name:** ${companyName}
+**Assignment Title:** ${assignmentTitle}
+**Owning Practice:** ${owningPractice}
+**Website:** ${companyUrl || 'Not provided — search for it'}
+**Industry:** ${industry || 'Infer from research'}
+${additionalContext ? `**Additional Context:** ${additionalContext}` : ''}
 
-## POSITIONING & DIFFERENTIATION
-[How do they position themselves? What's their stated value proposition? What makes them different from competitors? 2-3 sentences]
+Search the web before responding. Make every question specific to this company. Keep the entire response tight — it should work as a single reference page.
 
-## REPUTATION & PRESENCE
-[What's their media presence like? PR/coverage? Social engagement? Brand perception? Any notable awards, controversies, or recognition? 2-3 sentences]
+---
+## CLIENT SNAPSHOT
 
-## MARKETING OPPORTUNITY ASSESSMENT
-**Owned (Website & Content):** [What does their owned presence look like? Website quality, content strategy, SEO presence?]
-**Earned (PR & Media):** [What's their earned media presence? Are they getting press? Do they have thought leadership?]
-**Paid (Advertising):** [Any visible paid activity? Ads, social campaigns, SEM?]
-**Social (Community):** [Social channels, engagement quality, influencer activity, community?]
+**Who They Are**
+2–3 sentences maximum. What they do, who they serve, what makes them distinct. Written as a cold briefing.
 
-## KEY STRATEGIC OPPORTUNITIES
-[3-5 bullet points: specific integrated marketing opportunities Antenna Group could address for this company based on gaps identified above]
+**Website**
+1–2 sentences. Honest assessment of messaging and brand expression. Be direct.
 
-## 10 INTAKE CALL QUESTIONS
-[Number 1-10. These should be intelligent, strategic questions that will uncover this company's real marketing needs, priorities, budget range, decision-making process, and where Antenna Group can add the most value. Avoid generic questions. Make them specific to what you found in the research.]`
+**Earned Media & PR**
+1–2 sentences. Are they visible, dormant, or inconsistent? Note any notable coverage or gaps.
+
+**Social & Digital**
+1 sentence. Are they showing up meaningfully or going through the motions?
+
+**The One Thing**
+1 sentence only. The single most important thing the BD team should know walking in — a tension, gap, or opportunity that should shape the conversation.
+
+---
+## 10 INTAKE QUESTIONS
+
+Rules for every question:
+- Maximum 2 sentences. Shorter is better.
+- Specific to this company — never generic
+- Opens a conversation, does not close one
+- Follow each question with a rationale of 10 words or fewer
+
+**1. Business Context**
+[Company-specific question about the business situation driving this conversation]
+*Rationale: [10 words max]*
+
+**2. The Real Problem**
+[Company-specific question about the underlying challenge]
+*Rationale: [10 words max]*
+
+**3. Success Definition**
+[Company-specific question about what a win looks like in 12 months]
+*Rationale: [10 words max]*
+
+**4. Past Agency Experience**
+[Company-specific question about what's worked before and where agency relationships have broken down]
+*Rationale: [10 words max]*
+
+**5. Internal Dynamics**
+[Company-specific question about who has final say and how approval works]
+*Rationale: [10 words max]*
+
+**6. Appetite for Bold Work**
+[Company-specific question about whether they want safe and steady or something their competitors wouldn't do]
+*Rationale: [10 words max]*
+
+**7. Channel or Service Priority**
+[Company-specific question about where they see the biggest leverage point right now]
+*Rationale: [10 words max]*
+
+**8. Investment Tolerance**
+[Company-specific question about budget and how they think about marketing as investment vs cost]
+*Rationale: [10 words max]*
+
+**9. Urgency**
+[Company-specific question about what's driving the timing]
+*Rationale: [10 words max]*
+
+**10. The Decision**
+[Company-specific question about what would make them move forward or walk away]
+*Rationale: [10 words max]*
+
+CRITICAL: Replace each template question above with a version specific to this company based on your research. The templates show the topic area only — the actual questions must reference what you found.`
       });
 
-      // Parse questions
-      const questionMatch = result.match(/## 10 INTAKE CALL QUESTIONS([\s\S]*?)(?:$)/);
+      // Parse questions from ## 10 INTAKE QUESTIONS section
+      const questionMatch = result.match(/## 10 INTAKE QUESTIONS([\s\S]*?)(?:$)/);
       const questionsRaw = questionMatch ? questionMatch[1] : '';
-      const questions = questionsRaw.split('\n').filter(l => /^\d+\./.test(l.trim())).map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+      const questions = questionsRaw
+        .split('\n')
+        .filter(l => /^\*\*\d+\./.test(l.trim()))
+        .map(l => l.replace(/^\*\*\d+\.\s*/, '').replace(/\*\*$/, '').trim())
+        .filter(Boolean);
+
+      // Also extract rationales for richer display
+      const rationaleMatches = [...questionsRaw.matchAll(/\*Rationale:\s*([^*\n]+)\*/g)];
+      const rationales = rationaleMatches.map(m => m[1].trim());
 
       onUpdate({
         companyName, companyUrl, industry,
+        researchContext: additionalContext,
         researchSummary: result,
         intakeQuestions: questions,
+        intakeRationales: rationales,
         researchComplete: true,
         currentStage: 'research',
       });
@@ -1402,102 +1490,151 @@ Produce your response in this EXACT format:
     finally { setIsLoading(false); }
   };
 
-  const { researchSummary, intakeQuestions, researchComplete } = opportunity;
+  const { researchSummary, intakeQuestions = [], intakeRationales = [], researchComplete } = opportunity;
+
+  // Split snapshot from questions for display
+  const snapshotText = researchSummary
+    ? researchSummary.split('## 10 INTAKE QUESTIONS')[0].replace('## CLIENT SNAPSHOT', '').trim()
+    : '';
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left: Input */}
-        <div>
-          <div className="mb-8">
-            <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
-              <Search className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Company Research</h2>
-            <p className="text-gray-500">AI-powered discovery to understand the prospect, identify marketing gaps, and generate smart intake questions.</p>
+    <div className="max-w-7xl mx-auto px-8 py-10">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+          <Search className="w-6 h-6 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">Company Research</h2>
+        <p className="text-gray-500 text-sm">AI-powered discovery to understand the prospect, identify marketing gaps, and generate smart intake questions.</p>
+      </div>
+
+      {/* Input panel — always visible */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+        <div className="grid sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name *</label>
+            <input value={companyName} onChange={e => setCompanyName(e.target.value)}
+              placeholder="e.g. Cartography Capital"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
-
-          <div className="space-y-4 mb-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name *</label>
-              <input value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="e.g. Cartography Capital" className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website URL</label>
-              <input value={companyUrl} onChange={e => setCompanyUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry / Sector</label>
-              <input value={industry} onChange={e => setIndustry(e.target.value)} placeholder="e.g. Fintech, Healthcare, Climate Tech" className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Context (optional)</label>
-              <textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="How did they reach us? Any existing relationship? Specific areas of interest?" className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[100px] resize-y" />
-            </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website URL</label>
+            <input value={companyUrl} onChange={e => setCompanyUrl(e.target.value)}
+              placeholder="https://example.com"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
-
-          {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />{error}</div>}
-
-          <AntennaButton onClick={runResearch} loading={isLoading} loadingText="Researching..." icon={Search} disabled={!companyName.trim()} className="w-full" size="large">
-            {researchComplete ? 'Re-run Research' : 'Run Company Research'}
-          </AntennaButton>
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry / Sector</label>
+            <input value={industry} onChange={e => setIndustry(e.target.value)}
+              placeholder="e.g. Fintech, Healthcare, Climate Tech"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Context</label>
+            <input value={additionalContext} onChange={e => setAdditionalContext(e.target.value)}
+              placeholder="How they reached us, existing relationship, specific focus..."
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+          </div>
         </div>
 
-        {/* Right: Results */}
-        <div>
-          {!researchComplete ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20 px-8">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
-                <Globe className="w-10 h-10 text-gray-300" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-400 mb-2">Research results will appear here</h3>
-              <p className="text-sm text-gray-400">Enter the company details and run research to generate an intelligence brief and intake questions.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Research Summary */}
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="font-semibold text-gray-900">Intelligence Brief</span>
-                  </div>
-                  <CopyButton text={researchSummary} />
-                </div>
-                <div className="p-5 max-h-80 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{researchSummary}</pre>
-                </div>
-              </div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}
+          </div>
+        )}
 
-              {/* Intake Questions */}
-              {intakeQuestions.length > 0 && (
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                  <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FileQuestion className="w-4 h-4 text-blue-600" />
-                      <span className="font-semibold text-gray-900">Intake Call Questions</span>
-                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">{intakeQuestions.length}</span>
-                    </div>
-                    <CopyButton text={intakeQuestions.map((q, i) => `${i+1}. ${q}`).join('\n')} />
-                  </div>
-                  <div className="p-5 space-y-3">
-                    {intakeQuestions.map((q, i) => (
-                      <div key={i} className="flex gap-3">
-                        <span className="w-6 h-6 rounded-full bg-[#12161E] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i+1}</span>
-                        <p className="text-sm text-gray-700 leading-relaxed">{q}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <AntennaButton onClick={() => onUpdate({ currentStage: 'brief' })} icon={ArrowRight} className="w-full">
-                Proceed to Return Brief →
-              </AntennaButton>
-            </div>
+        <div className="flex items-center gap-3">
+          <AntennaButton onClick={runResearch} loading={isLoading} loadingText="Researching…" icon={Search} disabled={!companyName.trim()}>
+            {researchComplete ? 'Re-run Research' : 'Run Research'}
+          </AntennaButton>
+          {researchComplete && (
+            <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+              <CheckCircle className="w-4 h-4" />Research complete
+            </span>
           )}
         </div>
       </div>
+
+      {/* Results */}
+      {researchSummary && (
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
+
+          {/* Client Snapshot */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#12161E] rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="font-bold text-gray-900">Client Snapshot</span>
+              </div>
+              <CopyButton text={snapshotText} />
+            </div>
+            <div className="p-5 overflow-y-auto" style={{ maxHeight: '520px' }}>
+              <div className="space-y-4">
+                {snapshotText.split('\n\n').filter(Boolean).map((block, i) => {
+                  const isBold = block.startsWith('**');
+                  if (isBold) {
+                    const titleMatch = block.match(/^\*\*([^*]+)\*\*/);
+                    const title = titleMatch ? titleMatch[1] : '';
+                    const body = block.replace(/^\*\*[^*]+\*\*\s*/, '').trim();
+                    return (
+                      <div key={i}>
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{title}</p>
+                        <p className="text-sm text-gray-700 leading-relaxed">{body}</p>
+                      </div>
+                    );
+                  }
+                  return <p key={i} className="text-sm text-gray-600 leading-relaxed">{block}</p>;
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Intake Questions */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#E8FF00] rounded-lg flex items-center justify-center">
+                  <FileQuestion className="w-3.5 h-3.5 text-[#12161E]" />
+                </div>
+                <span className="font-bold text-gray-900">Intake Questions</span>
+                <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">{intakeQuestions.length || 10}</span>
+              </div>
+              <CopyButton text={intakeQuestions.map((q, i) => `${i+1}. ${q}`).join('\n')} />
+            </div>
+            <div className="p-5 overflow-y-auto" style={{ maxHeight: '520px' }}>
+              {/* Parse and display questions with rationales from raw text if structured parsing failed */}
+              {intakeQuestions.length > 0 ? (
+                <div className="space-y-4">
+                  {intakeQuestions.map((q, i) => (
+                    <div key={i} className="flex gap-3">
+                      <span className="w-6 h-6 rounded-full bg-[#12161E] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i+1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800 leading-relaxed font-medium">{q}</p>
+                        {intakeRationales[i] && (
+                          <p className="text-xs text-gray-400 mt-1 italic">{intakeRationales[i]}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Fallback: render raw questions section as text
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">
+                  {researchSummary.split('## 10 INTAKE QUESTIONS')[1] || ''}
+                </pre>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {researchComplete && (
+        <AntennaButton onClick={() => onUpdate({ currentStage: 'brief' })} icon={ArrowRight} className="w-full">
+          Proceed to Return Brief →
+        </AntennaButton>
+      )}
     </div>
   );
 }
@@ -1596,7 +1733,7 @@ Then on a new section add:
   const internalAnalysis = internalSplit > 0 ? briefText.substring(internalSplit).trim() : '';
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Left: Input */}
         <div>
@@ -1982,7 +2119,7 @@ Write the proposal in this exact structure:
   const statusInfo = PROPOSAL_STATUSES.find(s => s.value === opportunity.proposalStatus) || PROPOSAL_STATUSES[0];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-8 py-10">
       {/* Header */}
       <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
         <div>
@@ -2312,7 +2449,7 @@ Use markdown formatting. This is a professional legal/business document — form
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="mb-8">
         <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
           <PenTool className="w-6 h-6 text-white" />
@@ -2554,7 +2691,7 @@ What's working well: [brief notes]`;
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="mb-8">
         <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
           <ShieldCheck className="w-6 h-6 text-white" />
@@ -2797,7 +2934,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
   const hasPrereqs = opportunity.proposalDraft && opportunity.sowDraft;
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="mb-8">
         <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
           <ClipboardList className="w-6 h-6 text-white" />
@@ -3247,7 +3384,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const [filterPractice, setFilterPractice] = useState('');
 
   const handleCreate = () => {
-    if (!newName.trim()) return;
+    if (!newName.trim() || !newTitle.trim()) return;
     const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim(), newPractice, newTitle.trim());
     onCreateOpportunity(opp);
     setShowCreate(false);
@@ -3329,7 +3466,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC', '#9B59B6'];
 
   return (
-    <div className="max-w-7xl mx-auto px-8 py-12">
+    <div className="max-w-7xl mx-auto px-8 pb-16">
 
       {/* Hero */}
       <div className="mb-10">
@@ -3398,8 +3535,10 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                 <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && newName.trim() && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Assignment Title <span className="text-gray-400 font-normal">(optional)</span></label>
-                <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. Q3 Integrated Campaign" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Assignment Title <span className="text-red-500">*</span></label>
+                <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
+                  placeholder="e.g. Q4 Integrated Campaign"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Owning Practice</label>
@@ -3419,7 +3558,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowCreate(false)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">Cancel</button>
-              <button onClick={handleCreate} disabled={!newName.trim()} className="flex-1 px-4 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2a3040] transition-colors flex items-center justify-center gap-2">
+              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim()} className="flex-1 px-4 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2a3040] transition-colors flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" />Create Opportunity
               </button>
             </div>
@@ -3496,8 +3635,9 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                 const initials = opp.companyName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
                 const pill = stagePill(opp.currentStage);
                 return (
-                  <button key={opp.id} onClick={() => onSelectOpportunity(opp)}
-                    className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
+                  <div key={opp.id} className="relative group/row">
+                    <button onClick={() => onSelectOpportunity(opp)}
+                      className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
                     {/* Opp # */}
                     <div className="col-span-1">
                       <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-600 transition-colors">{opp.oppNumber || '—'}</span>
@@ -3550,6 +3690,17 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                       <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors flex-shrink-0 ml-2" />
                     </div>
                   </button>
+                  {/* Admin delete button — appears on row hover */}
+                  {roleInfo?.canAccessAdmin && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${opp.companyName} — ${opp.title || ''}"? This cannot be undone.`)) onDeleteOpportunity(opp.id); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/row:opacity-100 transition-opacity p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600"
+                      title="Delete opportunity"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
                 );
               })}
             </div>
@@ -3560,13 +3711,25 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
               <CollapsibleSection title={`Evaporated (${evaporated.length})`} icon={Archive}>
                 <div className="space-y-1.5">
                   {evaporated.map(opp => (
-                    <button key={opp.id} onClick={() => onSelectOpportunity(opp)} className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div>
-                        <span className="text-sm text-gray-500 font-medium">{opp.companyName}</span>
-                        {opp.title && <span className="text-xs text-gray-400 ml-2">{opp.title}</span>}
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-gray-300" />
-                    </button>
+                    <div key={opp.id} className="relative group/row flex items-center">
+                      <button onClick={() => onSelectOpportunity(opp)} className="flex-1 flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div>
+                          <span className="text-sm text-gray-500 font-medium">{opp.companyName}</span>
+                          {opp.title && <span className="text-xs text-gray-400 ml-2">{opp.title}</span>}
+                          {opp.oppNumber && <span className="text-[10px] font-mono text-gray-400 ml-2">{opp.oppNumber}</span>}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-300" />
+                      </button>
+                      {roleInfo?.canAccessAdmin && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${opp.companyName}"? This cannot be undone.`)) onDeleteOpportunity(opp.id); }}
+                          className="ml-2 p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
+                          title="Delete opportunity"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </CollapsibleSection>
@@ -3649,7 +3812,15 @@ export default function App() {
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error && data) {
-          setOpportunities(data.map(r => ({ ...r.data, id: r.id })));
+          setOpportunities(data.map(r => {
+            const opp = { ...r.data, id: r.id };
+            // Backfill oppNumber for older records that don't have one
+            if (!opp.oppNumber) {
+              opp.oppNumber = getNextOppNumber();
+              supabase.from('opportunities').update({ data: { ...r.data, oppNumber: opp.oppNumber } }).eq('id', r.id);
+            }
+            return opp;
+          }));
         }
       });
   }, [currentUser?.id]);
@@ -3751,7 +3922,7 @@ export default function App() {
             <UserMenu currentUser={currentUser} onLogout={handleLogout} onOpenAdmin={() => {}} />
           </div>
         </header>
-        <main className="max-w-6xl mx-auto px-6 py-10">
+        <main className="max-w-7xl mx-auto px-8 py-10">
           <div className="mb-6 flex items-center gap-3">
             <div className="px-3 py-1.5 bg-amber-100 border border-amber-200 rounded-lg flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-amber-600" />
@@ -3772,7 +3943,7 @@ export default function App() {
 
       {/* Header */}
       <header className="border-b border-gray-200/80 sticky top-0 z-20" style={{ backgroundColor: '#E8E6E1' }}>
-        <div className="max-w-6xl mx-auto px-6 py-0">
+        <div className="max-w-7xl mx-auto px-8 py-0">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-3">
               <button onClick={() => setCurrentView('home')} className="hover:opacity-80 transition-opacity">
