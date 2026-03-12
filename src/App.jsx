@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.4';
+const APP_VERSION = '3.15.5';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -773,15 +773,13 @@ function LoginView({ onLogin }) {
       const tempPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2).toUpperCase() + '!1';
       const { data, error } = await supabase.functions.invoke('admin-users', {
         body: {
-          action: 'create',
+          action: 'request-access',
           name: reqName.trim(),
           email: reqEmail.trim().toLowerCase(),
           password: tempPassword,
           role: 'growth',
-          active: false,
           requestNote: reqNote.trim(),
           practice: reqPractice,
-          isPendingRequest: true,
         },
       });
       if (error || data?.error) {
