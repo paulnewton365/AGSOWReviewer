@@ -3159,7 +3159,9 @@ function QualificationModal({ onClose }) {
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((row, i) => (
                   <tr key={i} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-gray-900 whitespace-nowrap">{row['CLIENT'] || '—'}</td>
+                    <td className="py-3 px-3 font-semibold text-gray-900 w-36 max-w-[144px]">
+                      <p className="truncate" title={row['CLIENT']}>{row['CLIENT'] || '—'}</p>
+                    </td>
                     <td className="py-3 px-3 text-gray-700 max-w-[180px]">
                       <p className="truncate">{row['Assignment Title'] || '—'}</p>
                     </td>
