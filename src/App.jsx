@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.8.0';
+const APP_VERSION = '3.10.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -1349,12 +1349,10 @@ function ResearchView({ opportunity, onUpdate }) {
   const [industry, setIndustry] = useState(opportunity.industry || '');
   const [additionalContext, setAdditionalContext] = useState(opportunity.researchContext || '');
 
-  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
-  const saveRef = useRef({});
-  useEffect(() => { saveRef.current = { companyName, companyUrl, industry, researchContext: additionalContext }; });
-  useEffect(() => {
-    return () => { onUpdate(saveRef.current); };
-  }, []);
+  // Save input fields explicitly — no reliance on unmount cleanup
+  const saveInputs = useCallback(() => {
+    onUpdate({ companyName, companyUrl, industry, researchContext: additionalContext });
+  }, [companyName, companyUrl, industry, additionalContext]);
 
   const runResearch = async () => {
     if (!companyName.trim()) return setError('Please enter a company name.');
@@ -1515,25 +1513,25 @@ CRITICAL: Replace each template question above with a version specific to this c
         <div className="grid sm:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name *</label>
-            <input value={companyName} onChange={e => setCompanyName(e.target.value)}
+            <input value={companyName} onChange={e => setCompanyName(e.target.value)} onBlur={saveInputs}
               placeholder="e.g. Cartography Capital"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website URL</label>
-            <input value={companyUrl} onChange={e => setCompanyUrl(e.target.value)}
+            <input value={companyUrl} onChange={e => setCompanyUrl(e.target.value)} onBlur={saveInputs}
               placeholder="https://example.com"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry / Sector</label>
-            <input value={industry} onChange={e => setIndustry(e.target.value)}
+            <input value={industry} onChange={e => setIndustry(e.target.value)} onBlur={saveInputs}
               placeholder="e.g. Fintech, Healthcare, Climate Tech"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Context</label>
-            <input value={additionalContext} onChange={e => setAdditionalContext(e.target.value)}
+            <input value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} onBlur={saveInputs}
               placeholder="How they reached us, existing relationship, specific focus..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
@@ -1633,7 +1631,17 @@ CRITICAL: Replace each template question above with a version specific to this c
       )}
 
       {researchComplete && (
-        <AntennaButton onClick={() => onUpdate({ currentStage: 'brief', companyName, companyUrl, industry, researchContext: additionalContext })} icon={ArrowRight} className="w-full">
+        <AntennaButton
+          onClick={() => onUpdate({
+            currentStage: 'brief',
+            companyName, companyUrl, industry,
+            researchContext: additionalContext,
+            researchSummary: opportunity.researchSummary,
+            intakeQuestions: opportunity.intakeQuestions,
+            intakeRationales: opportunity.intakeRationales,
+            researchComplete: true,
+          })}
+          icon={ArrowRight} className="w-full">
           Proceed to Return Brief →
         </AntennaButton>
       )}
@@ -1649,103 +1657,140 @@ function BriefView({ opportunity, onUpdate }) {
   const [error, setError] = useState(null);
   const [transcript, setTranscript] = useState(opportunity.transcript || '');
   const [briefNotes, setBriefNotes] = useState(opportunity.briefNotes || '');
+  const [contactName, setContactName] = useState(opportunity.contactName || '');
+  const [contactRole, setContactRole] = useState(opportunity.contactRole || '');
+  const [callDate, setCallDate] = useState(opportunity.callDate || '');
   const [compassAssessment, setCompassAssessment] = useState(opportunity.compassAssessment || '');
-  const [fitArchetype, setFitArchetype] = useState(opportunity.fitArchetype || '');
+  const [fitArchetypes, setFitArchetypes] = useState(opportunity.fitArchetypes || (opportunity.fitArchetype ? [opportunity.fitArchetype] : []));
   const [isEditing, setIsEditing] = useState(false);
   const [editedBrief, setEditedBrief] = useState(opportunity.returnBrief || '');
   const [showCompass, setShowCompass] = useState(!!(opportunity.compassAssessment));
 
-  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
-  const saveRef = useRef({});
-  useEffect(() => { saveRef.current = { transcript, briefNotes, compassAssessment, fitArchetype }; });
-  useEffect(() => {
-    return () => { onUpdate(saveRef.current); };
-  }, []);
+  const toggleFit = (id) => {
+    setFitArchetypes(prev => {
+      if (prev.includes(id)) return prev.filter(a => a !== id);
+      if (prev.length >= 2) return [prev[1], id]; // replace oldest with new
+      return [...prev, id];
+    });
+  };
+
+  // Save brief inputs explicitly on blur — no unmount cleanup needed
+  const saveBriefInputs = useCallback(() => {
+    onUpdate({ transcript, briefNotes, contactName, contactRole, callDate, compassAssessment, fitArchetypes });
+  }, [transcript, briefNotes, contactName, contactRole, callDate, compassAssessment, fitArchetypes]);
 
   const generateBrief = async () => {
     if (!transcript.trim()) return setError('Please paste the call transcript.');
     setIsLoading(true); setError(null);
 
-    // Save inputs immediately
-    onUpdate({ transcript, briefNotes, compassAssessment, fitArchetype });
+    // Save inputs immediately before async call
+    onUpdate({ transcript, briefNotes, contactName, contactRole, callDate, compassAssessment, fitArchetypes });
 
-    const serviceTriggerSummary = SERVICE_TRIGGERS.map(t => `- ${t.category}: ${(t.triggerPatterns.direct || []).slice(0,3).join(', ')}`).join('\n');
-    const archetypeInfo = fitArchetype ? FIT_ARCHETYPES[fitArchetype] : null;
-    const archetypeContext = archetypeInfo
-      ? `\nCLIENT FIT ARCHETYPE (confirmed): ${archetypeInfo.emoji} ${archetypeInfo.title} — ${archetypeInfo.short}\n${archetypeInfo.description}\nWays of working consideration: ${archetypeInfo.waysOfWorking.substring(0, 400)}`
-      : '';
-    const compassContext = compassAssessment.trim()
-      ? `\nCOMPASS BRAND ASSESSMENT (provided):\n${compassAssessment}`
-      : '';
+    // Build FIT result string
+    const fitResult = fitArchetypes.length > 0
+      ? fitArchetypes.map(id => {
+          const a = FIT_ARCHETYPES[id];
+          if (!a) return '';
+          const pct = fitArchetypes.length === 2
+            ? (fitArchetypes[0] === id ? '60%' : '40%')
+            : '100%';
+          return `${a.title.toUpperCase()} ${pct}`;
+        }).filter(Boolean).join(' / ')
+      : 'Not completed';
+
+    const compassResult = compassAssessment.trim() || 'Not completed';
+    const clientLine = [
+      opportunity.companyName,
+      contactName && contactRole ? `${contactName}, ${contactRole}` : contactName || contactRole || null,
+      callDate ? `Call date: ${callDate}` : null,
+    ].filter(Boolean).join(' | ');
 
     try {
       const result = await callClaude({
-        maxTokens: 5000,
-        system: `You are a senior account strategist at Antenna Group, an integrated marketing and communications agency. Your job is to listen deeply to what clients say and don't say, synthesize their needs, and produce a crisp, strategic Return Brief that demonstrates you truly understand the opportunity. Your writing is warm, direct, and shows genuine intelligence — not corporate jargon.`,
-        userMessage: `Analyze this client call transcript and produce a Return Brief.
+        maxTokens: 3000,
+        system: `You are a senior strategist at Antenna Group. Write a Return Brief — a short client-facing document sent after a discovery call to confirm what was heard before a proposal is written.
 
-COMPANY: ${opportunity.companyName}
-RESEARCH CONTEXT: ${opportunity.researchSummary ? opportunity.researchSummary.substring(0, 800) : 'No prior research available'}${archetypeContext}${compassContext}
-ADDITIONAL NOTES: ${briefNotes || 'None'}
+Its only job: make the client feel understood and give them the chance to correct anything.
 
-TRANSCRIPT:
+RULES:
+- Written to the client, not about them
+- Every section: 2–3 sentences or 3 bullets maximum
+- No jargon, no filler, no repetition
+- If a section has no data, omit it entirely
+- The whole document must be readable in 90 seconds
+- Output plain text only — no markdown, no asterisks, no hashes`,
+
+        userMessage: `Write a Return Brief using the information below. Omit any section where no data exists.
+
+CLIENT: ${clientLine}
+
+TRANSCRIPT / NOTES:
 ${transcript}
 
-SERVICE CATEGORIES ANTENNA OFFERS:
-${serviceTriggerSummary}
+FIT RESULT:
+${fitResult}
 
-Produce a professional Return Brief in this EXACT format:
+COMPASS RESULT:
+${compassResult}
 
----
-
-# Return Brief: ${opportunity.companyName}
-**Prepared by Antenna Group | ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}**
-
-## What We Heard
-[2-3 sentences capturing the essence of what the client communicated — their situation, their energy, their urgency]
-
-## The Problem We're Solving
-[1-2 paragraphs. Be specific about the business challenge. Not just "they need marketing" — what's actually broken, missing, or holding them back?]
-
-## What They Want
-[Bullet list of explicit requests and stated desires from the call]
-
-## What They Need
-[Bullet list of underlying needs — what they should want, even if they didn't say it directly. This is where your strategic thinking shows]
-
-## What Success Looks Like
-[2-3 measurable or tangible outcomes that would make this engagement a success in their eyes]
-
-## Constraints & Parameters
-**Budget:** [Stated or implied budget range, or "TBC — to be confirmed in follow-up"]
-**Timeline:** [Key dates, launch targets, urgency signals]
-**Brand:** [Any brand constraints, existing guidelines, sensitivity areas${compassAssessment.trim() ? ' — reference the Compass assessment' : ''}]
-**Decision Making:** [Who are the key stakeholders? Who has sign-off authority?]
-
-## Mandatories
-[Things they explicitly stated as non-negotiable or must-haves]
-
-## Services We're Likely To Propose
-[Brief bullet list of the Antenna service areas most relevant to this brief]
-${archetypeInfo ? `
-## Working With This Client
-[Based on the ${archetypeInfo.title} archetype, 2-3 sentences on how Antenna should approach this relationship — pace, communication style, what will matter most to them]` : ''}
-
-## Recommended Next Step
-This Return Brief confirms our understanding of the opportunity. We recommend proceeding to a proposal that outlines our recommended approach, service scope, and investment range. We'll follow up within [X] business days.
-
----
-*This brief is a working document and can be updated as our understanding evolves.*
+BD TEAM NOTES:
+${briefNotes.trim() || 'None'}
 
 ---
 
-Then on a new section add:
+Use this EXACT output format:
 
-## TRIGGER ANALYSIS (Internal — Do Not Share)
-[For internal use: list which service trigger categories were detected and why, confirm or suggest a FIT archetype with reasoning, and any strategic observations about the opportunity]`
+RETURN BRIEF
+
+Client:          ${opportunity.companyName}
+Prepared for:    ${contactName ? `${contactName}${contactRole ? `, ${contactRole}` : ''}` : '[Contact]'}
+From:            Antenna Group
+Date:            ${callDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+────────────────────────────────────────
+
+WHAT WE HEARD
+[2–3 sentences in the client's own language. The situation and what brought them to this conversation.]
+
+THE PROBLEM WE'RE HERE TO SOLVE
+[1–2 sentences. The real underlying challenge, not the surface ask.]
+
+WHAT SUCCESS LOOKS LIKE
+- [Outcome 1]
+- [Outcome 2]
+- [Outcome 3]
+
+HOW YOU LIKE TO WORK
+[Only include if FIT data was provided. Format: [Archetype name(s)] — [2 sentences on what this means practically for how we'll work together.]]
+
+WHAT WE'VE LEARNT ABOUT YOUR BRAND
+[Only include if Compass data was provided. Format:
+Overall: [Maturity stage] ([Score])
+The areas that matter most for this engagement: [2–3 attributes only, one line each.]]
+
+WHAT A PROPOSAL SHOULD FOCUS ON
+- [Service / priority 1] — [one line why]
+- [Service / priority 2] — [one line why]
+- [Service / priority 3] — [one line why]
+
+YOUR MANDATORIES
+- [Non-negotiable 1]
+- [Non-negotiable 2]
+- [Non-negotiable 3]
+
+BEFORE WE GO FURTHER
+[One clarifying question — the single thing that would most sharpen the proposal.]
+
+────────────────────────────────────────
+Does this reflect what we discussed? Reply with any corrections before we begin.
+
+---INTERNAL---
+
+TRIGGER ANALYSIS (Internal — Do Not Share)
+[List which Antenna service categories were detected and why. Confirm or suggest a FIT archetype with reasoning. Note any strategic observations about this opportunity.]`,
       });
 
-      onUpdate({ transcript, briefNotes, compassAssessment, fitArchetype, returnBrief: result, briefComplete: true, currentStage: 'brief' });
+      onUpdate({ transcript, briefNotes, contactName, contactRole, callDate, compassAssessment, fitArchetypes, returnBrief: result, briefComplete: true, currentStage: 'brief' });
       setEditedBrief(result);
     } catch (e) { setError(e.message); }
     finally { setIsLoading(false); }
@@ -1753,11 +1798,14 @@ Then on a new section add:
 
   const handleSaveEdit = () => { onUpdate({ returnBrief: editedBrief }); setIsEditing(false); };
 
-  // Split brief from internal analysis
+  // Split brief from internal analysis at the sentinel
   const briefText = opportunity.returnBrief || '';
-  const internalSplit = briefText.indexOf('## TRIGGER ANALYSIS');
-  const publicBrief = internalSplit > 0 ? briefText.substring(0, internalSplit).trim() : briefText;
-  const internalAnalysis = internalSplit > 0 ? briefText.substring(internalSplit).trim() : '';
+  const internalSplit = briefText.indexOf('---INTERNAL---');
+  // Also handle legacy format
+  const legacySplit = briefText.indexOf('## TRIGGER ANALYSIS');
+  const splitIndex = internalSplit > 0 ? internalSplit : legacySplit > 0 ? legacySplit : -1;
+  const publicBrief = splitIndex > 0 ? briefText.substring(0, splitIndex).trim() : briefText;
+  const internalAnalysis = splitIndex > 0 ? briefText.substring(splitIndex).replace('---INTERNAL---', '').replace('## TRIGGER ANALYSIS (Internal — Do Not Share)', '').trim() : '';
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
@@ -1769,24 +1817,51 @@ Then on a new section add:
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Return Brief</h2>
-            <p className="text-gray-500 text-sm">Paste your call transcript. We'll analyze what they want and need, then produce a brief you can send back to the prospect.</p>
+            <p className="text-gray-500 text-sm">Paste your call transcript. We'll produce a concise client-facing brief to confirm what was heard — ready to send before the proposal.</p>
           </div>
 
           <div className="space-y-4 mb-6">
 
+            {/* Contact details row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Contact Name <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input value={contactName} onChange={e => setContactName(e.target.value)} onBlur={saveBriefInputs}
+                  placeholder="e.g. Sarah Chen"
+                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Role <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input value={contactRole} onChange={e => setContactRole(e.target.value)} onBlur={saveBriefInputs}
+                  placeholder="e.g. CMO"
+                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Call Date <span className="text-gray-400 font-normal">(optional)</span></label>
+              <input type="date" value={callDate} onChange={e => setCallDate(e.target.value)} onBlur={saveBriefInputs}
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 text-sm" />
+            </div>
+
             {/* FIT Archetype Selector */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <label className="block text-sm font-bold text-gray-900 mb-3">Client FIT Archetype</label>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-bold text-gray-900">Client FIT Archetype</label>
+                <span className="text-xs text-gray-400">{fitArchetypes.length}/2 selected</span>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {Object.values(FIT_ARCHETYPES).map(arch => {
-                  const isSelected = fitArchetype === arch.id;
+                  const isSelected = fitArchetypes.includes(arch.id);
+                  const isDisabled = !isSelected && fitArchetypes.length >= 2;
                   return (
                     <button
                       key={arch.id}
-                      onClick={() => setFitArchetype(isSelected ? '' : arch.id)}
+                      onClick={() => toggleFit(arch.id)}
                       className={`flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
                         isSelected
                           ? 'border-[#12161E] bg-[#12161E] text-white'
+                          : isDisabled
+                          ? 'border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed'
                           : 'border-gray-200 hover:border-gray-400 bg-gray-50'
                       }`}
                     >
@@ -1799,8 +1874,13 @@ Then on a new section add:
                   );
                 })}
               </div>
-              {fitArchetype && (
-                <p className="mt-2 text-xs text-gray-500 italic">{FIT_ARCHETYPES[fitArchetype]?.description}</p>
+              {fitArchetypes.length > 0 && (
+                <p className="mt-2 text-xs text-gray-500 italic">
+                  {fitArchetypes.map(id => FIT_ARCHETYPES[id]?.description).join(' · ')}
+                </p>
+              )}
+              {fitArchetypes.length === 2 && (
+                <p className="mt-1 text-xs text-amber-600 font-medium">Blended archetype — brief will reflect both working styles</p>
               )}
             </div>
 
@@ -1810,18 +1890,20 @@ Then on a new section add:
               <textarea
                 value={transcript}
                 onChange={e => setTranscript(e.target.value)}
+                onBlur={saveBriefInputs}
                 placeholder="Paste the full transcript of your client discovery call here..."
                 className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[220px] resize-y font-mono text-sm"
               />
             </div>
 
-            {/* Additional Notes */}
+            {/* BD Team Notes */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">BD Team Notes <span className="text-gray-400 font-normal">(optional)</span></label>
               <textarea
                 value={briefNotes}
                 onChange={e => setBriefNotes(e.target.value)}
-                placeholder="Any context not captured in the transcript — offline conversations, email exchanges, specific concerns..."
+                onBlur={saveBriefInputs}
+                placeholder="Anything not in the transcript — gut reads, room dynamics, things implied but not said, relationship context, red flags..."
                 className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[80px] resize-y text-sm"
               />
             </div>
@@ -1843,6 +1925,7 @@ Then on a new section add:
                   <textarea
                     value={compassAssessment}
                     onChange={e => setCompassAssessment(e.target.value)}
+                    onBlur={saveBriefInputs}
                     placeholder="Paste the Compass brand assessment output here — brand positioning, perception gaps, competitive context, or any strategic brand context from the assessment..."
                     className="w-full px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none text-gray-900 placeholder:text-gray-400 min-h-[120px] resize-y text-sm"
                     autoFocus
@@ -1877,16 +1960,17 @@ Then on a new section add:
           ) : (
             <div className="space-y-4">
               {/* FIT badge if set */}
-              {fitArchetype && FIT_ARCHETYPES[fitArchetype] && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl">
-                  <span className="text-lg">{FIT_ARCHETYPES[fitArchetype].emoji}</span>
-                  <div>
-                    <span className="text-xs font-bold text-gray-900">{FIT_ARCHETYPES[fitArchetype].title}</span>
-                    <span className="text-xs text-gray-400 ml-1.5">{FIT_ARCHETYPES[fitArchetype].short}</span>
-                  </div>
-                  {compassAssessment && (
-                    <span className="ml-auto text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">Compass included</span>
-                  )}
+              {fitArchetypes.length > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl flex-wrap">
+                  {fitArchetypes.map(id => FIT_ARCHETYPES[id]).filter(Boolean).map(arch => (
+                    <div key={arch.id} className="flex items-center gap-1.5">
+                      <span className="text-base">{arch.emoji}</span>
+                      <span className="text-xs font-bold text-gray-900">{arch.title}</span>
+                      <span className="text-xs text-gray-400">{arch.short}</span>
+                    </div>
+                  ))}
+                  {fitArchetypes.length === 2 && <span className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium ml-auto">Blended</span>}
+                  {compassAssessment && <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">Compass included</span>}
                 </div>
               )}
 
@@ -1896,26 +1980,46 @@ Then on a new section add:
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                     <span className="font-semibold text-gray-900">Return Brief</span>
-                    <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Ready to send</span>
+                    {isEditing
+                      ? <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">Editing</span>
+                      : <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Ready to send</span>
+                    }
                   </div>
                   <div className="flex items-center gap-2">
-                    <CopyButton text={publicBrief} />
-                    <button onClick={() => { setIsEditing(!isEditing); setEditedBrief(briefText); }} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5">
-                      <Edit3 className="w-3 h-3" />{isEditing ? 'Cancel' : 'Edit'}
+                    {!isEditing && <CopyButton text={publicBrief} />}
+                    <button
+                      onClick={() => { setIsEditing(!isEditing); setEditedBrief(briefText); }}
+                      className={`text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium ${
+                        isEditing
+                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          : 'bg-[#12161E] text-white hover:bg-gray-800'
+                      }`}>
+                      <Edit3 className="w-3 h-3" />{isEditing ? 'Cancel Edit' : 'Edit Brief'}
                     </button>
-                    <button onClick={() => downloadDocx(publicBrief, `${opportunity.companyName}_Return_Brief.docx`, { title: `Return Brief: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5">
-                      <Download className="w-3 h-3" />Download
-                    </button>
+                    {!isEditing && (
+                      <button onClick={() => downloadDocx(publicBrief, `${opportunity.companyName}_Return_Brief.docx`, { title: `Return Brief: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5">
+                        <Download className="w-3 h-3" />Download
+                      </button>
+                    )}
                   </div>
                 </div>
                 {isEditing ? (
                   <div className="p-5">
-                    <textarea value={editedBrief} onChange={e => setEditedBrief(e.target.value)} className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[400px] resize-y font-mono focus:ring-2 focus:ring-gray-900 outline-none" />
-                    <button onClick={handleSaveEdit} className="mt-3 px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
+                    <p className="text-xs text-gray-500 mb-3">Edit the brief below. Changes are saved when you click Save — the original will be replaced.</p>
+                    <textarea
+                      value={editedBrief}
+                      onChange={e => setEditedBrief(e.target.value)}
+                      className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[480px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-gray-900 outline-none bg-gray-50"
+                    />
+                    <div className="mt-3 flex items-center gap-3">
+                      <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
+                      <button onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
+                      <CopyButton text={editedBrief} />
+                    </div>
                   </div>
                 ) : (
-                  <div className="p-5 max-h-[520px] overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{publicBrief}</pre>
+                  <div className="p-6 max-h-[560px] overflow-y-auto">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-mono">{publicBrief}</pre>
                   </div>
                 )}
               </div>
@@ -1927,7 +2031,13 @@ Then on a new section add:
                 </CollapsibleSection>
               )}
 
-              <AntennaButton onClick={() => onUpdate({ currentStage: 'proposal', transcript, briefNotes, compassAssessment, fitArchetype })} icon={ArrowRight} className="w-full">
+              <AntennaButton onClick={() => onUpdate({
+                currentStage: 'proposal',
+                transcript, briefNotes, contactName, contactRole, callDate,
+                compassAssessment, fitArchetypes,
+                returnBrief: opportunity.returnBrief,
+                briefComplete: opportunity.briefComplete,
+              })} icon={ArrowRight} className="w-full">
                 Proceed to Proposal →
               </AntennaButton>
             </div>
@@ -2072,12 +2182,11 @@ function ProposalView({ opportunity, onUpdate }) {
   const [isIterating, setIsIterating] = useState(false);
   const [activeTab, setActiveTab] = useState('services');
 
-  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
-  const saveRef = useRef({});
-  useEffect(() => { saveRef.current = { draftNotes }; });
-  useEffect(() => {
-    return () => { onUpdate(saveRef.current); };
-  }, []);
+  // Save local state when navigating away — use onBlur not unmount cleanup
+  const saveProposalInputs = useCallback(() => { onUpdate({ draftNotes }); }, [draftNotes]);
+
+  // Remove the unreliable ref/cleanup pattern
+
 
   const selectedServices = opportunity.selectedServices || [];
   const selectedArchetypes = opportunity.selectedArchetypes || [];
@@ -2482,7 +2591,15 @@ Write the proposal in this exact structure:
 
                 {/* Proceed to SOW */}
                 {opportunity.proposalStatus === 'approved' && (
-                  <AntennaButton onClick={() => onUpdate({ currentStage: 'sow', draftNotes })} icon={ArrowRight} className="w-full">
+                  <AntennaButton onClick={() => onUpdate({
+                    currentStage: 'sow',
+                    draftNotes,
+                    selectedServices: opportunity.selectedServices,
+                    selectedArchetypes: opportunity.selectedArchetypes,
+                    draftEngagementType: opportunity.draftEngagementType,
+                    proposalDraft: opportunity.proposalDraft,
+                    proposalStatus: opportunity.proposalStatus,
+                  })} icon={ArrowRight} className="w-full">
                     Generate SOW →
                   </AntennaButton>
                 )}
@@ -2508,12 +2625,8 @@ function SOWGenerateView({ opportunity, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedSOW, setEditedSOW] = useState(opportunity.sowDraft || '');
 
-  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
-  const saveRef = useRef({});
-  useEffect(() => { saveRef.current = { sowNotes }; });
-  useEffect(() => {
-    return () => { onUpdate(saveRef.current); };
-  }, []);
+  // Use onBlur saves, not unmount cleanup (cleanup is unreliable with React state)
+
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
@@ -2607,7 +2720,7 @@ Use markdown formatting. This is a professional legal/business document — form
             </div>
             <div className="mt-4">
               <label className="block text-xs font-semibold text-gray-900 mb-1.5">Additional SOW Notes</label>
-              <textarea value={sowNotes} onChange={e => setSOWNotes(e.target.value)} placeholder="Payment schedule preferences, specific legal requirements, special terms..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
+              <textarea value={sowNotes} onChange={e => setSOWNotes(e.target.value)} onBlur={() => onUpdate({ sowNotes })} placeholder="Payment schedule preferences, specific legal requirements, special terms..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
             </div>
           </div>
 
@@ -2664,7 +2777,12 @@ Use markdown formatting. This is a professional legal/business document — form
               {/* Proceed to Handover */}
               {opportunity.sowDraft && (
                 <div className="px-5 pb-5">
-                  <AntennaButton onClick={() => onUpdate({ currentStage: 'handover', sowNotes })} icon={ArrowRight} className="w-full">
+                  <AntennaButton onClick={() => onUpdate({
+                    currentStage: 'handover',
+                    sowNotes,
+                    sowDraft: opportunity.sowDraft,
+                    sowStatus: opportunity.sowStatus,
+                  })} icon={ArrowRight} className="w-full">
                     Proceed to Sales Handover →
                   </AntennaButton>
                 </div>
@@ -2959,12 +3077,8 @@ function HandoverView({ opportunity, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedHandover, setEditedHandover] = useState(opportunity.handoverDraft || '');
 
-  // Keep a ref always pointing at current values so the unmount cleanup saves correctly
-  const saveRef = useRef({});
-  useEffect(() => { saveRef.current = { handoverNotes }; });
-  useEffect(() => {
-    return () => { onUpdate(saveRef.current); };
-  }, []);
+  // Use onBlur saves, not unmount cleanup
+
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
@@ -3968,17 +4082,22 @@ export default function App() {
       });
   }, [currentUser?.id]);
 
+  // Keep a ref in sync with currentOpportunity so updateOpportunity always has the latest value
+  // without needing to close over state (which causes stale closure bugs in the state setter)
+  const currentOpportunityRef = useRef(null);
+  useEffect(() => { currentOpportunityRef.current = currentOpportunity; }, [currentOpportunity]);
+
   const updateOpportunity = useCallback((updates) => {
-    setCurrentOpportunity(prev => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...updates, updatedAt: new Date().toISOString() };
-      if (updates.currentStage) setCurrentStage(updates.currentStage);
-      setOpportunities(prevOpps => prevOpps.map(o => o.id === updated.id ? updated : o));
-      // Persist to Supabase (fire and forget — id is the row pk, rest goes into data)
-      const { id, ...data } = updated;
-      supabase.from('opportunities').update({ data }).eq('id', id);
-      return updated;
-    });
+    const prev = currentOpportunityRef.current;
+    if (!prev) return;
+    const updated = { ...prev, ...updates, updatedAt: new Date().toISOString() };
+    // Update React state
+    setCurrentOpportunity(updated);
+    if (updates.currentStage) setCurrentStage(updates.currentStage);
+    setOpportunities(prevOpps => prevOpps.map(o => o.id === updated.id ? updated : o));
+    // Persist to Supabase — outside the state setter so it only fires once per call
+    const { id, ...data } = updated;
+    supabase.from('opportunities').update({ data }).eq('id', id);
   }, []);
 
   const selectOpportunity = (opp, goToStage) => {
