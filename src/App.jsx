@@ -115,6 +115,8 @@ const createOpportunity = (companyName, companyUrl = '', industry = '', practice
   // Stage 2
   transcript: '',
   briefNotes: '',
+  compassAssessment: '',
+  fitArchetype: '',
   briefComplete: false,
   returnBrief: '',
   transcriptAnalysis: null,
@@ -1647,13 +1649,35 @@ function BriefView({ opportunity, onUpdate }) {
   const [error, setError] = useState(null);
   const [transcript, setTranscript] = useState(opportunity.transcript || '');
   const [briefNotes, setBriefNotes] = useState(opportunity.briefNotes || '');
+  const [compassAssessment, setCompassAssessment] = useState(opportunity.compassAssessment || '');
+  const [fitArchetype, setFitArchetype] = useState(opportunity.fitArchetype || '');
   const [isEditing, setIsEditing] = useState(false);
   const [editedBrief, setEditedBrief] = useState(opportunity.returnBrief || '');
+  const [showCompass, setShowCompass] = useState(!!(opportunity.compassAssessment));
+
+  // Save all local state when navigating away
+  useEffect(() => {
+    return () => {
+      onUpdate({ transcript, briefNotes, compassAssessment, fitArchetype });
+    };
+  }, [transcript, briefNotes, compassAssessment, fitArchetype]);
 
   const generateBrief = async () => {
     if (!transcript.trim()) return setError('Please paste the call transcript.');
     setIsLoading(true); setError(null);
+
+    // Save inputs immediately
+    onUpdate({ transcript, briefNotes, compassAssessment, fitArchetype });
+
     const serviceTriggerSummary = SERVICE_TRIGGERS.map(t => `- ${t.category}: ${(t.triggerPatterns.direct || []).slice(0,3).join(', ')}`).join('\n');
+    const archetypeInfo = fitArchetype ? FIT_ARCHETYPES[fitArchetype] : null;
+    const archetypeContext = archetypeInfo
+      ? `\nCLIENT FIT ARCHETYPE (confirmed): ${archetypeInfo.emoji} ${archetypeInfo.title} — ${archetypeInfo.short}\n${archetypeInfo.description}\nWays of working consideration: ${archetypeInfo.waysOfWorking.substring(0, 400)}`
+      : '';
+    const compassContext = compassAssessment.trim()
+      ? `\nCOMPASS BRAND ASSESSMENT (provided):\n${compassAssessment}`
+      : '';
+
     try {
       const result = await callClaude({
         maxTokens: 5000,
@@ -1661,7 +1685,7 @@ function BriefView({ opportunity, onUpdate }) {
         userMessage: `Analyze this client call transcript and produce a Return Brief.
 
 COMPANY: ${opportunity.companyName}
-RESEARCH CONTEXT: ${opportunity.researchSummary ? opportunity.researchSummary.substring(0, 1000) : 'No prior research available'}
+RESEARCH CONTEXT: ${opportunity.researchSummary ? opportunity.researchSummary.substring(0, 800) : 'No prior research available'}${archetypeContext}${compassContext}
 ADDITIONAL NOTES: ${briefNotes || 'None'}
 
 TRANSCRIPT:
@@ -1695,14 +1719,17 @@ Produce a professional Return Brief in this EXACT format:
 ## Constraints & Parameters
 **Budget:** [Stated or implied budget range, or "TBC — to be confirmed in follow-up"]
 **Timeline:** [Key dates, launch targets, urgency signals]
-**Brand:** [Any brand constraints, existing guidelines, sensitivity areas]
+**Brand:** [Any brand constraints, existing guidelines, sensitivity areas${compassAssessment.trim() ? ' — reference the Compass assessment' : ''}]
 **Decision Making:** [Who are the key stakeholders? Who has sign-off authority?]
 
 ## Mandatories
 [Things they explicitly stated as non-negotiable or must-haves]
 
 ## Services We're Likely To Propose
-[Brief bullet list of the Antenna service areas most relevant to this brief — reference the service categories]
+[Brief bullet list of the Antenna service areas most relevant to this brief]
+${archetypeInfo ? `
+## Working With This Client
+[Based on the ${archetypeInfo.title} archetype, 2-3 sentences on how Antenna should approach this relationship — pace, communication style, what will matter most to them]` : ''}
 
 ## Recommended Next Step
 This Return Brief confirms our understanding of the opportunity. We recommend proceeding to a proposal that outlines our recommended approach, service scope, and investment range. We'll follow up within [X] business days.
@@ -1715,10 +1742,10 @@ This Return Brief confirms our understanding of the opportunity. We recommend pr
 Then on a new section add:
 
 ## TRIGGER ANALYSIS (Internal — Do Not Share)
-[For internal use: list which service trigger categories were detected and why, what the client's FIT archetype most likely is, and any strategic observations about the opportunity]`
+[For internal use: list which service trigger categories were detected and why, confirm or suggest a FIT archetype with reasoning, and any strategic observations about the opportunity]`
       });
 
-      onUpdate({ transcript, briefNotes, returnBrief: result, briefComplete: true, currentStage: 'brief' });
+      onUpdate({ transcript, briefNotes, compassAssessment, fitArchetype, returnBrief: result, briefComplete: true, currentStage: 'brief' });
       setEditedBrief(result);
     } catch (e) { setError(e.message); }
     finally { setIsLoading(false); }
@@ -1737,30 +1764,98 @@ Then on a new section add:
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Left: Input */}
         <div>
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Return Brief</h2>
-            <p className="text-gray-500">Paste your call transcript. We'll analyze what they want and need, then produce a brief you can send back to the prospect.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Return Brief</h2>
+            <p className="text-gray-500 text-sm">Paste your call transcript. We'll analyze what they want and need, then produce a brief you can send back to the prospect.</p>
           </div>
 
           <div className="space-y-4 mb-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">
-                <div className="flex items-center gap-2"><MessageSquare className="w-4 h-4" />Call Transcript *</div>
-              </label>
-              <textarea value={transcript} onChange={e => setTranscript(e.target.value)} placeholder="Paste the full transcript of your client discovery call here..." className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[250px] resize-y font-mono text-sm" />
+
+            {/* FIT Archetype Selector */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <label className="block text-sm font-bold text-gray-900 mb-3">Client FIT Archetype</label>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.values(FIT_ARCHETYPES).map(arch => {
+                  const isSelected = fitArchetype === arch.id;
+                  return (
+                    <button
+                      key={arch.id}
+                      onClick={() => setFitArchetype(isSelected ? '' : arch.id)}
+                      className={`flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-[#12161E] bg-[#12161E] text-white'
+                          : 'border-gray-200 hover:border-gray-400 bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-lg leading-none mt-0.5 flex-shrink-0">{arch.emoji}</span>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-bold leading-tight ${isSelected ? 'text-white' : 'text-gray-900'}`}>{arch.title}</p>
+                        <p className={`text-[10px] mt-0.5 leading-tight ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>{arch.short}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {fitArchetype && (
+                <p className="mt-2 text-xs text-gray-500 italic">{FIT_ARCHETYPES[fitArchetype]?.description}</p>
+              )}
             </div>
+
+            {/* Transcript */}
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Notes (optional)</label>
-              <textarea value={briefNotes} onChange={e => setBriefNotes(e.target.value)} placeholder="Any context not captured in the transcript — offline conversations, email exchanges, specific concerns..." className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[80px] resize-y" />
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Call Transcript <span className="text-red-400">*</span></label>
+              <textarea
+                value={transcript}
+                onChange={e => setTranscript(e.target.value)}
+                placeholder="Paste the full transcript of your client discovery call here..."
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[220px] resize-y font-mono text-sm"
+              />
+            </div>
+
+            {/* Additional Notes */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+              <textarea
+                value={briefNotes}
+                onChange={e => setBriefNotes(e.target.value)}
+                placeholder="Any context not captured in the transcript — offline conversations, email exchanges, specific concerns..."
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[80px] resize-y text-sm"
+              />
+            </div>
+
+            {/* Compass Assessment — toggleable */}
+            <div>
+              <button
+                onClick={() => setShowCompass(!showCompass)}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors group"
+              >
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showCompass ? 'bg-[#12161E] border-[#12161E]' : 'border-gray-400 group-hover:border-gray-600'}`}>
+                  {showCompass && <span className="text-white text-[9px] font-black">✓</span>}
+                </div>
+                Include Compass Brand Assessment
+                <span className="text-xs text-gray-400 font-normal">(optional)</span>
+              </button>
+              {showCompass && (
+                <div className="mt-2">
+                  <textarea
+                    value={compassAssessment}
+                    onChange={e => setCompassAssessment(e.target.value)}
+                    placeholder="Paste the Compass brand assessment output here — brand positioning, perception gaps, competitive context, or any strategic brand context from the assessment..."
+                    className="w-full px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-400 outline-none text-gray-900 placeholder:text-gray-400 min-h-[120px] resize-y text-sm"
+                    autoFocus
+                  />
+                  <p className="mt-1.5 text-xs text-amber-700">Compass context will be woven into the brief's Brand section and inform service recommendations.</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />{error}</div>}
+          {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}</div>}
 
-          <AntennaButton onClick={generateBrief} loading={isLoading} loadingText="Generating Brief..." icon={FileText} disabled={!transcript.trim()} className="w-full" size="large">
+          <AntennaButton onClick={generateBrief} loading={isLoading} loadingText="Generating Brief…" icon={FileText} disabled={!transcript.trim()}>
             {opportunity.briefComplete ? 'Regenerate Brief' : 'Generate Return Brief'}
           </AntennaButton>
 
@@ -1781,7 +1876,21 @@ Then on a new section add:
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Brief Actions */}
+              {/* FIT badge if set */}
+              {fitArchetype && FIT_ARCHETYPES[fitArchetype] && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl">
+                  <span className="text-lg">{FIT_ARCHETYPES[fitArchetype].emoji}</span>
+                  <div>
+                    <span className="text-xs font-bold text-gray-900">{FIT_ARCHETYPES[fitArchetype].title}</span>
+                    <span className="text-xs text-gray-400 ml-1.5">{FIT_ARCHETYPES[fitArchetype].short}</span>
+                  </div>
+                  {compassAssessment && (
+                    <span className="ml-auto text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">Compass included</span>
+                  )}
+                </div>
+              )}
+
+              {/* Brief card */}
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-2">
@@ -1791,8 +1900,12 @@ Then on a new section add:
                   </div>
                   <div className="flex items-center gap-2">
                     <CopyButton text={publicBrief} />
-                    <button onClick={() => { setIsEditing(!isEditing); setEditedBrief(briefText); }} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5"><Edit3 className="w-3 h-3" />{isEditing ? 'Cancel' : 'Edit'}</button>
-                    <button onClick={() => downloadDocx(publicBrief, `${opportunity.companyName}_Return_Brief.docx`, { title: `Return Brief: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5"><Download className="w-3 h-3" />Download</button>
+                    <button onClick={() => { setIsEditing(!isEditing); setEditedBrief(briefText); }} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5">
+                      <Edit3 className="w-3 h-3" />{isEditing ? 'Cancel' : 'Edit'}
+                    </button>
+                    <button onClick={() => downloadDocx(publicBrief, `${opportunity.companyName}_Return_Brief.docx`, { title: `Return Brief: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5">
+                      <Download className="w-3 h-3" />Download
+                    </button>
                   </div>
                 </div>
                 {isEditing ? (
@@ -1801,7 +1914,7 @@ Then on a new section add:
                     <button onClick={handleSaveEdit} className="mt-3 px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
                   </div>
                 ) : (
-                  <div className="p-5 max-h-[500px] overflow-y-auto">
+                  <div className="p-5 max-h-[520px] overflow-y-auto">
                     <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{publicBrief}</pre>
                   </div>
                 )}
@@ -1958,6 +2071,11 @@ function ProposalView({ opportunity, onUpdate }) {
   const [proposalIteration, setProposalIteration] = useState('');
   const [isIterating, setIsIterating] = useState(false);
   const [activeTab, setActiveTab] = useState('services');
+
+  // Save local state when navigating away
+  useEffect(() => {
+    return () => { onUpdate({ draftNotes }); };
+  }, [draftNotes]);
 
   const selectedServices = opportunity.selectedServices || [];
   const selectedArchetypes = opportunity.selectedArchetypes || [];
@@ -2387,6 +2505,11 @@ function SOWGenerateView({ opportunity, onUpdate }) {
   const [iterationFeedback, setIterationFeedback] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedSOW, setEditedSOW] = useState(opportunity.sowDraft || '');
+
+  // Save local state when navigating away
+  useEffect(() => {
+    return () => { onUpdate({ sowNotes }); };
+  }, [sowNotes]);
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
@@ -2823,6 +2946,11 @@ function HandoverView({ opportunity, onUpdate }) {
   const [feedback, setFeedback] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedHandover, setEditedHandover] = useState(opportunity.handoverDraft || '');
+
+  // Save local state when navigating away
+  useEffect(() => {
+    return () => { onUpdate({ handoverNotes }); };
+  }, [handoverNotes]);
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
 
