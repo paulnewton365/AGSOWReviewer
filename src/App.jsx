@@ -7,7 +7,8 @@ import {
   Building2, Globe, TrendingUp, FileQuestion, Send, RotateCcw, X,
   Plus, Edit3, Trash2, ChevronLeft, Star, Clock, Archive, ArrowUpRight,
   RefreshCw, ChevronUp, Layers, BookOpen, ShieldCheck, Zap,
-  LogOut, UserCog, UserPlus, Shield, Lock, User, ToggleLeft, ToggleRight
+  LogOut, UserCog, UserPlus, Shield, Lock, User, ToggleLeft, ToggleRight,
+  ClipboardList, TableProperties, Filter, ExternalLink, Award, BadgeCheck, XCircle
 } from 'lucide-react';
 import {
   Document, Packer, Paragraph, TextRun, Header, Footer,
@@ -16,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.5.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -27,6 +28,7 @@ const PIPELINE_STAGES = [
   { id: 'brief', number: 2, label: 'Return Brief', Icon: FileText, description: 'Transcript analysis & client brief' },
   { id: 'proposal', number: 3, label: 'Proposal', Icon: Sparkles, description: 'Service selection & proposal' },
   { id: 'sow', number: 4, label: 'SOW', Icon: PenTool, description: 'Statement of Work generation' },
+  { id: 'handover', number: 5, label: 'Handover', Icon: ClipboardList, description: 'Sales to delivery handover doc' },
 ];
 
 const PROPOSAL_STATUSES = [
@@ -56,7 +58,7 @@ const USER_ROLES = {
     description: 'Full pipeline access including SOW generation',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     badgeColor: 'bg-purple-600',
-    allowedStages: ['research', 'brief', 'proposal', 'sow'],
+    allowedStages: ['research', 'brief', 'proposal', 'sow', 'handover'],
     canAccessSOWReview: true,
     canAccessAdmin: false,
     canCreateOpportunities: true,
@@ -76,7 +78,7 @@ const USER_ROLES = {
     description: 'Full access + user management',
     color: 'bg-gray-900 text-white border-gray-700',
     badgeColor: 'bg-gray-900',
-    allowedStages: ['research', 'brief', 'proposal', 'sow'],
+    allowedStages: ['research', 'brief', 'proposal', 'sow', 'handover'],
     canAccessSOWReview: true,
     canAccessAdmin: true,
     canCreateOpportunities: true,
@@ -116,6 +118,10 @@ const createOpportunity = (companyName, companyUrl = '', industry = '', practice
   sowDraft: '',
   sowStatus: 'draft',
   sowNotes: '',
+  // Stage 5
+  handoverDraft: '',
+  handoverNotes: '',
+  handoverStatus: 'draft',
 });
 
 // ============================================================================
@@ -2659,6 +2665,557 @@ What's working well: [brief notes]`;
 
 
 // ============================================================================
+// HANDOVER VIEW — Stage 5
+// ============================================================================
+function HandoverView({ opportunity, onUpdate }) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isIterating, setIsIterating] = useState(false);
+  const [error, setError] = useState(null);
+  const [handoverNotes, setHandoverNotes] = useState(opportunity.handoverNotes || '');
+  const [feedback, setFeedback] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedHandover, setEditedHandover] = useState(opportunity.handoverDraft || '');
+
+  const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
+
+  const pricingTotal = (() => {
+    try {
+      const services = opportunity.selectedServices || [];
+      if (!services.length) return null;
+      let low = 0, high = 0;
+      services.forEach(name => {
+        for (const cat of SERVICE_TRIGGERS) {
+          const svc = cat.services?.find(s => s.name === name);
+          if (svc?.pricing) {
+            low += svc.pricing.budgetLow || 0;
+            high += svc.pricing.budgetHigh || 0;
+            break;
+          }
+        }
+      });
+      if (!low && !high) return null;
+      const fmt = (n) => n >= 1000000 ? `$${(n/1000000).toFixed(1)}M` : `$${(n/1000).toFixed(0)}K`;
+      return { low, high, lowFmt: fmt(low), highFmt: fmt(high) };
+    } catch { return null; }
+  })();
+
+  const generateHandover = async () => {
+    setIsGenerating(true); setError(null);
+    try {
+      const pricing = pricingTotal ? `${pricingTotal.lowFmt} – ${pricingTotal.highFmt}` : 'See proposal for details';
+      const result = await callClaude({
+        maxTokens: 6000,
+        system: `You are a senior business development lead at Antenna Group, an integrated marketing and communications agency. You write clear, concise internal sales handover documents that give the delivery team everything they need to hit the ground running. Your writing is confident, pithy, and free of fluff. You write in plain English — no buzzwords, no filler.`,
+        userMessage: `Write a 2–3 page internal Sales Handover document for the delivery team. This is NOT a client-facing document — it is a crisp internal briefing that transfers knowledge from sales to delivery.
+
+CLIENT: ${opportunity.companyName}
+RID: ${opportunity.rid || 'TBC'}
+PRACTICE: ${opportunity.practice || 'Not specified'}
+ENGAGEMENT TYPE: ${engagementLabel}
+SERVICES: ${(opportunity.selectedServices || []).join(', ') || 'See proposal'}
+ESTIMATED INVESTMENT: ${pricing}
+
+RETURN BRIEF (key client context):
+${(opportunity.returnBrief || '').substring(0, 2000)}
+
+PROPOSAL SUMMARY:
+${(opportunity.proposalDraft || '').substring(0, 2000)}
+
+SOW HIGHLIGHTS:
+${(opportunity.sowDraft || '').substring(0, 2000)}
+
+ADDITIONAL NOTES: ${handoverNotes || 'None'}
+
+Write the handover document with these exact sections, in this order:
+
+## The Assignment
+One crisp paragraph: what we've been asked to do, why now, and what the client is trying to achieve. No more than 5 sentences.
+
+## Client Background
+Key facts about the company — who they are, their market position, what makes them tick. Surface anything from the brief that the delivery team needs to understand the client. 3–5 bullet points max.
+
+## The Brief in Plain English
+What problem are we actually solving? Write this as if you're telling a colleague over coffee — direct, clear, no jargon. Include the client's stated goals, any tensions or constraints, and what the client cares most about.
+
+## Services & Scope
+List the agreed services and what's included. Note any scope boundaries or explicit exclusions the team needs to respect.
+
+## What Success Looks Like
+3–5 specific, measurable outcomes the client will judge us on. Be precise — avoid generic statements like "increase brand awareness."
+
+## Budget & Commercial
+- Estimated investment range
+- Engagement type (${engagementLabel})
+- Key commercial terms (payment milestones, notice period, etc.) from the SOW if available
+- Any budget sensitivities flagged in the brief
+
+## Key Relationships & Stakeholders
+Who are we working with? Decision-maker, day-to-day contact, internal champions, potential detractors. Note any political dynamics flagged during the sales process.
+
+## Watch Outs
+2–4 honest bullets about risks, sensitivities, or things the team should know before their first meeting. What would have been good to know on day one?
+
+## Immediate Next Steps
+3 concrete actions for the delivery team in the first two weeks.
+
+Format: Use markdown with ## headers. Keep the whole document tight — every sentence should earn its place. This document should be readable in under 5 minutes.`
+      });
+      onUpdate({ handoverDraft: result, handoverNotes, handoverStatus: 'draft' });
+      setEditedHandover(result);
+    } catch (e) { setError(e.message); }
+    finally { setIsGenerating(false); }
+  };
+
+  const iterateHandover = async () => {
+    if (!feedback.trim()) return;
+    setIsIterating(true);
+    try {
+      const current = isEditing ? editedHandover : opportunity.handoverDraft;
+      const result = await callClaude({
+        maxTokens: 6000,
+        system: `You are updating an internal sales handover document. Apply the requested changes while keeping the document pithy, direct, and under 3 pages.`,
+        userMessage: `Update this handover document based on the following feedback:\n\nFEEDBACK: ${feedback}\n\nCURRENT DOCUMENT:\n${current}\n\nReturn the complete updated document.`
+      });
+      onUpdate({ handoverDraft: result });
+      setEditedHandover(result);
+      setFeedback('');
+    } catch (e) { setError(e.message); }
+    finally { setIsIterating(false); }
+  };
+
+  const hasPrereqs = opportunity.proposalDraft && opportunity.sowDraft;
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="mb-8">
+        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+          <ClipboardList className="w-6 h-6 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Sales Handover</h2>
+        <p className="text-gray-500">Generate the internal briefing document that transfers this opportunity from sales to delivery.</p>
+      </div>
+
+      {!hasPrereqs && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800">Complete earlier stages first</p>
+            <p className="text-xs text-amber-700 mt-1">A proposal and SOW are needed before generating the handover document.</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-sm">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+        </div>
+      )}
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Left panel */}
+        <div className="space-y-5">
+          {/* Summary card */}
+          <div className="bg-[#12161E] rounded-2xl p-5 text-white">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Assignment Summary</p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Client</p>
+                <p className="font-bold text-lg leading-tight">{opportunity.companyName}</p>
+              </div>
+              {opportunity.rid && (
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">RID</p>
+                  <p className="font-mono text-[#E8FF00] font-bold">{opportunity.rid}</p>
+                </div>
+              )}
+              {opportunity.practice && (
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Practice</p>
+                  <p className="text-sm text-gray-300">{opportunity.practice}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Engagement</p>
+                <p className="text-sm text-gray-300">{engagementLabel}</p>
+              </div>
+              {pricingTotal && (
+                <div>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Investment Range</p>
+                  <p className="text-xl font-black text-[#E8FF00]">{pricingTotal.lowFmt}</p>
+                  <p className="text-xs text-gray-500">– {pricingTotal.highFmt}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-1">Services</p>
+                <div className="flex flex-wrap gap-1">
+                  {(opportunity.selectedServices || []).slice(0, 6).map(s => (
+                    <span key={s} className="text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-gray-300">{s}</span>
+                  ))}
+                  {(opportunity.selectedServices || []).length > 6 && (
+                    <span className="text-[10px] px-1.5 py-0.5 bg-white/10 rounded text-gray-400">+{opportunity.selectedServices.length - 6} more</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="font-bold text-gray-900 mb-3">Notes for Handover</h3>
+            <textarea
+              value={handoverNotes}
+              onChange={e => setHandoverNotes(e.target.value)}
+              onBlur={() => onUpdate({ handoverNotes })}
+              placeholder="Key context for the delivery team, relationship notes, sensitivities..."
+              className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y"
+            />
+          </div>
+
+          {/* Generate */}
+          {!opportunity.handoverDraft ? (
+            <AntennaButton
+              onClick={generateHandover}
+              loading={isGenerating}
+              loadingText="Generating Handover..."
+              icon={ClipboardList}
+              disabled={!hasPrereqs}
+              size="large"
+              className="w-full"
+            >
+              Generate Handover Doc
+            </AntennaButton>
+          ) : (
+            <div className="space-y-3">
+              <AntennaButton onClick={generateHandover} loading={isGenerating} loadingText="Regenerating..." icon={RotateCcw} size="default" className="w-full" variant="secondary">
+                Regenerate
+              </AntennaButton>
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <h4 className="text-xs font-bold text-gray-700 mb-2">Iterate with Feedback</h4>
+                <textarea
+                  value={feedback}
+                  onChange={e => setFeedback(e.target.value)}
+                  placeholder="e.g. Sharpen the Watch Outs section, add more detail on budget..."
+                  className="w-full text-sm px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[70px] resize-y mb-2"
+                />
+                <AntennaButton onClick={iterateHandover} loading={isIterating} loadingText="Updating..." disabled={!feedback.trim()} icon={RefreshCw} size="small" className="w-full">
+                  Apply Feedback
+                </AntennaButton>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Document */}
+        <div className="lg:col-span-2">
+          {!opportunity.handoverDraft ? (
+            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-dashed border-gray-200">
+              <ClipboardList className="w-12 h-12 text-gray-200 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-400 mb-2">No handover document yet</h3>
+              <p className="text-sm text-gray-400 text-center max-w-xs">Add any notes in the left panel and generate the handover doc.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-gray-900">Sales Handover Document</span>
+                  <span className="text-xs px-2 py-0.5 bg-[#E8FF00] text-[#12161E] font-bold rounded">Internal</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CopyButton text={isEditing ? editedHandover : opportunity.handoverDraft} />
+                  <button
+                    onClick={() => { setIsEditing(!isEditing); setEditedHandover(opportunity.handoverDraft); }}
+                    className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"
+                  >
+                    <Edit3 className="w-3 h-3" />{isEditing ? 'Cancel' : 'Edit'}
+                  </button>
+                  <button
+                    onClick={() => downloadDocx(
+                      opportunity.handoverDraft,
+                      `${opportunity.companyName}_SalesHandover.docx`,
+                      { title: `Sales Handover: ${opportunity.companyName}`, client: opportunity.companyName }
+                    )}
+                    className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"
+                  >
+                    <Download className="w-3 h-3" />Download
+                  </button>
+                </div>
+              </div>
+              {isEditing ? (
+                <div className="p-5">
+                  <textarea
+                    value={editedHandover}
+                    onChange={e => setEditedHandover(e.target.value)}
+                    className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[600px] resize-y font-mono focus:ring-2 focus:ring-gray-900 outline-none"
+                  />
+                  <button
+                    onClick={() => { onUpdate({ handoverDraft: editedHandover }); setIsEditing(false); }}
+                    className="mt-3 px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              ) : (
+                <div className="p-6 max-h-[700px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{opportunity.handoverDraft}</pre>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================================
+// QUALIFICATION MODAL — Smartsheet integration
+// ============================================================================
+const SMARTSHEET_COLUMNS = [
+  { key: 'CLIENT', label: 'Client' },
+  { key: 'Assignment Title', label: 'Assignment' },
+  { key: 'QUALIFIED BY', label: 'Qualified By' },
+  { key: 'REQUEST TYPE', label: 'Request Type' },
+  { key: 'RECOMMENDATION', label: 'Recommendation' },
+  { key: 'QUALIFICATION SCORE (OUT OF 80)', label: 'Score /80' },
+  { key: 'Workflow Status', label: 'Status' },
+  { key: 'Owning Ecosystem', label: 'Ecosystem' },
+  { key: 'CONFLICT', label: 'Conflict' },
+];
+
+function QualificationModal({ onClose }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchQ, setSearchQ] = useState('');
+  const [filterRec, setFilterRec] = useState('');
+  const [filterEco, setFilterEco] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [sortCol, setSortCol] = useState('QUALIFICATION SCORE (OUT OF 80)');
+  const [sortDir, setSortDir] = useState('desc');
+
+  useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
+    setLoading(true); setError('');
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('smartsheet-proxy', {
+        body: { sheetId: '5750175070900100' },
+      });
+      if (fnError || data?.error) {
+        setError(data?.error || fnError?.message || 'Could not load qualification data.');
+      } else if (data?.rows) {
+        setRows(data.rows);
+      }
+    } catch (e) {
+      setError(e.message || 'Failed to connect to Smartsheet.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const recommendations = [...new Set(rows.map(r => r['RECOMMENDATION']).filter(Boolean))];
+  const ecosystems = [...new Set(rows.map(r => r['Owning Ecosystem']).filter(Boolean))];
+  const statuses = [...new Set(rows.map(r => r['Workflow Status']).filter(Boolean))];
+
+  const filtered = rows.filter(r => {
+    const q = searchQ.toLowerCase();
+    const matchSearch = !q ||
+      (r['CLIENT'] || '').toLowerCase().includes(q) ||
+      (r['Assignment Title'] || '').toLowerCase().includes(q) ||
+      (r['QUALIFIED BY'] || '').toLowerCase().includes(q);
+    const matchRec = !filterRec || r['RECOMMENDATION'] === filterRec;
+    const matchEco = !filterEco || r['Owning Ecosystem'] === filterEco;
+    const matchStatus = !filterStatus || r['Workflow Status'] === filterStatus;
+    return matchSearch && matchRec && matchEco && matchStatus;
+  }).sort((a, b) => {
+    const av = a[sortCol] ?? '';
+    const bv = b[sortCol] ?? '';
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return sortDir === 'asc' ? av - bv : bv - av;
+    }
+    const as = String(av).toLowerCase();
+    const bs = String(bv).toLowerCase();
+    return sortDir === 'asc' ? as.localeCompare(bs) : bs.localeCompare(as);
+  });
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir('desc'); }
+  };
+
+  const recStyle = (rec) => {
+    if (!rec) return 'bg-gray-100 text-gray-500';
+    const r = rec.toUpperCase();
+    if (r === 'PROCEED') return 'bg-green-100 text-green-700';
+    if (r === 'DECLINE') return 'bg-red-100 text-red-700';
+    if (r === 'PROCEED WITH CAUTION') return 'bg-amber-100 text-amber-700';
+    return 'bg-gray-100 text-gray-600';
+  };
+
+  const scoreBar = (score) => {
+    if (!score && score !== 0) return null;
+    const pct = Math.min(100, (score / 80) * 100);
+    const color = pct >= 70 ? '#6B9E4A' : pct >= 50 ? '#E8C23D' : '#E8553D';
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+        </div>
+        <span className="text-xs font-bold" style={{ color }}>{score}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+      <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-[#12161E] flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#E8FF00] rounded-xl flex items-center justify-center">
+              <TableProperties className="w-5 h-5 text-[#12161E]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Qualification Board</h2>
+              <p className="text-xs text-gray-400">Live from Smartsheet · {rows.length} opportunities</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={loadData} disabled={loading} className="p-2 text-gray-400 hover:text-white transition-colors">
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 px-8 py-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              value={searchQ} onChange={e => setSearchQ(e.target.value)}
+              placeholder="Search client, assignment, qualifier..."
+              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-gray-900 placeholder:text-gray-400"
+            />
+            {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><X className="w-3.5 h-3.5" /></button>}
+          </div>
+          <select value={filterRec} onChange={e => setFilterRec(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-700">
+            <option value="">All Recommendations</option>
+            {recommendations.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <select value={filterEco} onChange={e => setFilterEco(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-700">
+            <option value="">All Ecosystems</option>
+            {ecosystems.map(e => <option key={e} value={e}>{e}</option>)}
+          </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none text-gray-700">
+            <option value="">All Statuses</option>
+            {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {(searchQ || filterRec || filterEco || filterStatus) && (
+            <button onClick={() => { setSearchQ(''); setFilterRec(''); setFilterEco(''); setFilterStatus(''); }} className="text-xs px-3 py-2 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50">Clear</button>
+          )}
+          <span className="text-xs text-gray-400 ml-auto">{filtered.length} of {rows.length}</span>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto px-8 py-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
+                <p className="text-sm text-gray-400">Loading from Smartsheet...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <AlertCircle className="w-10 h-10 text-red-300 mb-4" />
+              <p className="text-sm text-red-600 font-medium mb-2">Could not load data</p>
+              <p className="text-xs text-gray-400 mb-4">{error}</p>
+              <button onClick={loadData} className="px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-medium">Retry</button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-24">
+              <p className="text-gray-400">No results match your filters.</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  {SMARTSHEET_COLUMNS.map(col => (
+                    <th key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className="text-left py-2.5 px-3 text-xs font-bold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-900 select-none whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        {col.label}
+                        {sortCol === col.key && (
+                          <ChevronDown className={`w-3 h-3 transition-transform ${sortDir === 'asc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((row, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-3 font-semibold text-gray-900 whitespace-nowrap">{row['CLIENT'] || '—'}</td>
+                    <td className="py-3 px-3 text-gray-700 max-w-[180px]">
+                      <p className="truncate">{row['Assignment Title'] || '—'}</p>
+                    </td>
+                    <td className="py-3 px-3 text-gray-500 whitespace-nowrap text-xs">{row['QUALIFIED BY'] || '—'}</td>
+                    <td className="py-3 px-3 max-w-[160px]">
+                      <p className="text-xs text-gray-500 line-clamp-2">{row['REQUEST TYPE'] || '—'}</p>
+                    </td>
+                    <td className="py-3 px-3">
+                      {row['RECOMMENDATION'] ? (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${recStyle(row['RECOMMENDATION'])}`}>
+                          {row['RECOMMENDATION']}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-3 px-3 w-32">
+                      {scoreBar(row['QUALIFICATION SCORE (OUT OF 80)'])}
+                    </td>
+                    <td className="py-3 px-3">
+                      {row['Workflow Status'] ? (
+                        <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium whitespace-nowrap">{row['Workflow Status']}</span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-3 px-3 text-xs text-gray-500 whitespace-nowrap">{row['Owning Ecosystem'] || '—'}</td>
+                    <td className="py-3 px-3">
+                      {row['CONFLICT'] && row['CONFLICT'].toString().toLowerCase() !== 'no' && row['CONFLICT'].toString().toLowerCase() !== 'none' ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-red-600">
+                          <XCircle className="w-3 h-3" />Yes
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                          <CheckCircle className="w-3 h-3" />No
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-3 border-t border-gray-100 bg-gray-50 flex-shrink-0 flex items-center justify-between">
+          <p className="text-xs text-gray-400">Data sourced live from Smartsheet. Refresh to see latest.</p>
+          <a href={`https://app.smartsheet.com/sheets/5750175070900100`} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors">
+            Open in Smartsheet <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================================
 // HOME / DASHBOARD VIEW
 // ============================================================================
 function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, currentUser, roleInfo }) {
@@ -2930,6 +3487,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showQualification, setShowQualification] = useState(false);
 
   // Restore session from Supabase on mount
   useEffect(() => {
@@ -3061,6 +3619,7 @@ export default function App() {
       case 'brief': return <BriefView {...props} />;
       case 'proposal': return <ProposalView {...props} />;
       case 'sow': return <SOWGenerateView {...props} />;
+      case 'handover': return <HandoverView {...props} />;
       default: return <ResearchView {...props} />;
     }
   };
@@ -3105,6 +3664,7 @@ export default function App() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#E8E6E1' }}>
       {showAdmin && <AdminView currentUser={currentUser} onClose={() => setShowAdmin(false)} />}
+      {showQualification && <QualificationModal onClose={() => setShowQualification(false)} />}
 
       {/* Header */}
       <header className="border-b border-gray-200/80 sticky top-0 z-20" style={{ backgroundColor: '#E8E6E1' }}>
@@ -3128,6 +3688,12 @@ export default function App() {
                   <ChevronLeft className="w-4 h-4" />Back
                 </button>
               )}
+              <button
+                onClick={() => setShowQualification(true)}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#12161E] hover:text-[#12161E] transition-all"
+              >
+                <TableProperties className="w-3.5 h-3.5" />Qualification Board
+              </button>
               <UserMenu currentUser={currentUser} onLogout={handleLogout} onOpenAdmin={() => setShowAdmin(true)} />
             </div>
           </div>
