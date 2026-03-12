@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.12.0';
+const APP_VERSION = '3.13.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3666,6 +3666,288 @@ function QualificationModal({ onClose }) {
 }
 
 
+
+// ============================================================================
+// PIPELINE MODAL
+// ============================================================================
+const PIPELINE_STATUSES_ORDER = [
+  'Raised',
+  'Proposal',
+  'Waiting For Response',
+  'Working On Contract',
+  'On Hold',
+];
+const PIPELINE_STATUSES_EXCLUDE = new Set(['Win', 'Evaporated', 'Lost', 'Duplicate']);
+
+const PIPELINE_COLUMNS = [
+  { key: 'RID',                     label: 'RID' },
+  { key: 'Client',                  label: 'Client' },
+  { key: 'Assignment Title',        label: 'Assignment' },
+  { key: 'Budget Forecast',         label: 'Budget Forecast',       numeric: true },
+  { key: 'Workflow Status',         label: 'Status' },
+  { key: 'PM/PROD Assigned',        label: 'PM / PROD' },
+  { key: 'Owning Ecosystem',        label: 'Ecosystem' },
+  { key: 'Win Probability',         label: 'Win %',                 numeric: true },
+  { key: 'Weighted Pipeline Value', label: 'Weighted Value',        numeric: true },
+];
+
+function PipelineModal({ onClose }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchQ, setSearchQ] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterEco, setFilterEco] = useState('');
+  const [sortCol, setSortCol] = useState('__statusOrder');
+  const [sortDir, setSortDir] = useState('asc');
+
+  useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
+    setLoading(true); setError('');
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('smartsheet-proxy', {
+        body: { sheetId: '4617169849503620' },
+      });
+      if (fnError || data?.error) {
+        setError(data?.error || fnError?.message || 'Could not load pipeline data.');
+      } else if (data?.rows) {
+        // Pre-filter: only active statuses
+        const active = data.rows.filter(r => {
+          const s = r['Workflow Status'] || '';
+          return !PIPELINE_STATUSES_EXCLUDE.has(s) && s !== '';
+        });
+        setRows(active);
+      }
+    } catch (e) {
+      setError(e.message || 'Failed to connect to Smartsheet.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const ecosystems = [...new Set(rows.map(r => r['Owning Ecosystem']).filter(Boolean))].sort();
+
+  const statusOrder = (s) => {
+    const idx = PIPELINE_STATUSES_ORDER.indexOf(s);
+    return idx === -1 ? 99 : idx;
+  };
+
+  const filtered = rows.filter(r => {
+    const q = searchQ.toLowerCase();
+    const matchSearch = !q ||
+      (r['Client'] || '').toLowerCase().includes(q) ||
+      (r['Assignment Title'] || '').toLowerCase().includes(q) ||
+      (r['RID'] || '').toLowerCase().includes(q) ||
+      (r['PM/PROD Assigned'] || '').toLowerCase().includes(q);
+    const matchStatus = !filterStatus || r['Workflow Status'] === filterStatus;
+    const matchEco = !filterEco || r['Owning Ecosystem'] === filterEco;
+    return matchSearch && matchStatus && matchEco;
+  }).sort((a, b) => {
+    if (sortCol === '__statusOrder') {
+      return statusOrder(a['Workflow Status']) - statusOrder(b['Workflow Status']);
+    }
+    const av = a[sortCol] ?? '';
+    const bv = b[sortCol] ?? '';
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return sortDir === 'asc' ? av - bv : bv - av;
+    }
+    return sortDir === 'asc'
+      ? String(av).toLowerCase().localeCompare(String(bv).toLowerCase())
+      : String(bv).toLowerCase().localeCompare(String(av).toLowerCase());
+  });
+
+  const handleSort = (col) => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir(col === 'Win Probability' || col === 'Budget Forecast' || col === 'Weighted Pipeline Value' ? 'desc' : 'asc'); }
+  };
+
+  const totalWeighted = filtered.reduce((sum, r) => sum + (Number(r['Weighted Pipeline Value']) || 0), 0);
+  const totalBudget = filtered.reduce((sum, r) => sum + (Number(r['Budget Forecast']) || 0), 0);
+
+  const fmt = (n) => n != null && n !== '' && !isNaN(n)
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+    : '—';
+
+  const fmtPct = (n) => n != null && n !== '' && !isNaN(n)
+    ? `${Math.round(Number(n) * 100)}%`
+    : '—';
+
+  const statusStyle = (s) => {
+    switch (s) {
+      case 'Raised':                return 'bg-amber-100 text-amber-700';
+      case 'Proposal':              return 'bg-blue-100 text-blue-700';
+      case 'Waiting For Response':  return 'bg-purple-100 text-purple-700';
+      case 'Working On Contract':   return 'bg-green-100 text-green-700';
+      case 'On Hold':               return 'bg-gray-100 text-gray-500';
+      default:                      return 'bg-gray-100 text-gray-500';
+    }
+  };
+
+  const statusCounts = PIPELINE_STATUSES_ORDER.reduce((acc, s) => {
+    acc[s] = rows.filter(r => r['Workflow Status'] === s).length;
+    return acc;
+  }, {});
+
+  return (
+    <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+      <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-[#12161E] flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-[#E8FF00] rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-[#12161E]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">New Business Pipeline</h2>
+              <p className="text-xs text-gray-400">Live from Smartsheet · {rows.length} active opportunities</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={loadData} disabled={loading} className="p-2 text-gray-400 hover:text-white transition-colors">
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+          </div>
+        </div>
+
+        {/* Summary stats bar */}
+        {!loading && !error && rows.length > 0 && (
+          <div className="flex items-stretch gap-0 border-b border-gray-100 flex-shrink-0 divide-x divide-gray-100 bg-gray-50">
+            {PIPELINE_STATUSES_ORDER.map(s => (
+              <button key={s}
+                onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
+                className={`flex-1 px-4 py-3 text-center transition-colors ${filterStatus === s ? 'bg-[#12161E]' : 'hover:bg-gray-100'}`}>
+                <p className={`text-lg font-black ${filterStatus === s ? 'text-[#E8FF00]' : 'text-gray-900'}`}>{statusCounts[s] || 0}</p>
+                <p className={`text-[10px] font-semibold uppercase tracking-wider mt-0.5 ${filterStatus === s ? 'text-gray-400' : 'text-gray-400'}`}>{s}</p>
+              </button>
+            ))}
+            <div className="flex-1 px-4 py-3 text-right bg-[#12161E]">
+              <p className="text-lg font-black text-[#E8FF00]">{fmt(totalWeighted)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5 text-gray-400">Weighted ({filtered.length} shown)</p>
+            </div>
+          </div>
+        )}
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 px-8 py-4 border-b border-gray-100 bg-white flex-shrink-0">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              value={searchQ} onChange={e => setSearchQ(e.target.value)}
+              placeholder="Search client, assignment, RID, PM..."
+              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-gray-900 placeholder:text-gray-400"
+            />
+            {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><X className="w-3.5 h-3.5" /></button>}
+          </div>
+          <select value={filterEco} onChange={e => setFilterEco(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none text-gray-700">
+            <option value="">All Ecosystems</option>
+            {ecosystems.map(e => <option key={e} value={e}>{e}</option>)}
+          </select>
+          {(searchQ || filterStatus || filterEco) && (
+            <button onClick={() => { setSearchQ(''); setFilterStatus(''); setFilterEco(''); }} className="text-xs px-3 py-2 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50">Clear filters</button>
+          )}
+          <span className="text-xs text-gray-400 ml-auto">{filtered.length} of {rows.length} opportunities</span>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 overflow-auto px-8 py-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
+                <p className="text-sm text-gray-400">Loading pipeline from Smartsheet...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <AlertCircle className="w-10 h-10 text-red-300 mb-4" />
+              <p className="text-sm text-red-600 font-medium mb-2">Could not load data</p>
+              <p className="text-xs text-gray-400 mb-4">{error}</p>
+              <button onClick={loadData} className="px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-medium">Retry</button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-24">
+              <p className="text-gray-400">No results match your filters.</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  {PIPELINE_COLUMNS.map(col => (
+                    <th key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className={`text-left py-2.5 px-3 text-xs font-bold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-900 select-none whitespace-nowrap ${col.numeric ? 'text-right' : ''}`}>
+                      <div className={`flex items-center gap-1 ${col.numeric ? 'justify-end' : ''}`}>
+                        {col.label}
+                        {sortCol === col.key && (
+                          <ChevronDown className={`w-3 h-3 transition-transform ${sortDir === 'asc' ? 'rotate-180' : ''}`} />
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((row, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors group">
+                    <td className="py-3 px-3 font-mono text-xs text-gray-400 whitespace-nowrap">{row['RID'] || '—'}</td>
+                    <td className="py-3 px-3 font-semibold text-gray-900 max-w-[140px]">
+                      <p className="truncate" title={row['Client']}>{row['Client'] || '—'}</p>
+                    </td>
+                    <td className="py-3 px-3 text-gray-700 max-w-[200px]">
+                      <p className="truncate" title={row['Assignment Title']}>{row['Assignment Title'] || '—'}</p>
+                    </td>
+                    <td className="py-3 px-3 text-right font-medium text-gray-700 whitespace-nowrap">{fmt(row['Budget Forecast'])}</td>
+                    <td className="py-3 px-3">
+                      {row['Workflow Status'] ? (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${statusStyle(row['Workflow Status'])}`}>
+                          {row['Workflow Status']}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-3 px-3 text-xs text-gray-500 whitespace-nowrap">{row['PM/PROD Assigned'] || <span className="text-gray-300">Unassigned</span>}</td>
+                    <td className="py-3 px-3 text-xs text-gray-500 whitespace-nowrap">{row['Owning Ecosystem'] || '—'}</td>
+                    <td className="py-3 px-3 text-right">
+                      {row['Win Probability'] != null && row['Win Probability'] !== '' ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-12 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                            <div className="h-full rounded-full bg-[#6B9E4A]" style={{ width: `${Math.min(100, Number(row['Win Probability']) * 100)}%` }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-700 w-8 text-right">{fmtPct(row['Win Probability'])}</span>
+                        </div>
+                      ) : '—'}
+                    </td>
+                    <td className="py-3 px-3 text-right font-bold text-gray-900 whitespace-nowrap">{fmt(row['Weighted Pipeline Value'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gray-200 bg-gray-50">
+                  <td colSpan={3} className="py-3 px-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Totals ({filtered.length})</td>
+                  <td className="py-3 px-3 text-right text-xs font-bold text-gray-700">{fmt(totalBudget)}</td>
+                  <td colSpan={4} />
+                  <td className="py-3 px-3 text-right text-sm font-black text-gray-900">{fmt(totalWeighted)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-3 border-t border-gray-100 bg-gray-50 flex-shrink-0 flex items-center justify-between">
+          <p className="text-xs text-gray-400">Active pipeline only — Win, Lost, Evaporated and Duplicate excluded. Refresh to see latest.</p>
+          <a href="https://app.smartsheet.com/sheets/4617169849503620" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 transition-colors">
+            Open in Smartsheet <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // ============================================================================
 // HOME / DASHBOARD VIEW
 // ============================================================================
@@ -4059,6 +4341,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showQualification, setShowQualification] = useState(false);
+  const [showPipeline, setShowPipeline] = useState(false);
 
   // Restore session from Supabase on mount
   useEffect(() => {
@@ -4288,6 +4571,7 @@ export default function App() {
     <div className="min-h-screen" style={{ backgroundColor: '#E8E6E1' }}>
       {showAdmin && <AdminView currentUser={currentUser} onClose={() => setShowAdmin(false)} />}
       {showQualification && <QualificationModal onClose={() => setShowQualification(false)} />}
+      {showPipeline && <PipelineModal onClose={() => setShowPipeline(false)} />}
 
       {/* Header */}
       <header className="border-b border-gray-200/80 sticky top-0 z-20" style={{ backgroundColor: '#E8E6E1' }}>
@@ -4323,6 +4607,12 @@ export default function App() {
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#12161E] hover:text-[#12161E] transition-all"
               >
                 <TableProperties className="w-3.5 h-3.5" />Qualified?
+              </button>
+              <button
+                onClick={() => setShowPipeline(true)}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#12161E] hover:text-[#12161E] transition-all"
+              >
+                <TrendingUp className="w-3.5 h-3.5" />Pipeline
               </button>
               <UserMenu currentUser={currentUser} onLogout={handleLogout} onOpenAdmin={() => setShowAdmin(true)} />
             </div>
