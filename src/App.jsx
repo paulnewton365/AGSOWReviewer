@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.10.0';
+const APP_VERSION = '3.11.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -1382,7 +1382,8 @@ OUTPUT RULES — apply these to everything you write:
 - Write for a smart person in a hurry
 - No fluff, no filler sentences, no restating the obvious
 - Every sentence must earn its place
-- The entire response should fit on one printed page`,
+- The entire response should fit on one printed page
+- Never use em dashes (-- or the character). Use commas or plain hyphens (-) instead.`,
         userMessage: `Prepare a client snapshot and intake questions for the following prospect:
 
 **Company Name:** ${companyName}
@@ -1714,11 +1715,12 @@ Its only job: make the client feel understood and give them the chance to correc
 
 RULES:
 - Written to the client, not about them
-- Every section: 2–3 sentences or 3 bullets maximum
+- Every section: 2-3 sentences or 3 bullets maximum
 - No jargon, no filler, no repetition
 - If a section has no data, omit it entirely
 - The whole document must be readable in 90 seconds
-- Output plain text only — no markdown, no asterisks, no hashes`,
+- Output plain text only -- no markdown, no asterisks, no hashes
+- Never use em dashes (-- or the character). Use commas, colons, or plain hyphens (-) instead.`,
 
         userMessage: `Write a Return Brief using the information below. Omit any section where no data exists.
 
@@ -2185,8 +2187,11 @@ function ProposalView({ opportunity, onUpdate }) {
   // Save local state when navigating away — use onBlur not unmount cleanup
   const saveProposalInputs = useCallback(() => { onUpdate({ draftNotes }); }, [draftNotes]);
 
-  // Remove the unreliable ref/cleanup pattern
-
+  // Debounced auto-save for draftNotes — catches navigation without blur
+  useEffect(() => {
+    const t = setTimeout(() => { if (draftNotes !== (opportunity.draftNotes || '')) onUpdate({ draftNotes }); }, 800);
+    return () => clearTimeout(t);
+  }, [draftNotes]);
 
   const selectedServices = opportunity.selectedServices || [];
   const selectedArchetypes = opportunity.selectedArchetypes || [];
@@ -2234,94 +2239,124 @@ function ProposalView({ opportunity, onUpdate }) {
     if (selectedServices.length === 0) return;
     setIsGenerating(true); setError(null);
     try {
-      const servicesText = SERVICE_TRIGGERS.flatMap(t => t.services.filter(s => selectedServices.includes(getServiceName(s))).map(s => {
-        const p = formatPricingForService(s);
-        const name = getServiceName(s);
-        return `- ${name}${p?.budget ? ` (${p.budget}${p.term ? ', ' + p.term : ''})` : ''}`;
-      })).join('\n');
+      // Build service lines with pricing for the proposal
+      const serviceLines = SERVICE_TRIGGERS.flatMap(t =>
+        t.services.filter(s => selectedServices.includes(getServiceName(s))).map(s => {
+          const p = formatPricingForService(s);
+          const name = getServiceName(s);
+          const budget = p?.budget || 'TBC';
+          const term = p?.term ? `, ${p.term}` : '';
+          return { name, budget, term, category: t.category };
+        })
+      );
 
-      const archetypeContext = selectedArchetypes.length > 0 ? selectedArchetypes.map(id => FIT_ARCHETYPES[id]?.title + ': ' + FIT_ARCHETYPES[id]?.short).join('; ') : 'Architect: Strategic & Systematic';
+      // Build the investment table with EXACT calculated numbers — no AI guessing
+      const investmentTable = serviceLines.map(s => '| ' + s.name + ' | ' + s.budget + s.term + ' |').join('\n');
+      const totalLine = pricingTotal
+        ? '\n**Total Estimated Investment: ' + pricingTotal.lowFormatted + ' - ' + pricingTotal.highFormatted + '**'
+        : '\n**Total Estimated Investment: TBC**';
+
+      // FIT context from the Return Brief stage
+      const fitArchetypes = opportunity.fitArchetypes || [];
+      const fitContext = fitArchetypes.length > 0
+        ? fitArchetypes.map(id => {
+            const a = FIT_ARCHETYPES[id];
+            return a ? a.title + ': ' + a.short + ' - ' + a.description : '';
+          }).filter(Boolean).join(' / ')
+        : 'Not specified';
+
+      const compassContext = opportunity.compassAssessment?.trim()
+        ? `\nCOMPASS BRAND ASSESSMENT:\n${opportunity.compassAssessment.substring(0, 600)}`
+        : '';
+
+      const returnBriefExcerpt = opportunity.returnBrief
+        ? opportunity.returnBrief.split('---INTERNAL---')[0].substring(0, 2000)
+        : '';
+
+      const transcriptExcerpt = opportunity.transcript
+        ? opportunity.transcript.substring(0, 1500)
+        : '';
 
       const result = await callClaude({
         maxTokens: 6000,
-        system: `You are a senior business development writer at Antenna Group, an integrated marketing and communications agency that works with conscious brands that have the courage to lead. 
+        system: `You are a senior business development writer at Antenna Group, an integrated marketing and communications agency that works with conscious brands that have the courage to lead.
 
 Your proposals are:
-- Warm, direct, and confident — never corporate or generic
-- Strategic, not salesy — you demonstrate understanding before recommending
-- Specific — you reference the client's actual situation, not generic marketing speak
+- Warm, direct, and confident -- never corporate or generic
+- Strategic, not salesy -- you demonstrate understanding before recommending
+- Specific -- you reference the client's actual situation, not generic marketing speak
 - Written in first person plural ("we") on behalf of Antenna
 - Built around genuine insight into what the client needs
 
-Visit www.antennagroup.com for brand voice context. Antenna believes in work that matters, brands with purpose, and marketing that creates real-world impact.`,
+CRITICAL FORMATTING RULES:
+- Never use em dashes (-- or the character) anywhere in the document. Use commas, colons, or plain hyphens (-) instead.
+- Use plain text formatting. No bold except for headers.
+- The Investment section must use EXACTLY the figures provided -- do not invent or alter any numbers.`,
+
         userMessage: `Write a compelling proposal for this client opportunity.
 
 CLIENT: ${opportunity.companyName}
+RID: ${opportunity.rid || 'TBC'}
 ENGAGEMENT TYPE: ${ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label || 'Fixed Fee'}
-CLIENT FIT ARCHETYPE: ${archetypeContext}
-BRIEF / CONTEXT:
-${(opportunity.returnBrief || opportunity.transcript || 'No brief available').substring(0, 2000)}
+CLIENT FIT ARCHETYPE: ${fitContext}
+${compassContext}
 
-SELECTED SERVICES WITH PRICING:
-${servicesText}
+RETURN BRIEF (what was heard from the client):
+${returnBriefExcerpt || 'No return brief available'}
 
-TOTAL ESTIMATED INVESTMENT: ${pricingTotal ? `${pricingTotal.lowFormatted} – ${pricingTotal.highFormatted}` : 'TBC'}
+CALL TRANSCRIPT EXCERPT:
+${transcriptExcerpt || 'No transcript available'}
+
+SELECTED SERVICES:
+${serviceLines.map(s => '- ' + s.name + ' (' + s.budget + s.term + ')').join('\n')}
 
 ADDITIONAL NOTES: ${draftNotes || 'None'}
 
-Write the proposal in this exact structure:
-
 ---
 
-# Proposal: ${opportunity.companyName}
-**Prepared by Antenna Group | ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}**
+Write the proposal in this exact structure:
 
-## About This Document
-[2-3 sentences: what this document is, what it covers, and what the next step is. Warm and direct.]
+# Proposal: ${opportunity.companyName}
+Prepared by Antenna Group | RID: ${opportunity.rid || 'TBC'} | ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
 
 ## The Challenge
-[1-2 paragraphs: articulate the business problem with real insight. Show you understand what they're dealing with — their competitive context, the gap in their current approach, the opportunity they might be missing. This should feel like you've truly listened.]
+[1-2 paragraphs. Show you've listened. Reference what came through in the brief and transcript -- their specific situation, the gap in their current approach, what's at stake. This must feel specific to them, not generic.]
 
 ## What Success Looks Like
-[3-5 bullet points: specific, tangible outcomes that will tell both parties this engagement was worth it. These should be meaningful to the client's actual goals.]
+[3-5 bullet points: specific, tangible outcomes that will tell both parties this engagement delivered. Ground these in what the client actually said.]
 
 ## What We're Proposing
 
-[For each service group or major service, use this format:]
+[For each service or logical service group:]
 
 ### [Service Name or Group]
-**What we'll do:** [1-2 sentences on the work]
-**Why this matters for ${opportunity.companyName}:** [1-2 sentences connecting this service to their specific situation]
-**What you'll get:** [Key output/deliverable in plain language]
-
-[Repeat for each major service or logical grouping]
+What we'll do: [1-2 sentences on the work]
+Why this matters for ${opportunity.companyName}: [1-2 sentences connecting to their specific situation]
+What you'll get: [Key output in plain language]
 
 ## Investment
 
-[Present as a clear breakdown. Group related services if it makes sense. Be direct about ranges.]
-
-| Service Area | Investment Range |
+| Service | Investment Range |
 |---|---|
-[Table rows for each major service/group]
+${investmentTable}
+${totalLine}
 
-**Total Estimated Investment: ${pricingTotal ? `${pricingTotal.lowFormatted} – ${pricingTotal.highFormatted}` : 'TBC'}**
-[1-2 sentences about what's included / any notes about what's not in scope at this stage]
+[1-2 sentences about what's included and what's not in scope at this stage.]
 
 ## How We Work Together
-[2-3 sentences on Antenna's working style — collaborative, transparent, integrated. Reference the client's preferred working style based on their archetype.]
+[2-3 sentences on Antenna's working style. Reference the client's preferred approach based on their FIT archetype if provided.]
 
 ## Next Steps
-1. [Specific action item for client — e.g., "Review this proposal and share any questions or adjustments"]
-2. [Specific action from Antenna — e.g., "Schedule a follow-up call to discuss"]
-3. [Path to SOW — e.g., "Once aligned, we'll develop a full Statement of Work for sign-off"]
+1. [Specific action for the client]
+2. [Specific follow-up from Antenna]
+3. [Path to SOW]
 
-*We're excited about what we can build together. Let's talk.*
+We're excited about what we can build together. Let's talk.
 
 ---
-**Antenna Group** | www.antennagroup.com
-
----`
+Antenna Group | www.antennagroup.com`
       });
+
       onUpdate({ proposalDraft: result, proposalStatus: 'draft', draftNotes });
       setEditedProposal(result);
     } catch (e) { setError(e.message); }
@@ -2380,104 +2415,94 @@ Write the proposal in this exact structure:
       </div>
 
       {activeTab === 'services' && (
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left: Settings */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-bold text-gray-900 mb-4">Engagement Type</h3>
-              <div className="space-y-2">
-                {ENGAGEMENT_TYPES.map(et => (
-                  <label key={et.value} className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${draftEngagementType === et.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="engagementType" value={et.value} checked={draftEngagementType === et.value} onChange={() => setDraftEngagementType(et.value)} className="text-gray-900" />
-                    <div><p className="text-sm font-semibold text-gray-900">{et.label}</p><p className="text-xs text-gray-500">{et.description}</p></div>
-                  </label>
-                ))}
+        <div>
+          {/* Budget Total Banner — always visible when services selected */}
+          {pricingTotal && (
+            <div className="flex items-center justify-between bg-[#12161E] rounded-2xl px-6 py-4 mb-6">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-5 h-5 text-[#E8FF00]" />
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Investment</p>
+                  <p className="text-2xl font-black text-white leading-none mt-0.5">{pricingTotal.lowFormatted} <span className="text-gray-400 text-base font-normal">– {pricingTotal.highFormatted}</span></p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-xs text-gray-500">{selectedServices.length} service{selectedServices.length !== 1 ? 's' : ''} selected</span>
+                <p className="text-xs text-[#E8FF00] font-bold mt-0.5">estimated range</p>
               </div>
             </div>
+          )}
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-bold text-[#12161E] mb-1">Client FIT Archetype</h3>
-              <p className="text-xs text-gray-400 mb-4">Select up to 2. Shapes the proposal's voice, emphasis, and working style.</p>
-              {/* Quadrant visualization — like FIT assessment */}
-              <div className="relative mb-4 rounded-xl overflow-hidden border border-gray-100" style={{ height: '140px', backgroundColor: '#F5F4F1' }}>
-                <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
-                  {Object.values(FIT_ARCHETYPES).map((arch, i) => {
-                    const isSelected = selectedArchetypes.includes(arch.id);
-                    const corners = ['bottom-right','bottom-left','top-right','top-left'];
-                    return (
-                      <button key={arch.id} onClick={() => toggleArchetype(arch.id)}
-                        className={`relative flex flex-col items-center justify-center transition-all ${isSelected ? '' : 'opacity-50 hover:opacity-80'}`}
-                        style={{ backgroundColor: isSelected ? '#E8FF00' : 'transparent' }}>
-                        <span className="text-lg">{arch.emoji}</span>
-                        <span className="text-[10px] font-black text-[#12161E] leading-tight">{arch.title}</span>
-                        {isSelected && <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-[#12161E] flex items-center justify-center"><span className="text-white text-[7px] font-black">✓</span></div>}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Crosshair */}
-                <div className="absolute top-0 left-1/2 bottom-0 w-px bg-gray-300 pointer-events-none" />
-                <div className="absolute left-0 top-1/2 right-0 h-px bg-gray-300 pointer-events-none" />
-              </div>
-              {selectedArchetypes.length > 0 && (
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left: Settings — Engagement Type, RID, Notes only */}
+            <div className="space-y-5">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                <h3 className="font-bold text-gray-900 mb-4">Engagement Type</h3>
                 <div className="space-y-2">
-                  {selectedArchetypes.map(id => {
-                    const arch = FIT_ARCHETYPES[id];
-                    return (
-                      <div key={id} className="p-3 rounded-xl border-2 border-[#12161E] bg-[#12161E]">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span>{arch.emoji}</span>
-                          <span className="text-xs font-black text-white">{arch.title}</span>
-                          <span className="text-[10px] text-gray-400">{arch.short}</span>
+                  {ENGAGEMENT_TYPES.map(et => (
+                    <label key={et.value} className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${draftEngagementType === et.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                      <input type="radio" name="engagementType" value={et.value} checked={draftEngagementType === et.value} onChange={() => setDraftEngagementType(et.value)} className="text-gray-900" />
+                      <div><p className="text-sm font-semibold text-gray-900">{et.label}</p><p className="text-xs text-gray-500">{et.description}</p></div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                <h3 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                  RID
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Required</span>
+                </h3>
+                <p className="text-xs text-gray-400 mb-3">Format: NB followed by up to 4 digits (e.g. NB9530). Required before generating.</p>
+                <input
+                  value={opportunity.rid || ''}
+                  onChange={e => {
+                    let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                    if (!val.startsWith('NB') && val.length > 0) val = 'NB' + val.replace(/^N?B?/, '');
+                    if (val.length > 6) val = val.slice(0, 6);
+                    onUpdate({ rid: val });
+                  }}
+                  placeholder="e.g. NB9530"
+                  maxLength={6}
+                  className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-gray-900 outline-none ${
+                    !opportunity.rid
+                      ? 'border-amber-300 bg-amber-50'
+                      : /^NB[A-Z0-9]{1,4}$/.test(opportunity.rid)
+                      ? 'border-green-300 bg-green-50'
+                      : 'border-red-300 bg-red-50'
+                  }`}
+                />
+                {opportunity.rid && !/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid) && (
+                  <p className="mt-1.5 text-xs text-red-500">Must start with NB and be 3-6 characters total</p>
+                )}
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-200 p-5">
+                <h3 className="font-bold text-gray-900 mb-3">Notes for Proposal</h3>
+                <textarea value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={saveProposalInputs} placeholder="Budget constraints, specific client requests, tone notes, things to emphasise or avoid..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y" />
+              </div>
+
+              {/* FIT context from brief — read-only display if set */}
+              {(opportunity.fitArchetypes || []).length > 0 && (
+                <div className="bg-gray-50 rounded-2xl border border-gray-100 p-4">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">FIT from Return Brief</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(opportunity.fitArchetypes || []).map(id => {
+                      const a = FIT_ARCHETYPES[id];
+                      return a ? (
+                        <div key={id} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white rounded-lg border border-gray-200">
+                          <span>{a.emoji}</span>
+                          <span className="text-xs font-bold text-gray-700">{a.title}</span>
                         </div>
-                        <p className="text-[11px] text-gray-300 leading-relaxed">{arch.description}</p>
-                      </div>
-                    );
-                  })}
+                      ) : null;
+                    })}
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
-                RID
-                <span className="text-[10px] font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Required</span>
-              </h3>
-              <p className="text-xs text-gray-400 mb-3">Unique opportunity identifier (e.g. NB9530). Required before proposal generation.</p>
-              <input
-                value={opportunity.rid || ''}
-                onChange={e => onUpdate({ rid: e.target.value.toUpperCase() })}
-                placeholder="e.g. NB9530"
-                maxLength={8}
-                className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-gray-900 outline-none ${(opportunity.rid || '').trim() ? 'border-gray-200 bg-gray-50' : 'border-amber-300 bg-amber-50'}`}
-              />
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-bold text-gray-900 mb-3">Notes for Proposal</h3>
-              <textarea value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={() => onUpdate({ draftNotes })} placeholder="Budget constraints, specific client requests, tone notes..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
-            </div>
-
-            {/* Budget Total — Compass score card style */}
-            {pricingTotal && (
-              <div className="rounded-2xl overflow-hidden border border-gray-200">
-                <div className="bg-[#12161E] px-5 pt-5 pb-3">
-                  <div className="flex items-center gap-2 mb-1"><DollarSign className="w-3.5 h-3.5 text-[#E8FF00]" /><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Investment</span></div>
-                  <p className="text-3xl font-black text-white leading-none">{pricingTotal.lowFormatted}</p>
-                  <p className="text-sm text-gray-400 mt-1">– {pricingTotal.highFormatted}</p>
-                </div>
-                <div className="bg-gray-900 px-5 py-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">{selectedServices.length} services selected</span>
-                    <span className="text-xs font-bold text-[#E8FF00]">range</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right: Services */}
-          <div className="lg:col-span-2">
+            {/* Right: Services */}
+            <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-900">{selectedServices.length} Services Selected</h3>
               <div className="flex gap-2">
@@ -2497,13 +2522,13 @@ Write the proposal in this exact structure:
 
             {selectedServices.length > 0 && (
               <div className="mt-6 space-y-2">
-                {!(opportunity.rid || '').trim() && (
+                {!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || '')) && (
                   <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs font-medium">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    Enter a RID in the left panel before generating.
+                    Enter a valid RID (e.g. NB9530) in the left panel before generating.
                   </div>
                 )}
-                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={!(opportunity.rid || '').trim()} className="w-full" size="large">
+                <AntennaButton onClick={() => { generateProposal(); setActiveTab('proposal'); }} loading={isGenerating} loadingText="Generating Proposal..." icon={Sparkles} disabled={!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || ''))} className="w-full" size="large">
                   Generate Proposal
                 </AntennaButton>
               </div>
@@ -2530,21 +2555,35 @@ Write the proposal in this exact structure:
                     <div className="flex items-center gap-3">
                       <span className="font-semibold text-gray-900">Proposal Document</span>
                       <StatusBadge status={opportunity.proposalStatus || 'draft'} />
+                      {isEditingProposal && <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">Editing</span>}
                     </div>
                     <div className="flex items-center gap-2">
-                      <CopyButton text={isEditingProposal ? editedProposal : opportunity.proposalDraft} />
-                      <button onClick={() => { setIsEditingProposal(!isEditingProposal); setEditedProposal(opportunity.proposalDraft); }} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"><Edit3 className="w-3 h-3" />{isEditingProposal ? 'Cancel' : 'Edit'}</button>
-                      <button onClick={() => downloadDocx(opportunity.proposalDraft, `${opportunity.companyName}_Proposal.docx`, { title: `Proposal: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"><Download className="w-3 h-3" />Download</button>
+                      {!isEditingProposal && <CopyButton text={opportunity.proposalDraft} />}
+                      <button
+                        onClick={() => { setIsEditingProposal(!isEditingProposal); setEditedProposal(opportunity.proposalDraft); }}
+                        className={`text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
+                          isEditingProposal ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#12161E] text-white hover:bg-gray-800'
+                        }`}>
+                        <Edit3 className="w-3 h-3" />{isEditingProposal ? 'Cancel Edit' : 'Edit Proposal'}
+                      </button>
+                      {!isEditingProposal && (
+                        <button onClick={() => downloadDocx(opportunity.proposalDraft, `${opportunity.companyName}_Proposal.docx`, { title: `Proposal: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"><Download className="w-3 h-3" />Download</button>
+                      )}
                     </div>
                   </div>
                   {isEditingProposal ? (
                     <div className="p-5">
-                      <textarea value={editedProposal} onChange={e => setEditedProposal(e.target.value)} className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[500px] resize-y font-mono focus:ring-2 focus:ring-gray-900 outline-none" />
-                      <button onClick={() => { onUpdate({ proposalDraft: editedProposal }); setIsEditingProposal(false); }} className="mt-3 px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium">Save Changes</button>
+                      <p className="text-xs text-gray-500 mb-3">Edit the proposal below. Changes are saved when you click Save.</p>
+                      <textarea value={editedProposal} onChange={e => setEditedProposal(e.target.value)} className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[600px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-gray-900 outline-none bg-gray-50" />
+                      <div className="mt-3 flex gap-3">
+                        <button onClick={() => { onUpdate({ proposalDraft: editedProposal }); setIsEditingProposal(false); }} className="px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
+                        <button onClick={() => setIsEditingProposal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
+                        <CopyButton text={editedProposal} />
+                      </div>
                     </div>
                   ) : (
-                    <div className="p-5 max-h-[700px] overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{opportunity.proposalDraft}</pre>
+                    <div className="p-6 max-h-[700px] overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-800 leading-relaxed font-sans">{opportunity.proposalDraft}</pre>
                     </div>
                   )}
                 </div>
@@ -2552,23 +2591,35 @@ Write the proposal in this exact structure:
 
               {/* Right sidebar */}
               <div className="space-y-4">
+                {/* Investment summary — matches banner total exactly */}
+                {pricingTotal && (
+                  <div className="rounded-2xl overflow-hidden border border-gray-200">
+                    <div className="bg-[#12161E] px-5 pt-5 pb-4">
+                      <div className="flex items-center gap-2 mb-2"><DollarSign className="w-3.5 h-3.5 text-[#E8FF00]" /><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Investment Range</span></div>
+                      <p className="text-2xl font-black text-white leading-none">{pricingTotal.lowFormatted}</p>
+                      <p className="text-sm text-gray-400 mt-1">– {pricingTotal.highFormatted}</p>
+                      <p className="text-xs text-gray-500 mt-2">{selectedServices.length} services | {ENGAGEMENT_TYPES.find(t => t.value === draftEngagementType)?.label}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Iterate */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Iterate</h3>
-                  <textarea value={proposalIteration} onChange={e => setProposalIteration(e.target.value)} placeholder="Describe what to change... 'Make the investment section clearer', 'Add more about our SEO capabilities', 'Tone down the sales language'..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y" />
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Refine Proposal</h3>
+                  <textarea value={proposalIteration} onChange={e => setProposalIteration(e.target.value)} placeholder="Describe what to change... e.g. 'Make the investment section clearer', 'Add more about our SEO approach', 'Soften the tone'" className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y" />
                   <button onClick={iterateProposal} disabled={isIterating || !proposalIteration.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
-                    {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Update Proposal</>}
+                    {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Apply Changes</>}
                   </button>
                 </div>
 
                 {/* Regenerate */}
-                <button onClick={() => { generateProposal(); }} disabled={isGenerating} className="w-full px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:border-gray-900 hover:text-gray-900 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-                  {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</> : <><Sparkles className="w-4 h-4" />Regenerate</>}
+                <button onClick={() => generateProposal()} disabled={isGenerating} className="w-full px-4 py-3 border-2 border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:border-gray-900 hover:text-gray-900 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                  {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" />Generating...</> : <><Sparkles className="w-4 h-4" />Regenerate Proposal</>}
                 </button>
 
                 {/* Status */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Clock className="w-4 h-4" />Proposal Status</h3>
+                  <h3 className="font-bold text-gray-900 mb-3">Proposal Status</h3>
                   <div className="space-y-2">
                     {PROPOSAL_STATUSES.map(s => (
                       <button key={s.value} onClick={() => onUpdate({ proposalStatus: s.value })} className={`w-full text-left px-3 py-2 rounded-lg border transition-all text-sm font-medium ${opportunity.proposalStatus === s.value ? `${s.bg} ${s.text} ${s.border} border-2` : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
@@ -2577,17 +2628,6 @@ Write the proposal in this exact structure:
                     ))}
                   </div>
                 </div>
-
-                {/* Budget Summary */}
-                {pricingTotal && (
-                  <div className="rounded-2xl overflow-hidden border border-gray-700">
-                    <div className="bg-[#12161E] px-5 pt-4 pb-2">
-                      <div className="flex items-center gap-2 mb-1"><DollarSign className="w-3 h-3 text-[#E8FF00]" /><span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Investment</span></div>
-                      <p className="text-2xl font-black text-white">{pricingTotal.lowFormatted}</p>
-                      <p className="text-xs text-gray-500">– {pricingTotal.highFormatted}</p>
-                    </div>
-                  </div>
-                )}
 
                 {/* Proceed to SOW */}
                 {opportunity.proposalStatus === 'approved' && (
@@ -3876,7 +3916,8 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Practice / RID</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
             <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Progress</span>
-            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Budget</span>
+            <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Budget</span>
+            <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Modified By</span>
           </div>
 
           {filtered.length === 0 ? (
@@ -3938,12 +3979,17 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                         <span className="text-xs font-bold text-gray-400 w-8 text-right">{progress}%</span>
                       </div>
                     </div>
-                    {/* Budget + arrow */}
-                    <div className="col-span-2 hidden sm:flex items-center justify-between">
+                    {/* Budget + Modified By + arrow */}
+                    <div className="col-span-1 hidden sm:block">
                       {budget
                         ? <span className="text-xs font-semibold text-gray-700">{budget}</span>
                         : <span className="text-xs text-gray-300">—</span>}
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors flex-shrink-0 ml-2" />
+                    </div>
+                    <div className="col-span-1 hidden sm:flex items-center justify-between gap-1">
+                      <span className="text-[10px] text-gray-400 truncate" title={opp.lastModifiedBy || ''}>
+                        {opp.lastModifiedBy ? opp.lastModifiedBy.split('@')[0] : '—'}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors flex-shrink-0" />
                     </div>
                   </button>
                   {/* Admin delete button — appears on row hover */}
@@ -4087,10 +4133,22 @@ export default function App() {
   const currentOpportunityRef = useRef(null);
   useEffect(() => { currentOpportunityRef.current = currentOpportunity; }, [currentOpportunity]);
 
+  // Keep a ref to currentUser so updateOpportunity can stamp lastModifiedBy without closing over state
+  const currentUserRef = useRef(null);
+  useEffect(() => { currentUserRef.current = currentUser; }, [currentUser]);
+
   const updateOpportunity = useCallback((updates) => {
     const prev = currentOpportunityRef.current;
     if (!prev) return;
-    const updated = { ...prev, ...updates, updatedAt: new Date().toISOString() };
+    const user = currentUserRef.current;
+    const modifiedBy = user?.user_metadata?.full_name || user?.email || 'Unknown';
+    const updated = {
+      ...prev,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+      lastModifiedBy: modifiedBy,
+      lastModifiedAt: new Date().toISOString(),
+    };
     // Update React state
     setCurrentOpportunity(updated);
     if (updates.currentStage) setCurrentStage(updates.currentStage);
