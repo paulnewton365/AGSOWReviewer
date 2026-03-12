@@ -23,7 +23,6 @@ serve(async (req) => {
 
     const targetSheetId = sheetId || '5750175070900100';
 
-    // Fetch sheet data from Smartsheet API
     const response = await fetch(
       `https://api.smartsheet.com/2.0/sheets/${targetSheetId}?include=columnType`,
       {
@@ -50,36 +49,23 @@ serve(async (req) => {
       columnMap[col.id] = col.title;
     }
 
-    // Target columns to extract
-    const TARGET_COLUMNS = [
-      'CLIENT',
-      'Assignment Title',
-      'QUALIFIED BY',
-      'REQUEST TYPE',
-      'RECOMMENDATION',
-      'QUALIFICATION SCORE (OUT OF 80)',
-      'Workflow Status',
-      'Owning Ecosystem',
-      'CONFLICT',
-      'Modified',
-    ];
-
-    // Transform rows into flat objects
+    // Return ALL columns for every row — each sheet defines its own columns
     const rows = (sheetData.rows || []).map((row: any) => {
       const obj: Record<string, any> = {};
       for (const cell of row.cells || []) {
         const colName = columnMap[cell.columnId];
-        if (colName && TARGET_COLUMNS.includes(colName)) {
+        if (colName) {
           obj[colName] = cell.displayValue ?? cell.value ?? null;
         }
       }
-      // Add row-level modified date
       if (row.modifiedAt) obj['Modified'] = row.modifiedAt;
       return obj;
-    }).filter((row: Record<string, any>) =>
-      // Only include rows that have at least a client name
-      row['CLIENT'] && String(row['CLIENT']).trim() !== ''
-    );
+    }).filter((row: Record<string, any>) => {
+      // Filter out rows with no meaningful content
+      // Support both column name conventions used across sheets
+      const client = row['Client'] || row['CLIENT'] || '';
+      return String(client).trim() !== '';
+    });
 
     return new Response(
       JSON.stringify({ rows, total: rows.length }),

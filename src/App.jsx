@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.13.0';
+const APP_VERSION = '3.14.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -1304,6 +1304,19 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
         </div>
         {/* Tab row — exactly like Compass nav */}
         <div className="flex items-center gap-1">
+          {currentIdx > 0 && (
+            <button
+              onClick={() => {
+                const prevStage = stageOrder[currentIdx - 1];
+                if (allowedStages.length === 0 || allowedStages.includes(prevStage)) {
+                  onStageClick && onStageClick(prevStage);
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 mr-2 text-xs font-semibold text-gray-500 hover:text-[#12161E] border border-transparent hover:border-gray-300 rounded-lg transition-all"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />Back
+            </button>
+          )}
           {PIPELINE_STAGES.map((stage, idx) => {
             const status = getStageStatus(stage.id);
             const isClickable = status === 'complete' || status === 'active';
@@ -3951,7 +3964,7 @@ function PipelineModal({ onClose }) {
 // ============================================================================
 // HOME / DASHBOARD VIEW
 // ============================================================================
-function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, onOpenQualification, currentUser, roleInfo }) {
+function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, onOpenQualification, onOpenPipeline, currentUser, roleInfo }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newTitle, setNewTitle] = useState('');
@@ -3963,7 +3976,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const [filterPractice, setFilterPractice] = useState('');
 
   const handleCreate = () => {
-    if (!newName.trim() || !newTitle.trim()) return;
+    if (!newName.trim() || !newTitle.trim() || !newUrl.trim() || !newIndustry) return;
     const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim(), newPractice, newTitle.trim());
     onCreateOpportunity(opp);
     setShowCreate(false);
@@ -4050,7 +4063,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
       {/* Hero */}
       <div className="mb-10">
         <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Antenna Group · Internal Tools</p>
-        <h1 className="text-5xl lg:text-6xl font-black text-[#12161E] leading-none mb-4 tracking-tight">SOW Workbench</h1>
+        <h1 className="text-5xl lg:text-6xl font-light text-[#12161E] leading-none mb-4 tracking-tight">SOW Workbench</h1>
         <p className="text-base text-gray-500 max-w-2xl leading-relaxed mb-8">
           We diagnose before we prescribe! This tool helps you identify an opportunity and ensure that we can move fast and recommend the right services to solve our clients' problems.
         </p>
@@ -4077,6 +4090,12 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
           >
             <TableProperties className="w-4 h-4" />Check If Your Opportunity Is Qualified
+          </button>
+          <button
+            onClick={onOpenPipeline}
+            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
+          >
+            <TrendingUp className="w-4 h-4" />Check The Pipeline
           </button>
         </div>
       </div>
@@ -4127,17 +4146,35 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website <span className="text-gray-400 font-normal">(optional)</span></label>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website <span className="text-red-400">*</span></label>
                 <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry <span className="text-gray-400 font-normal">(optional)</span></label>
-                <input value={newIndustry} onChange={e => setNewIndustry(e.target.value)} placeholder="e.g. Climate Tech" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry <span className="text-red-400">*</span></label>
+                <select value={newIndustry} onChange={e => setNewIndustry(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 bg-white text-sm">
+                  <option value="">Select industry...</option>
+                  <option value="Technology & Software">Technology & Software</option>
+                  <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+                  <option value="Financial Services">Financial Services</option>
+                  <option value="Energy & Utilities">Energy & Utilities</option>
+                  <option value="Manufacturing & Industrial">Manufacturing & Industrial</option>
+                  <option value="Retail & Consumer Goods">Retail & Consumer Goods</option>
+                  <option value="Media & Entertainment">Media & Entertainment</option>
+                  <option value="Telecommunications">Telecommunications</option>
+                  <option value="Professional Services">Professional Services</option>
+                  <option value="Real Estate & Construction">Real Estate & Construction</option>
+                  <option value="Mobility & Automotive">Mobility & Automotive</option>
+                  <option value="Transportation & Logistics">Transportation & Logistics</option>
+                  <option value="Hospitality & Travel">Hospitality & Travel</option>
+                  <option value="Education">Education</option>
+                  <option value="Nonprofit & Government">Nonprofit & Government</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowCreate(false)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">Cancel</button>
-              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim()} className="flex-1 px-4 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2a3040] transition-colors flex items-center justify-center gap-2">
+              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim() || !newUrl.trim() || !newIndustry} className="flex-1 px-4 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2a3040] transition-colors flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" />Create Opportunity
               </button>
             </div>
@@ -4582,7 +4619,7 @@ export default function App() {
                 <AntennaLogo className="h-7" />
               </button>
               <div className="h-5 w-px bg-gray-300" />
-              <span className="text-sm font-semibold text-[#12161E] tracking-tight">SOW Workbench</span>
+              <span className="text-sm font-normal text-[#12161E] tracking-tight">SOW Workbench</span>
             </div>
             <div className="flex items-center gap-3">
               {currentView === 'opportunity' && currentOpportunity && (
@@ -4644,6 +4681,7 @@ export default function App() {
             onDeleteOpportunity={deleteOpportunity}
             onOpenReview={roleInfo?.canAccessSOWReview ? () => setCurrentView('sow-review') : null}
             onOpenQualification={() => setShowQualification(true)}
+            onOpenPipeline={() => setShowPipeline(true)}
             currentUser={currentUser}
             roleInfo={roleInfo}
           />
