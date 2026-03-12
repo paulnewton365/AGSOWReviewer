@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.11.0';
+const APP_VERSION = '3.11.1';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -2533,6 +2533,7 @@ Antenna Group | www.antennagroup.com`
                 </AntennaButton>
               </div>
             )}
+          </div>
           </div>
         </div>
       )}
