@@ -55,7 +55,8 @@ serve(async (req) => {
       for (const cell of row.cells || []) {
         const colName = columnMap[cell.columnId];
         if (colName) {
-          obj[colName] = cell.displayValue ?? cell.value ?? null;
+          // Prefer raw numeric value so calculations work (displayValue is formatted, e.g. "$480,000" or "80%")
+          obj[colName] = (typeof cell.value === "number") ? cell.value : (cell.displayValue ?? cell.value ?? null);
         }
       }
       if (row.modifiedAt) obj['Modified'] = row.modifiedAt;

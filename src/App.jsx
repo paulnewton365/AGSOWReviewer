@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.0';
+const APP_VERSION = '3.15.1';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3823,20 +3823,18 @@ function PipelineModal({ onClose }) {
           </div>
         </div>
 
-        {/* Summary stats bar */}
+        {/* Summary strip — read-only counts per status + weighted total */}
         {!loading && !error && rows.length > 0 && (
-          <div className="flex items-stretch gap-0 border-b border-gray-100 flex-shrink-0 divide-x divide-gray-100 bg-gray-50">
+          <div className="flex items-stretch border-b border-gray-100 flex-shrink-0 divide-x divide-gray-100 bg-gray-50">
             {PIPELINE_STATUSES_ORDER.map(s => (
-              <button key={s}
-                onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
-                className={`flex-1 px-4 py-3 text-center transition-colors ${filterStatus === s ? 'bg-[#12161E]' : 'hover:bg-gray-100'}`}>
-                <p className={`text-lg font-black ${filterStatus === s ? 'text-[#E8FF00]' : 'text-gray-900'}`}>{statusCounts[s] || 0}</p>
-                <p className={`text-[10px] font-semibold uppercase tracking-wider mt-0.5 ${filterStatus === s ? 'text-gray-400' : 'text-gray-400'}`}>{s}</p>
-              </button>
+              <div key={s} className="flex-1 px-4 py-3 text-center">
+                <p className="text-xl font-black text-gray-900">{statusCounts[s] || 0}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5 text-gray-400 leading-tight">{s}</p>
+              </div>
             ))}
-            <div className="flex-1 px-4 py-3 text-right bg-[#12161E]">
-              <p className="text-lg font-black text-[#E8FF00]">{fmt(totalWeighted)}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5 text-gray-400">Weighted ({filtered.length} shown)</p>
+            <div className="flex-1 px-4 py-3 text-center bg-[#12161E]">
+              <p className="text-xl font-black text-[#E8FF00]">{fmt(totalWeighted)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5 text-gray-400">Weighted Total</p>
             </div>
           </div>
         )}
@@ -3852,14 +3850,18 @@ function PipelineModal({ onClose }) {
             />
             {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><X className="w-3.5 h-3.5" /></button>}
           </div>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none text-gray-700">
+            <option value="">All Statuses</option>
+            {PIPELINE_STATUSES_ORDER.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
           <select value={filterEco} onChange={e => setFilterEco(e.target.value)} className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none text-gray-700">
             <option value="">All Ecosystems</option>
             {ecosystems.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
           {(searchQ || filterStatus || filterEco) && (
-            <button onClick={() => { setSearchQ(''); setFilterStatus(''); setFilterEco(''); }} className="text-xs px-3 py-2 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50">Clear filters</button>
+            <button onClick={() => { setSearchQ(''); setFilterStatus(''); setFilterEco(''); }} className="text-xs px-3 py-2 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50">Clear</button>
           )}
-          <span className="text-xs text-gray-400 ml-auto">{filtered.length} of {rows.length} opportunities</span>
+          <span className="text-xs text-gray-400 ml-auto">{filtered.length} of {rows.length} shown</span>
         </div>
 
         {/* Table */}
