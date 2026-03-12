@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.2';
+const APP_VERSION = '3.15.3';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3689,7 +3689,7 @@ const PIPELINE_STATUSES_ORDER = [
   'Working On Contract',
   'On Hold',
 ];
-const PIPELINE_STATUSES_EXCLUDE = new Set(['Win', 'Evaporated', 'Lost', 'Duplicate']);
+const PIPELINE_STATUSES_EXCLUDE = new Set(['Win', 'Evaporated', 'Lost', 'Duplicate', 'Declined']);
 
 const PIPELINE_COLUMNS = [
   { key: 'RID',                     label: 'RID' },
@@ -3711,7 +3711,7 @@ function PipelineModal({ onClose }) {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterEco, setFilterEco] = useState('');
   const [sortCol, setSortCol] = useState('__statusOrder');
-  const [sortDir, setSortDir] = useState('asc');
+  const [sortDir, setSortDir] = useState('desc');
 
   useEffect(() => { loadData(); }, []);
 
@@ -3757,7 +3757,7 @@ function PipelineModal({ onClose }) {
     return matchSearch && matchStatus && matchEco;
   }).sort((a, b) => {
     if (sortCol === '__statusOrder') {
-      return statusOrder(a['Workflow Status']) - statusOrder(b['Workflow Status']);
+      return statusOrder(b['Workflow Status']) - statusOrder(a['Workflow Status']);
     }
     const av = a[sortCol] ?? '';
     const bv = b[sortCol] ?? '';
