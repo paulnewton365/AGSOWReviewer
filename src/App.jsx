@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.3';
+const APP_VERSION = '3.15.4';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3689,6 +3689,14 @@ const PIPELINE_STATUSES_ORDER = [
   'Working On Contract',
   'On Hold',
 ];
+// Sort order for table: most advanced first, On Hold always last
+const PIPELINE_STATUSES_DISPLAY_ORDER = [
+  'Working On Contract',
+  'Waiting For Response',
+  'Proposal',
+  'Raised',
+  'On Hold',
+];
 const PIPELINE_STATUSES_EXCLUDE = new Set(['Win', 'Evaporated', 'Lost', 'Duplicate', 'Declined']);
 
 const PIPELINE_COLUMNS = [
@@ -3757,7 +3765,11 @@ function PipelineModal({ onClose }) {
     return matchSearch && matchStatus && matchEco;
   }).sort((a, b) => {
     if (sortCol === '__statusOrder') {
-      return statusOrder(b['Workflow Status']) - statusOrder(a['Workflow Status']);
+      const displayOrder = (s) => {
+        const idx = PIPELINE_STATUSES_DISPLAY_ORDER.indexOf(s);
+        return idx === -1 ? 99 : idx;
+      };
+      return displayOrder(a['Workflow Status']) - displayOrder(b['Workflow Status']);
     }
     const av = a[sortCol] ?? '';
     const bv = b[sortCol] ?? '';
