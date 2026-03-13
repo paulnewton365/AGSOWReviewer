@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.5';
+const APP_VERSION = '3.15.6';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -4463,8 +4463,7 @@ export default function App() {
     supabase
       .from('opportunities')
       .select('id, data, created_at, updated_at')
-      .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error && data) {
           setOpportunities(data.map(r => {
