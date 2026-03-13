@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.1';
+const APP_VERSION = '3.16.2';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -680,8 +680,8 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
           <span className="relative z-10 flex-shrink-0 overflow-hidden">
             <span className="relative inline-block">
               {children}
-              <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none" style={{ backgroundColor: '#4BAE97' }}>
-                <span style={{ color: '#253530' }}>{children}</span>
+              <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none" style={{ backgroundColor: '#2E8070' }}>
+                <span style={{ color: '#ffffff' }}>{children}</span>
               </span>
             </span>
           </span>
@@ -1291,70 +1291,76 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
     return 'upcoming';
   };
   return (
-    <div style={{ backgroundColor: '#253530' }}>
-      <div className="max-w-7xl mx-auto px-8">
-        {/* Flow strip */}
-        <div className="flex items-stretch">
-          {PIPELINE_STAGES.map((stage, idx) => {
-            const status = getStageStatus(stage.id);
-            const isClickable = (status === 'complete' || status === 'active') && status !== 'locked';
-            const isActive = status === 'active';
-            const isComplete = status === 'complete';
-            const isLast = idx === PIPELINE_STAGES.length - 1;
-            return (
-              <React.Fragment key={stage.id}>
-                <button
-                  onClick={() => isClickable && onStageClick && onStageClick(stage.id)}
-                  disabled={!isClickable}
-                  className="flex items-center gap-2 px-5 py-3.5 text-xs font-semibold tracking-wide transition-all relative flex-1 justify-center"
-                  style={{
-                    backgroundColor: isActive ? '#3A9A82' : 'transparent',
-                    color: isActive ? '#ffffff' : isComplete ? '#D1FAF0' : '#6B7280',
-                    cursor: isClickable ? 'pointer' : 'default',
-                  }}
-                >
-                  {isComplete
-                    ? <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#3A9A82' }}><span style={{ color: '#ffffff', fontSize: '9px', fontWeight: 900 }}>✓</span></span>
-                    : status === 'locked'
-                    ? <Lock className="w-3 h-3 flex-shrink-0" />
-                    : <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: isActive ? '#3A9A82' : 'transparent', color: isActive ? '#ffffff' : '#9CA3AF' }}>
-                        {idx + 1}
-                      </span>
+    <div>
+      {/* Client name bar — above the stage strip, on warm gray */}
+      <div style={{ backgroundColor: '#E8E6E1' }}>
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex items-center justify-between py-2.5">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-400">Opportunity</span>
+              <ChevronRight className="w-3 h-3 text-gray-300" />
+              <span className="text-base font-bold text-[#253530]">{opportunity?.companyName}</span>
+              {opportunity?.proposalStatus && currentStage === 'proposal' && <StatusBadge status={opportunity.proposalStatus} />}
+            </div>
+            {currentIdx > 0 && (
+              <button
+                onClick={() => {
+                  const prevStage = stageOrder[currentIdx - 1];
+                  if (allowedStages.length === 0 || allowedStages.includes(prevStage)) {
+                    onStageClick && onStageClick(prevStage);
                   }
-                  <span className="whitespace-nowrap">{stage.label}</span>
-                </button>
-                {!isLast && (
-                  <div className="flex items-center flex-shrink-0" style={{ color: '#3A4E4A' }}>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-        {/* Breadcrumb + back row */}
-        <div className="flex items-center gap-3 pb-2 pt-1 border-t" style={{ borderColor: '#3A4E4A' }}>
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-xs" style={{ color: '#4B5563' }}>Opportunity</span>
-            <ChevronRight className="w-3 h-3" style={{ color: '#3A4E4A' }} />
-            <span className="text-xs font-semibold" style={{ color: '#E8E6E1' }}>{opportunity?.companyName}</span>
-            {opportunity?.proposalStatus && currentStage === 'proposal' && <StatusBadge status={opportunity.proposalStatus} />}
+                }}
+                className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-[#253530] transition-colors"
+              >
+                <ChevronLeft className="w-3 h-3" />Back
+              </button>
+            )}
           </div>
-          {currentIdx > 0 && (
-            <button
-              onClick={() => {
-                const prevStage = stageOrder[currentIdx - 1];
-                if (allowedStages.length === 0 || allowedStages.includes(prevStage)) {
-                  onStageClick && onStageClick(prevStage);
-                }
-              }}
-              className="flex items-center gap-1 text-xs font-medium transition-all hover:opacity-80"
-              style={{ color: '#9CA3AF' }}
-            >
-              <ChevronLeft className="w-3 h-3" />Back
-            </button>
-          )}
+        </div>
+      </div>
+
+      {/* Stage flow strip */}
+      <div style={{ backgroundColor: '#253530' }}>
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex items-stretch">
+            {PIPELINE_STAGES.map((stage, idx) => {
+              const status = getStageStatus(stage.id);
+              const isClickable = (status === 'complete' || status === 'active') && status !== 'locked';
+              const isActive = status === 'active';
+              const isComplete = status === 'complete';
+              const isLast = idx === PIPELINE_STAGES.length - 1;
+              return (
+                <React.Fragment key={stage.id}>
+                  <button
+                    onClick={() => isClickable && onStageClick && onStageClick(stage.id)}
+                    disabled={!isClickable}
+                    className="flex items-center gap-2 px-5 py-3 text-xs font-semibold tracking-wide transition-all relative flex-1 justify-center"
+                    style={{
+                      backgroundColor: isActive ? '#3A9A82' : 'transparent',
+                      color: isActive ? '#ffffff' : isComplete ? '#D1FAF0' : '#6B7280',
+                      cursor: isClickable ? 'pointer' : 'default',
+                    }}
+                  >
+                    {isComplete
+                      ? <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#3A9A82' }}><span style={{ color: '#ffffff', fontSize: '9px', fontWeight: 900 }}>✓</span></span>
+                      : status === 'locked'
+                      ? <Lock className="w-3 h-3 flex-shrink-0" />
+                      : <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)', color: isActive ? '#ffffff' : '#6B7280' }}>
+                          {idx + 1}
+                        </span>
+                    }
+                    <span className="whitespace-nowrap">{stage.label}</span>
+                  </button>
+                  {!isLast && (
+                    <div className="flex items-center flex-shrink-0" style={{ color: '#3A4E4A' }}>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
