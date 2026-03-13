@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.0';
+const APP_VERSION = '3.16.1';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -671,7 +671,7 @@ function AntennaLogo({ className = "h-8" }) {
 
 function AntennaButton({ children, onClick, disabled, loading, loadingText, icon: Icon, className = '', variant = 'primary', size = 'default' }) {
   const sizes = { small: 'px-4 py-2 text-sm rounded-lg gap-2', default: 'px-6 py-3 text-base rounded-xl gap-3', large: 'px-8 py-4 text-lg rounded-xl gap-3' };
-  const variants = { primary: 'bg-[#12161E] text-white', secondary: 'bg-white text-[#12161E] border-2 border-[#12161E]', ghost: 'bg-transparent text-[#12161E] hover:bg-[#12161E]/5' };
+  const variants = { primary: 'bg-[#3A9A82] text-white', secondary: 'bg-white text-[#253530] border-2 border-[#253530]', ghost: 'bg-transparent text-[#253530] hover:bg-[#253530]/5' };
   return (
     <button onClick={onClick} disabled={disabled || loading} className={`group relative overflow-hidden font-semibold transition-all duration-300 flex items-center justify-center ${variants[variant]} ${sizes[size]} ${(disabled || loading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}>
       {loading ? (<><Loader2 className="w-5 h-5 animate-spin relative z-10" /><span className="relative z-10">{loadingText || 'Loading...'}</span></>) : (
@@ -680,8 +680,8 @@ function AntennaButton({ children, onClick, disabled, loading, loadingText, icon
           <span className="relative z-10 flex-shrink-0 overflow-hidden">
             <span className="relative inline-block">
               {children}
-              <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none" style={{ backgroundColor: '#E8FF00' }}>
-                <span style={{ color: '#12161E' }}>{children}</span>
+              <span className="absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-out group-hover:translate-y-full pointer-events-none" style={{ backgroundColor: '#4BAE97' }}>
+                <span style={{ color: '#253530' }}>{children}</span>
               </span>
             </span>
           </span>
@@ -814,7 +814,7 @@ function LoginView({ onLogin }) {
                       type="email" value={email} onChange={e => setEmail(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleLogin()}
                       placeholder="you@antennagroup.com" autoFocus
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                   <div>
@@ -824,7 +824,7 @@ function LoginView({ onLogin }) {
                         type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleLogin()}
                         placeholder="••••••••"
-                        className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
+                        className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] focus:border-gray-900 outline-none text-gray-900 placeholder:text-gray-400"
                       />
                       <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
                         {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -846,7 +846,7 @@ function LoginView({ onLogin }) {
 
               <p className="text-center text-sm text-gray-500 mt-6">
                 Don't have access?{' '}
-                <button onClick={() => setShowRequest(true)} className="font-semibold text-[#12161E] hover:underline">
+                <button onClick={() => setShowRequest(true)} className="font-semibold text-[#253530] hover:underline">
                   Request credentials
                 </button>
               </p>
@@ -858,7 +858,7 @@ function LoginView({ onLogin }) {
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Request sent!</h3>
               <p className="text-sm text-gray-500 mb-6">An admin will review your request and activate your account. You'll be able to sign in once approved.</p>
-              <button onClick={() => { setShowRequest(false); setReqSent(false); setReqName(''); setReqEmail(''); setReqNote(''); setReqPractice(''); }} className="text-sm font-semibold text-[#12161E] hover:underline">Back to Sign In</button>
+              <button onClick={() => { setShowRequest(false); setReqSent(false); setReqName(''); setReqEmail(''); setReqNote(''); setReqPractice(''); }} className="text-sm font-semibold text-[#253530] hover:underline">Back to Sign In</button>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
@@ -870,17 +870,17 @@ function LoginView({ onLogin }) {
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-1.5">Full Name *</label>
                   <input value={reqName} onChange={e => setReqName(e.target.value)} placeholder="Your name"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900" />
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-1.5">Work Email *</label>
                   <input type="email" value={reqEmail} onChange={e => setReqEmail(e.target.value)} placeholder="you@antennagroup.com"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900" />
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-1.5">Practice</label>
                   <select value={reqPractice} onChange={e => setReqPractice(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900">
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900">
                     <option value="">Select practice...</option>
                     {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -888,7 +888,7 @@ function LoginView({ onLogin }) {
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-1.5">Note (optional)</label>
                   <input value={reqNote} onChange={e => setReqNote(e.target.value)} placeholder="Why you need access..."
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900" />
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900" />
                 </div>
               </div>
               {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>}
@@ -916,7 +916,7 @@ function UserMenu({ currentUser, onLogout, onOpenAdmin }) {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/60 hover:bg-white border border-gray-200 transition-all"
       >
-        <div className="w-7 h-7 rounded-full bg-[#12161E] flex items-center justify-center flex-shrink-0">
+        <div className="w-7 h-7 rounded-full bg-[#253530] flex items-center justify-center flex-shrink-0">
           <User className="w-3.5 h-3.5 text-white" />
         </div>
         <div className="hidden sm:block text-left">
@@ -1068,7 +1068,7 @@ function AdminView({ currentUser, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-gray-50 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#12161E] rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-[#253530] rounded-xl flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -1086,7 +1086,7 @@ function AdminView({ currentUser, onClose }) {
             { id: 'pending', label: 'Pending Requests', count: pendingUsers.length, highlight: pendingUsers.length > 0 },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAdminTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${adminTab === tab.id ? 'border-[#12161E] text-[#12161E]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${adminTab === tab.id ? 'border-[#253530] text-[#253530]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
               {tab.label}
               {tab.count > 0 && (
                 <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${tab.highlight ? 'bg-amber-400 text-amber-900' : 'bg-gray-200 text-gray-600'}`}>{tab.count}</span>
@@ -1119,7 +1119,7 @@ function AdminView({ currentUser, onClose }) {
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button onClick={() => handleActivate(user)} disabled={saving}
-                          className="px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-1.5">
+                          className="px-4 py-2 bg-[#3A9A82] text-white rounded-xl text-sm font-bold hover:bg-[#2E8070] disabled:opacity-50 transition-colors flex items-center gap-1.5">
                           <CheckCircle className="w-3.5 h-3.5" />Activate
                         </button>
                         <button onClick={() => handleDelete(user.id)} disabled={saving}
@@ -1150,7 +1150,7 @@ function AdminView({ currentUser, onClose }) {
               {/* Create User */}
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">Users ({activeUsers.length})</h3>
-                <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-colors">
+                <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 px-4 py-2 bg-[#3A9A82] text-white rounded-xl text-sm font-semibold hover:bg-[#2E8070] transition-colors">
                   <UserPlus className="w-4 h-4" />{showCreate ? 'Cancel' : 'Add User'}
                 </button>
               </div>
@@ -1160,16 +1160,16 @@ function AdminView({ currentUser, onClose }) {
                   <h4 className="font-semibold text-gray-900 mb-4">New User</h4>
                   {error && <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">{error}</div>}
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Full Name *</label><input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="Jane Smith" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" /></div>
-                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Email *</label><input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="jane@antennagroup.com" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" /></div>
-                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Password *</label><input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Temporary password" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none" /></div>
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Full Name *</label><input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} placeholder="Jane Smith" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#3A9A82] outline-none" /></div>
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Email *</label><input value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="jane@antennagroup.com" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#3A9A82] outline-none" /></div>
+                    <div><label className="block text-xs font-semibold text-gray-700 mb-1">Password *</label><input type="text" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Temporary password" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#3A9A82] outline-none" /></div>
                     <div><label className="block text-xs font-semibold text-gray-700 mb-1">Role *</label>
-                      <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gray-900 outline-none bg-white">
+                      <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#3A9A82] outline-none bg-white">
                         {roleOptions.map(r => <option key={r.value} value={r.value}>{r.label} — {r.description}</option>)}
                       </select>
                     </div>
                   </div>
-                  <button onClick={handleCreate} disabled={saving} className="px-6 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center gap-2">
+                  <button onClick={handleCreate} disabled={saving} className="px-6 py-2.5 bg-[#3A9A82] text-white rounded-xl text-sm font-semibold hover:bg-[#2E8070] disabled:opacity-50 transition-colors flex items-center gap-2">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}Create User
                   </button>
                 </div>
@@ -1245,7 +1245,7 @@ function AdminView({ currentUser, onClose }) {
                             <div className="flex items-center justify-end gap-1">
                               {isEditing ? (
                                 <>
-                                  <button onClick={() => handleSaveEdit(user.id)} disabled={saving} className="px-3 py-1.5 bg-[#12161E] text-white rounded-lg text-xs font-medium hover:bg-gray-800 disabled:opacity-50 flex items-center gap-1">
+                                  <button onClick={() => handleSaveEdit(user.id)} disabled={saving} className="px-3 py-1.5 bg-[#3A9A82] text-white rounded-lg text-xs font-medium hover:bg-[#2E8070] disabled:opacity-50 flex items-center gap-1">
                                     {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : null}Save
                                   </button>
                                   <button onClick={() => { setEditingId(null); setError(''); }} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200">Cancel</button>
@@ -1291,7 +1291,7 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
     return 'upcoming';
   };
   return (
-    <div style={{ backgroundColor: '#12161E' }}>
+    <div style={{ backgroundColor: '#253530' }}>
       <div className="max-w-7xl mx-auto px-8">
         {/* Flow strip */}
         <div className="flex items-stretch">
@@ -1308,24 +1308,24 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
                   disabled={!isClickable}
                   className="flex items-center gap-2 px-5 py-3.5 text-xs font-semibold tracking-wide transition-all relative flex-1 justify-center"
                   style={{
-                    backgroundColor: isActive ? '#E8FF00' : 'transparent',
-                    color: isActive ? '#12161E' : isComplete ? '#E8E6E1' : '#4B5563',
+                    backgroundColor: isActive ? '#3A9A82' : 'transparent',
+                    color: isActive ? '#ffffff' : isComplete ? '#D1FAF0' : '#6B7280',
                     cursor: isClickable ? 'pointer' : 'default',
                   }}
                 >
                   {isComplete
-                    ? <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#E8FF00' }}><span style={{ color: '#12161E', fontSize: '9px', fontWeight: 900 }}>✓</span></span>
+                    ? <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#3A9A82' }}><span style={{ color: '#ffffff', fontSize: '9px', fontWeight: 900 }}>✓</span></span>
                     : status === 'locked'
                     ? <Lock className="w-3 h-3 flex-shrink-0" />
                     : <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: isActive ? '#12161E' : '#2a3040', color: isActive ? '#E8FF00' : '#4B5563' }}>
+                        style={{ backgroundColor: isActive ? '#3A9A82' : 'transparent', color: isActive ? '#ffffff' : '#9CA3AF' }}>
                         {idx + 1}
                       </span>
                   }
                   <span className="whitespace-nowrap">{stage.label}</span>
                 </button>
                 {!isLast && (
-                  <div className="flex items-center flex-shrink-0" style={{ color: '#2a3040' }}>
+                  <div className="flex items-center flex-shrink-0" style={{ color: '#3A4E4A' }}>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </div>
                 )}
@@ -1334,10 +1334,10 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
           })}
         </div>
         {/* Breadcrumb + back row */}
-        <div className="flex items-center gap-3 pb-2 pt-1 border-t" style={{ borderColor: '#2a3040' }}>
+        <div className="flex items-center gap-3 pb-2 pt-1 border-t" style={{ borderColor: '#3A4E4A' }}>
           <div className="flex items-center gap-2 flex-1">
             <span className="text-xs" style={{ color: '#4B5563' }}>Opportunity</span>
-            <ChevronRight className="w-3 h-3" style={{ color: '#2a3040' }} />
+            <ChevronRight className="w-3 h-3" style={{ color: '#3A4E4A' }} />
             <span className="text-xs font-semibold" style={{ color: '#E8E6E1' }}>{opportunity?.companyName}</span>
             {opportunity?.proposalStatus && currentStage === 'proposal' && <StatusBadge status={opportunity.proposalStatus} />}
           </div>
@@ -1526,7 +1526,7 @@ CRITICAL: Replace each template question above with a version specific to this c
     <div className="max-w-7xl mx-auto px-8 py-10">
       {/* Header */}
       <div className="mb-8">
-        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+        <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center mb-4">
           <Search className="w-6 h-6 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Company Research</h2>
@@ -1540,25 +1540,25 @@ CRITICAL: Replace each template question above with a version specific to this c
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name *</label>
             <input value={companyName} onChange={e => setCompanyName(e.target.value)} onBlur={saveInputs}
               placeholder="e.g. Cartography Capital"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website URL</label>
             <input value={companyUrl} onChange={e => setCompanyUrl(e.target.value)} onBlur={saveInputs}
               placeholder="https://example.com"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry / Sector</label>
             <input value={industry} onChange={e => setIndustry(e.target.value)} onBlur={saveInputs}
               placeholder="e.g. Fintech, Healthcare, Climate Tech"
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-1.5">Additional Context</label>
             <input value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} onBlur={saveInputs}
               placeholder="How they reached us, existing relationship, specific focus..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
           </div>
         </div>
 
@@ -1588,7 +1588,7 @@ CRITICAL: Replace each template question above with a version specific to this c
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-[#12161E] rounded-lg flex items-center justify-center">
+                <div className="w-7 h-7 bg-[#253530] rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-3.5 h-3.5 text-white" />
                 </div>
                 <span className="font-bold text-gray-900">Client Snapshot</span>
@@ -1620,8 +1620,8 @@ CRITICAL: Replace each template question above with a version specific to this c
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-[#E8FF00] rounded-lg flex items-center justify-center">
-                  <FileQuestion className="w-3.5 h-3.5 text-[#12161E]" />
+                <div className="w-7 h-7 bg-[#4BAE97] rounded-lg flex items-center justify-center">
+                  <FileQuestion className="w-3.5 h-3.5 text-[#253530]" />
                 </div>
                 <span className="font-bold text-gray-900">Intake Questions</span>
                 <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">{intakeQuestions.length || 10}</span>
@@ -1634,7 +1634,7 @@ CRITICAL: Replace each template question above with a version specific to this c
                 <div className="space-y-4">
                   {intakeQuestions.map((q, i) => (
                     <div key={i} className="flex gap-3">
-                      <span className="w-6 h-6 rounded-full bg-[#12161E] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i+1}</span>
+                      <span className="w-6 h-6 rounded-full bg-[#253530] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i+1}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-800 leading-relaxed font-medium">{q}</p>
                         {intakeRationales[i] && (
@@ -1839,7 +1839,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
         {/* Left: Input */}
         <div>
           <div className="mb-6">
-            <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+            <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center mb-4">
               <MessageSquare className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">Return Brief</h2>
@@ -1854,19 +1854,19 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Contact Name <span className="text-gray-400 font-normal">(optional)</span></label>
                 <input value={contactName} onChange={e => setContactName(e.target.value)} onBlur={saveBriefInputs}
                   placeholder="e.g. Sarah Chen"
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Role <span className="text-gray-400 font-normal">(optional)</span></label>
                 <input value={contactRole} onChange={e => setContactRole(e.target.value)} onBlur={saveBriefInputs}
                   placeholder="e.g. CMO"
-                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                  className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-1.5">Call Date <span className="text-gray-400 font-normal">(optional)</span></label>
               <input type="date" value={callDate} onChange={e => setCallDate(e.target.value)} onBlur={saveBriefInputs}
-                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 text-sm" />
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 text-sm" />
             </div>
 
             {/* FIT Archetype Selector */}
@@ -1885,7 +1885,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                       onClick={() => toggleFit(arch.id)}
                       className={`flex items-start gap-2.5 p-3 rounded-xl border text-left transition-all ${
                         isSelected
-                          ? 'border-[#12161E] bg-[#12161E] text-white'
+                          ? 'border-[#3A9A82] bg-[#3A9A82] text-white'
                           : isDisabled
                           ? 'border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed'
                           : 'border-gray-200 hover:border-gray-400 bg-gray-50'
@@ -1918,7 +1918,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                 onChange={e => setTranscript(e.target.value)}
                 onBlur={saveBriefInputs}
                 placeholder="Paste the full transcript of your client discovery call here..."
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[220px] resize-y font-mono text-sm"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 min-h-[220px] resize-y font-mono text-sm"
               />
             </div>
 
@@ -1930,7 +1930,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                 onChange={e => setBriefNotes(e.target.value)}
                 onBlur={saveBriefInputs}
                 placeholder="Anything not in the transcript — gut reads, room dynamics, things implied but not said, relationship context, red flags..."
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-gray-900 placeholder:text-gray-400 min-h-[80px] resize-y text-sm"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 min-h-[80px] resize-y text-sm"
               />
             </div>
 
@@ -1940,7 +1940,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                 onClick={() => setShowCompass(!showCompass)}
                 className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors group"
               >
-                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showCompass ? 'bg-[#12161E] border-[#12161E]' : 'border-gray-400 group-hover:border-gray-600'}`}>
+                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${showCompass ? 'bg-[#253530] border-[#253530]' : 'border-gray-400 group-hover:border-gray-600'}`}>
                   {showCompass && <span className="text-white text-[9px] font-black">✓</span>}
                 </div>
                 Include Compass Brand Assessment
@@ -2018,7 +2018,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                       className={`text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium ${
                         isEditing
                           ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          : 'bg-[#12161E] text-white hover:bg-gray-800'
+                          : 'bg-[#3A9A82] text-white hover:bg-[#2E8070]'
                       }`}>
                       <Edit3 className="w-3 h-3" />{isEditing ? 'Cancel Edit' : 'Edit Brief'}
                     </button>
@@ -2035,10 +2035,10 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
                     <textarea
                       value={editedBrief}
                       onChange={e => setEditedBrief(e.target.value)}
-                      className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[480px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-gray-900 outline-none bg-gray-50"
+                      className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[480px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-[#3A9A82] outline-none bg-gray-50"
                     />
                     <div className="mt-3 flex items-center gap-3">
-                      <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
+                      <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#3A9A82] text-white rounded-lg text-sm font-medium hover:bg-[#2E8070] transition-colors">Save Changes</button>
                       <button onClick={() => setIsEditing(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
                       <CopyButton text={editedBrief} />
                     </div>
@@ -2109,18 +2109,18 @@ function ServiceCard({ trigger, selectedServices, onToggleService, onToggleBundl
   };
 
   return (
-    <div className={`rounded-xl border transition-all overflow-hidden ${selectedCount > 0 ? 'border-[#12161E]' : 'border-gray-200 bg-white'}`}>
+    <div className={`rounded-xl border transition-all overflow-hidden ${selectedCount > 0 ? 'border-[#253530]' : 'border-gray-200 bg-white'}`}>
       {/* Header */}
       <button onClick={() => setIsExpanded(!isExpanded)} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors">
         <div className="flex items-center gap-3">
           {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
           <div className="text-left">
-            <p className="font-bold text-[#12161E] text-sm">{trigger.category}</p>
+            <p className="font-bold text-[#253530] text-sm">{trigger.category}</p>
             <p className="text-xs text-gray-400">{trigger.description}</p>
           </div>
         </div>
         {selectedCount > 0 && (
-          <span className="px-2.5 py-1 bg-[#12161E] text-white text-xs rounded-full font-bold flex items-center gap-1">
+          <span className="px-2.5 py-1 bg-[#253530] text-white text-xs rounded-full font-bold flex items-center gap-1">
             <CheckCircle className="w-3 h-3" />{selectedCount}
           </span>
         )}
@@ -2133,15 +2133,15 @@ function ServiceCard({ trigger, selectedServices, onToggleService, onToggleBundl
             const bundleSelected = isBundleSelected(bundle);
             const p = formatPricing(bundle.pricing);
             return (
-              <div key={bundle.name} className={`rounded-lg border p-3 transition-all ${bundleSelected ? 'border-[#12161E] bg-gray-50' : 'border-gray-100'}`}>
+              <div key={bundle.name} className={`rounded-lg border p-3 transition-all ${bundleSelected ? 'border-[#253530] bg-gray-50' : 'border-gray-100'}`}>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={bundleSelected} onChange={() => onToggleBundle(bundle.services.map(s => s.name), !bundleSelected)}
-                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#12161E] focus:ring-[#12161E]" />
+                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#253530] focus:ring-[#3A9A82]" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-[#12161E]">{bundle.name}</span>
+                      <span className="text-sm font-semibold text-[#253530]">{bundle.name}</span>
                       <span className="text-xs text-gray-400">({bundle.services.length} services)</span>
-                      {p?.budget && <span className="text-xs px-2 py-0.5 bg-[#E8FF00] text-[#12161E] rounded font-bold">{p.budget}</span>}
+                      {p?.budget && <span className="text-xs px-2 py-0.5 bg-[#4BAE97] text-[#253530] rounded font-bold">{p.budget}</span>}
                       {p?.term && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">{p.term}</span>}
                     </div>
                     {bundleSelected && (
@@ -2165,14 +2165,14 @@ function ServiceCard({ trigger, selectedServices, onToggleService, onToggleBundl
             const p = formatPricing(service.pricing);
             const isConditional = service.recommend === 'conditional';
             return (
-              <label key={name} className={`flex items-start gap-3 cursor-pointer rounded-lg border px-3 py-2.5 transition-all ${isSelected ? 'border-[#12161E] bg-gray-50' : 'border-gray-100 hover:border-gray-300'}`}>
+              <label key={name} className={`flex items-start gap-3 cursor-pointer rounded-lg border px-3 py-2.5 transition-all ${isSelected ? 'border-[#253530] bg-gray-50' : 'border-gray-100 hover:border-gray-300'}`}>
                 <input type="checkbox" checked={isSelected} onChange={() => onToggleService(name)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#12161E] focus:ring-[#12161E]" />
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#253530] focus:ring-[#3A9A82]" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-[#12161E]">{name}</span>
+                    <span className="text-sm font-medium text-[#253530]">{name}</span>
                     {isConditional && <span className="text-[10px] px-1.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-600 rounded font-medium">Conditional</span>}
-                    {p?.budget && isSelected && <span className="text-xs px-2 py-0.5 bg-[#E8FF00] text-[#12161E] rounded font-bold">{p.budget}</span>}
+                    {p?.budget && isSelected && <span className="text-xs px-2 py-0.5 bg-[#4BAE97] text-[#253530] rounded font-bold">{p.budget}</span>}
                     {p?.term && isSelected && <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">{p.term}</span>}
                   </div>
                 </div>
@@ -2483,7 +2483,7 @@ Antenna Group | www.antennagroup.com`
 
       {/* Page header */}
       <div className="flex items-center gap-4 mb-8 flex-wrap">
-        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center flex-shrink-0">
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -2545,9 +2545,9 @@ Antenna Group | www.antennagroup.com`
 
           {/* Budget total */}
           {pricingTotal && (
-            <div className="bg-[#12161E] rounded-2xl px-5 py-4">
+            <div className="bg-[#253530] rounded-2xl px-5 py-4">
               <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="w-3.5 h-3.5 text-[#E8FF00]" />
+                <DollarSign className="w-3.5 h-3.5 text-[#4BAE97]" />
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Estimated Investment</span>
               </div>
               <p className="text-2xl font-black text-white leading-none">{pricingTotal.lowFormatted}</p>
@@ -2563,7 +2563,7 @@ Antenna Group | www.antennagroup.com`
               {recommendedEngagementType && recommendedEngagementType !== draftEngagementType && (
                 <button
                   onClick={() => setDraftEngagementType(recommendedEngagementType)}
-                  className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#E8FF00] text-[#12161E] hover:opacity-80 transition-opacity">
+                  className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#4BAE97] text-[#253530] hover:opacity-80 transition-opacity">
                   Suggested: {ENGAGEMENT_TYPES.find(t => t.value === recommendedEngagementType)?.label || recommendedEngagementType}
                 </button>
               )}
@@ -2597,7 +2597,7 @@ Antenna Group | www.antennagroup.com`
               }}
               placeholder="e.g. NB9530"
               maxLength={6}
-              className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-gray-900 outline-none ${
+              className={`w-full px-3 py-2.5 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-[#3A9A82] outline-none ${
                 !opportunity.rid ? 'border-amber-300 bg-amber-50'
                 : /^NB[A-Z0-9]{1,4}$/.test(opportunity.rid) ? 'border-green-300 bg-green-50'
                 : 'border-red-300 bg-red-50'}`}
@@ -2613,7 +2613,7 @@ Antenna Group | www.antennagroup.com`
             <textarea
               value={draftNotes} onChange={e => setDraftNotes(e.target.value)} onBlur={saveProposalInputs}
               placeholder="Budget constraints, specific requests, tone notes, things to emphasise or avoid..."
-              className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[90px] resize-y" />
+              className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[90px] resize-y" />
           </div>
 
           {/* FIT */}
@@ -2689,7 +2689,7 @@ Antenna Group | www.antennagroup.com`
                   <button
                     onClick={() => { setIsEditingProposal(!isEditingProposal); setEditedProposal(opportunity.proposalDraft); }}
                     className={`text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors ${
-                      isEditingProposal ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#12161E] text-white hover:bg-gray-800'}`}>
+                      isEditingProposal ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-[#3A9A82] text-white hover:bg-[#2E8070]'}`}>
                     <Edit3 className="w-3 h-3" />{isEditingProposal ? 'Cancel' : 'Edit'}
                   </button>
                 </div>
@@ -2699,10 +2699,10 @@ Antenna Group | www.antennagroup.com`
               {isEditingProposal ? (
                 <div className="p-5">
                   <textarea value={editedProposal} onChange={e => setEditedProposal(e.target.value)}
-                    className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[600px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-gray-900 outline-none bg-gray-50" />
+                    className="w-full text-sm text-gray-800 border border-gray-200 rounded-lg p-4 min-h-[600px] resize-y font-mono leading-relaxed focus:ring-2 focus:ring-[#3A9A82] outline-none bg-gray-50" />
                   <div className="mt-3 flex gap-3">
                     <button onClick={() => { onUpdate({ proposalDraft: editedProposal }); setIsEditingProposal(false); }}
-                      className="px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Save Changes</button>
+                      className="px-4 py-2 bg-[#3A9A82] text-white rounded-lg text-sm font-medium hover:bg-[#2E8070] transition-colors">Save Changes</button>
                     <button onClick={() => setIsEditingProposal(false)}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Cancel</button>
                     <CopyButton text={editedProposal} />
@@ -2721,9 +2721,9 @@ Antenna Group | www.antennagroup.com`
                   <div className="flex gap-3">
                     <textarea value={proposalIteration} onChange={e => setProposalIteration(e.target.value)}
                       placeholder="Describe what to change… e.g. 'Make the investment section clearer', 'Add more on our SEO approach', 'Soften the tone'"
-                      className="flex-1 text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[70px] resize-y" />
+                      className="flex-1 text-sm px-3 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[70px] resize-y" />
                     <button onClick={iterateProposal} disabled={isIterating || !proposalIteration.trim()}
-                      className="self-end px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap">
+                      className="self-end px-4 py-2.5 bg-[#3A9A82] text-white rounded-xl text-sm font-semibold hover:bg-[#2E8070] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap">
                       {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating…</> : <><RefreshCw className="w-4 h-4" />Apply</>}
                     </button>
                   </div>
@@ -2826,7 +2826,7 @@ Use markdown formatting. This is a professional legal/business document — form
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+        <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center mb-4">
           <PenTool className="w-6 h-6 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Statement of Work</h2>
@@ -2855,7 +2855,7 @@ Use markdown formatting. This is a professional legal/business document — form
             </div>
             <div className="mt-4">
               <label className="block text-xs font-semibold text-gray-900 mb-1.5">Additional SOW Notes</label>
-              <textarea value={sowNotes} onChange={e => setSOWNotes(e.target.value)} onBlur={() => onUpdate({ sowNotes })} placeholder="Payment schedule preferences, specific legal requirements, special terms..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
+              <textarea value={sowNotes} onChange={e => setSOWNotes(e.target.value)} onBlur={() => onUpdate({ sowNotes })} placeholder="Payment schedule preferences, specific legal requirements, special terms..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[80px] resize-y" />
             </div>
           </div>
 
@@ -2869,8 +2869,8 @@ Use markdown formatting. This is a professional legal/business document — form
           {opportunity.sowDraft && (
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Iterate</h3>
-              <textarea value={iterationFeedback} onChange={e => setIterationFeedback(e.target.value)} placeholder="'Add stronger revision limits', 'Update payment to net 45', 'Add a stop work clause'..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[80px] resize-y" />
-              <button onClick={iterateSOW} disabled={isIterating || !iterationFeedback.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#12161E] text-white rounded-xl text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+              <textarea value={iterationFeedback} onChange={e => setIterationFeedback(e.target.value)} placeholder="'Add stronger revision limits', 'Update payment to net 45', 'Add a stop work clause'..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[80px] resize-y" />
+              <button onClick={iterateSOW} disabled={isIterating || !iterationFeedback.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#3A9A82] text-white rounded-xl text-sm font-semibold hover:bg-[#2E8070] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
                 {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Update SOW</>}
               </button>
             </div>
@@ -2901,8 +2901,8 @@ Use markdown formatting. This is a professional legal/business document — form
               </div>
               {isEditing ? (
                 <div className="p-5">
-                  <textarea value={editedSOW} onChange={e => setEditedSOW(e.target.value)} className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[600px] resize-y font-mono focus:ring-2 focus:ring-gray-900 outline-none" />
-                  <button onClick={() => { onUpdate({ sowDraft: editedSOW }); setIsEditing(false); }} className="mt-3 px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium">Save Changes</button>
+                  <textarea value={editedSOW} onChange={e => setEditedSOW(e.target.value)} className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[600px] resize-y font-mono focus:ring-2 focus:ring-[#3A9A82] outline-none" />
+                  <button onClick={() => { onUpdate({ sowDraft: editedSOW }); setIsEditing(false); }} className="mt-3 px-4 py-2 bg-[#3A9A82] text-white rounded-lg text-sm font-medium">Save Changes</button>
                 </div>
               ) : (
                 <div className="p-5 max-h-[700px] overflow-y-auto">
@@ -3081,7 +3081,7 @@ What's working well: [brief notes]`;
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+        <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center mb-4">
           <ShieldCheck className="w-6 h-6 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">SOW Review</h2>
@@ -3108,7 +3108,7 @@ What's working well: [brief notes]`;
 
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">Engagement Type</label>
-            <select value={engagementType} onChange={e => setEngagementType(e.target.value)} className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none text-gray-900">
+            <select value={engagementType} onChange={e => setEngagementType(e.target.value)} className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900">
               <option value="">Not specified</option>
               {ENGAGEMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
@@ -3172,8 +3172,8 @@ What's working well: [brief notes]`;
               {analysis.overall && <CollapsibleSection title="Overall Assessment" defaultOpen><pre className="whitespace-pre-wrap text-sm text-gray-900">{analysis.overall}</pre></CollapsibleSection>}
 
               {/* Generate Revised */}
-              <div className="mt-6 bg-[#12161E] rounded-2xl p-6">
-                <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2"><Sparkles className="w-5 h-5 text-[#E8FF00]" />Generate Revised SOW</h3>
+              <div className="mt-6 bg-[#253530] rounded-2xl p-6">
+                <h3 className="text-white font-bold text-lg mb-2 flex items-center gap-2"><Sparkles className="w-5 h-5 text-[#4BAE97]" />Generate Revised SOW</h3>
                 <p className="text-gray-400 text-sm mb-4">Create an updated draft incorporating your selected recommendations.</p>
                 {!draftedSOW ? (
                   <AntennaButton onClick={generateRevised} loading={isDrafting} loadingText="Generating..." icon={Sparkles} disabled={selectedRecs.critical.length === 0 && selectedRecs.recommended.length === 0 && selectedRecs.redFlags.length === 0} variant="secondary" className="bg-white hover:bg-gray-100">
@@ -3327,7 +3327,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
   return (
     <div className="max-w-7xl mx-auto px-8 py-10">
       <div className="mb-8">
-        <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center mb-4">
+        <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center mb-4">
           <ClipboardList className="w-6 h-6 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Sales Handover</h2>
@@ -3354,7 +3354,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
         {/* Left panel */}
         <div className="space-y-5">
           {/* Summary card */}
-          <div className="bg-[#12161E] rounded-2xl p-5 text-white">
+          <div className="bg-[#253530] rounded-2xl p-5 text-white">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Assignment Summary</p>
             <div className="space-y-3">
               <div>
@@ -3364,7 +3364,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
               {opportunity.rid && (
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">RID</p>
-                  <p className="font-mono text-[#E8FF00] font-bold">{opportunity.rid}</p>
+                  <p className="font-mono text-[#4BAE97] font-bold">{opportunity.rid}</p>
                 </div>
               )}
               {opportunity.practice && (
@@ -3380,7 +3380,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
               {pricingTotal && (
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-0.5">Investment Range</p>
-                  <p className="text-xl font-black text-[#E8FF00]">{pricingTotal.lowFmt}</p>
+                  <p className="text-xl font-black text-[#4BAE97]">{pricingTotal.lowFmt}</p>
                   <p className="text-xs text-gray-500">– {pricingTotal.highFmt}</p>
                 </div>
               )}
@@ -3406,7 +3406,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
               onChange={e => setHandoverNotes(e.target.value)}
               onBlur={() => onUpdate({ handoverNotes })}
               placeholder="Key context for the delivery team, relationship notes, sensitivities..."
-              className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[100px] resize-y"
+              className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[100px] resize-y"
             />
           </div>
 
@@ -3434,7 +3434,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
                   value={feedback}
                   onChange={e => setFeedback(e.target.value)}
                   placeholder="e.g. Sharpen the Watch Outs section, add more detail on budget..."
-                  className="w-full text-sm px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-900 text-gray-700 min-h-[70px] resize-y mb-2"
+                  className="w-full text-sm px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[70px] resize-y mb-2"
                 />
                 <AntennaButton onClick={iterateHandover} loading={isIterating} loadingText="Updating..." disabled={!feedback.trim()} icon={RefreshCw} size="small" className="w-full">
                   Apply Feedback
@@ -3457,7 +3457,7 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-gray-900">Sales Handover Document</span>
-                  <span className="text-xs px-2 py-0.5 bg-[#E8FF00] text-[#12161E] font-bold rounded">Internal</span>
+                  <span className="text-xs px-2 py-0.5 bg-[#4BAE97] text-[#253530] font-bold rounded">Internal</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CopyButton text={isEditing ? editedHandover : opportunity.handoverDraft} />
@@ -3484,11 +3484,11 @@ Format: Use markdown with ## headers. Keep the whole document tight — every se
                   <textarea
                     value={editedHandover}
                     onChange={e => setEditedHandover(e.target.value)}
-                    className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[600px] resize-y font-mono focus:ring-2 focus:ring-gray-900 outline-none"
+                    className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[600px] resize-y font-mono focus:ring-2 focus:ring-[#3A9A82] outline-none"
                   />
                   <button
                     onClick={() => { onUpdate({ handoverDraft: editedHandover }); setIsEditing(false); }}
-                    className="mt-3 px-4 py-2 bg-[#12161E] text-white rounded-lg text-sm font-medium"
+                    className="mt-3 px-4 py-2 bg-[#3A9A82] text-white rounded-lg text-sm font-medium"
                   >
                     Save Changes
                   </button>
@@ -3611,10 +3611,10 @@ function QualificationModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
       <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-[#12161E] flex-shrink-0">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-[#253530] flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#E8FF00] rounded-xl flex items-center justify-center">
-              <TableProperties className="w-5 h-5 text-[#12161E]" />
+            <div className="w-9 h-9 bg-[#4BAE97] rounded-xl flex items-center justify-center">
+              <TableProperties className="w-5 h-5 text-[#253530]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Qualification Board</h2>
@@ -3636,7 +3636,7 @@ function QualificationModal({ onClose }) {
             <input
               value={searchQ} onChange={e => setSearchQ(e.target.value)}
               placeholder="Search client, assignment, qualifier..."
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-gray-900 placeholder:text-gray-400"
+              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3A9A82] placeholder:text-gray-400"
             />
             {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><X className="w-3.5 h-3.5" /></button>}
           </div>
@@ -3672,7 +3672,7 @@ function QualificationModal({ onClose }) {
               <AlertCircle className="w-10 h-10 text-red-300 mb-4" />
               <p className="text-sm text-red-600 font-medium mb-2">Could not load data</p>
               <p className="text-xs text-gray-400 mb-4">{error}</p>
-              <button onClick={loadData} className="px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-medium">Retry</button>
+              <button onClick={loadData} className="px-4 py-2 bg-[#3A9A82] text-white rounded-xl text-sm font-medium">Retry</button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-24">
@@ -3919,10 +3919,10 @@ function PipelineModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
       <div className="absolute inset-4 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-[#12161E] flex-shrink-0">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-gray-200 bg-[#253530] flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#E8FF00] rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-[#12161E]" />
+            <div className="w-9 h-9 bg-[#4BAE97] rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-[#253530]" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">New Business Pipeline</h2>
@@ -3946,8 +3946,8 @@ function PipelineModal({ onClose }) {
                 <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5 text-gray-400 leading-tight">{s}</p>
               </div>
             ))}
-            <div className="flex-1 px-4 py-3 text-center bg-[#12161E]">
-              <p className="text-xl font-black text-[#E8FF00]">{fmt(totalWeighted)}</p>
+            <div className="flex-1 px-4 py-3 text-center bg-[#253530]">
+              <p className="text-xl font-black text-[#4BAE97]">{fmt(totalWeighted)}</p>
               <p className="text-[10px] font-semibold uppercase tracking-wider mt-0.5 text-gray-400">Weighted Total</p>
             </div>
           </div>
@@ -3960,7 +3960,7 @@ function PipelineModal({ onClose }) {
             <input
               value={searchQ} onChange={e => setSearchQ(e.target.value)}
               placeholder="Search client, assignment, RID, PM..."
-              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-gray-900 placeholder:text-gray-400"
+              className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#3A9A82] placeholder:text-gray-400"
             />
             {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><X className="w-3.5 h-3.5" /></button>}
           </div>
@@ -3992,7 +3992,7 @@ function PipelineModal({ onClose }) {
               <AlertCircle className="w-10 h-10 text-red-300 mb-4" />
               <p className="text-sm text-red-600 font-medium mb-2">Could not load data</p>
               <p className="text-xs text-gray-400 mb-4">{error}</p>
-              <button onClick={loadData} className="px-4 py-2 bg-[#12161E] text-white rounded-xl text-sm font-medium">Retry</button>
+              <button onClick={loadData} className="px-4 py-2 bg-[#3A9A82] text-white rounded-xl text-sm font-medium">Retry</button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-24">
@@ -4177,7 +4177,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
 
       {/* Hero */}
       <div className="mb-10">
-        <h1 className="text-4xl lg:text-5xl font-semibold text-[#12161E] leading-none mb-4 tracking-tight">SOW Workbench</h1>
+        <h1 className="text-4xl lg:text-5xl font-semibold text-[#253530] leading-none mb-4 tracking-tight">SOW Workbench</h1>
         <p className="text-base text-gray-500 max-w-2xl leading-relaxed mb-8">
           We diagnose before we prescribe! This tool helps you identify an opportunity and ensure that we can move fast and recommend the right services to solve our clients' problems.
         </p>
@@ -4186,7 +4186,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           {roleInfo?.canCreateOpportunities !== false && (
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-5 py-3 bg-[#12161E] text-white rounded-xl font-semibold text-sm hover:bg-[#2a3040] transition-all shadow-sm"
+              className="flex items-center gap-2 px-5 py-3 bg-[#3A9A82] text-white rounded-xl font-semibold text-sm hover:bg-[#2E8070] transition-all shadow-sm"
             >
               <Plus className="w-4 h-4" />New Opportunity
             </button>
@@ -4194,20 +4194,20 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           {onOpenReview && (
             <button
               onClick={onOpenReview}
-              className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
+              className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#253530] hover:text-[#253530] transition-all shadow-sm"
             >
               <ShieldCheck className="w-4 h-4" />Review Existing SOW
             </button>
           )}
           <button
             onClick={onOpenQualification}
-            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
+            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#253530] hover:text-[#253530] transition-all shadow-sm"
           >
             <TableProperties className="w-4 h-4" />Check If Your Opportunity Is Qualified
           </button>
           <button
             onClick={onOpenPipeline}
-            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#12161E] hover:text-[#12161E] transition-all shadow-sm"
+            className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-[#253530] hover:text-[#253530] transition-all shadow-sm"
           >
             <TrendingUp className="w-4 h-4" />Check The Pipeline
           </button>
@@ -4221,12 +4221,12 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           const isActive = filterStage === stage.id;
           return (
             <button key={stage.id} onClick={() => setFilterStage(isActive ? '' : stage.id)}
-              className={`bg-white rounded-xl border p-5 text-left transition-all ${isActive ? 'border-[#12161E] ring-2 ring-[#12161E]/10 shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:shadow-sm'}`}>
+              className={`bg-white rounded-xl border p-5 text-left transition-all ${isActive ? 'border-[#253530] ring-2 ring-[#253530]/10 shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:shadow-sm'}`}>
               <div className="flex items-start justify-between mb-3">
                 <span className="text-xs font-bold tracking-widest text-gray-300 uppercase">{String(idx + 1).padStart(2,'0')}</span>
                 {stageCount > 0 && <span className="text-2xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>}
               </div>
-              <h3 className="font-black text-[#12161E] text-base leading-tight mb-1">{stage.label}</h3>
+              <h3 className="font-black text-[#253530] text-base leading-tight mb-1">{stage.label}</h3>
               <p className="text-xs text-gray-400 leading-snug">{stage.description}</p>
             </button>
           );
@@ -4244,28 +4244,28 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name <span className="text-red-400">*</span></label>
-                <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && newName.trim() && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && newName.trim() && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Assignment Title <span className="text-red-500">*</span></label>
                 <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
                   placeholder="e.g. Q4 Integrated Campaign"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Owning Practice</label>
-                <select value={newPractice} onChange={e => setNewPractice(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 bg-white text-sm">
+                <select value={newPractice} onChange={e => setNewPractice(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 bg-white text-sm">
                   <option value="">Select practice...</option>
                   {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website <span className="text-red-400">*</span></label>
-                <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry <span className="text-red-400">*</span></label>
-                <select value={newIndustry} onChange={e => setNewIndustry(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#12161E] outline-none text-gray-900 bg-white text-sm">
+                <select value={newIndustry} onChange={e => setNewIndustry(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 bg-white text-sm">
                   <option value="">Select industry...</option>
                   <option value="Technology & Software">Technology & Software</option>
                   <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
@@ -4288,7 +4288,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowCreate(false)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">Cancel</button>
-              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim() || !newUrl.trim() || !newIndustry} className="flex-1 px-4 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2a3040] transition-colors flex items-center justify-center gap-2">
+              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim() || !newUrl.trim() || !newIndustry} className="flex-1 px-4 py-2.5 bg-[#3A9A82] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2E8070] transition-colors flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" />Create Opportunity
               </button>
             </div>
@@ -4303,7 +4303,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           <h3 className="text-lg font-semibold text-gray-400 mb-2">No opportunities yet</h3>
           <p className="text-sm text-gray-400 mb-6">Create your first opportunity to begin the pipeline.</p>
           {roleInfo?.canCreateOpportunities !== false && (
-            <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#12161E] text-white rounded-xl font-semibold text-sm hover:bg-[#2a3040] transition-colors">
+            <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#3A9A82] text-white rounded-xl font-semibold text-sm hover:bg-[#2E8070] transition-colors">
               <Plus className="w-4 h-4" />New Opportunity
             </button>
           )}
@@ -4312,7 +4312,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
         <div>
           {/* Section title + search row */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-[#12161E]">Opportunities</h2>
+            <h2 className="text-lg font-bold text-[#253530]">Opportunities</h2>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <span>{filtered.length} of {allActive.length}</span>
             </div>
@@ -4325,11 +4325,11 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
               <input
                 value={searchQ} onChange={e => setSearchQ(e.target.value)}
                 placeholder="Search company, title, RID, practice..."
-                className="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#12161E] outline-none placeholder:text-gray-400"
+                className="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#3A9A82] outline-none placeholder:text-gray-400"
               />
               {searchQ && <button onClick={() => setSearchQ('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"><X className="w-3.5 h-3.5" /></button>}
             </div>
-            <select value={filterPractice} onChange={e => setFilterPractice(e.target.value)} className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#12161E] outline-none text-gray-700">
+            <select value={filterPractice} onChange={e => setFilterPractice(e.target.value)} className="px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-700">
               <option value="">All Practices</option>
               {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
@@ -4337,7 +4337,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
               <button onClick={() => { setSearchQ(''); setFilterStage(''); setFilterPractice(''); }} className="text-xs px-3 py-2.5 border border-gray-200 bg-white rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">Clear</button>
             )}
             {filtered.length > 0 && (
-              <button onClick={exportToExcel} className="ml-auto flex items-center gap-1.5 text-xs px-3 py-2.5 border border-gray-200 bg-white rounded-xl text-gray-600 hover:border-[#12161E] hover:text-[#12161E] transition-all font-medium">
+              <button onClick={exportToExcel} className="ml-auto flex items-center gap-1.5 text-xs px-3 py-2.5 border border-gray-200 bg-white rounded-xl text-gray-600 hover:border-[#253530] hover:text-[#253530] transition-all font-medium">
                 <Download className="w-3.5 h-3.5" />Export to Excel
               </button>
             )}
@@ -4368,18 +4368,18 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                 return (
                   <div key={opp.id} className="relative group/row">
                     <button onClick={() => onSelectOpportunity(opp)}
-                      className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#12161E] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
+                      className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#253530] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
                     {/* Opp # */}
                     <div className="col-span-1">
                       <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-600 transition-colors">{opp.oppNumber || '—'}</span>
                     </div>
                     {/* Company + Title */}
                     <div className="col-span-3 flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 bg-[#12161E] group-hover:bg-[#E8FF00] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-                        <span className="text-xs font-black text-white group-hover:text-[#12161E] transition-colors">{initials}</span>
+                      <div className="w-9 h-9 bg-[#253530] group-hover:bg-[#4BAE97] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                        <span className="text-xs font-black text-white group-hover:text-[#253530] transition-colors">{initials}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-[#12161E] leading-tight truncate text-sm">{opp.companyName}</p>
+                        <p className="font-bold text-[#253530] leading-tight truncate text-sm">{opp.companyName}</p>
                         {opp.title
                           ? <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.title}</p>
                           : <p className="text-xs text-gray-300 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
@@ -4423,7 +4423,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                       <span className="text-[10px] text-gray-400 truncate" title={opp.lastModifiedBy || ''}>
                         {opp.lastModifiedBy ? opp.lastModifiedBy.split('@')[0] : '—'}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#12161E] transition-colors flex-shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#253530] transition-colors flex-shrink-0" />
                     </div>
                   </button>
                   {/* Admin delete button — appears on row hover */}
@@ -4663,7 +4663,7 @@ export default function App() {
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Access Restricted</h2>
           <p className="text-gray-500 mb-6">Your <span className="font-semibold">{roleInfo.label}</span> role doesn't include access to this stage.</p>
-          <button onClick={() => { const first = roleInfo.allowedStages[0]; if (first) { setCurrentStage(first); updateOpportunity({ currentStage: first }); } else setCurrentView('home'); }} className="px-6 py-3 bg-[#12161E] text-white rounded-xl font-semibold hover:bg-gray-800 transition-colors">
+          <button onClick={() => { const first = roleInfo.allowedStages[0]; if (first) { setCurrentStage(first); updateOpportunity({ currentStage: first }); } else setCurrentView('home'); }} className="px-6 py-3 bg-[#3A9A82] text-white rounded-xl font-semibold hover:bg-[#2E8070] transition-colors">
             {roleInfo.allowedStages.length > 0 ? `Go to ${PIPELINE_STAGES.find(s => s.id === roleInfo.allowedStages[0])?.label}` : 'Back to Home'}
           </button>
         </div>
@@ -4732,7 +4732,7 @@ export default function App() {
                 <AntennaLogo className="h-7" />
               </button>
               <div className="h-5 w-px bg-gray-300" />
-              <span className="text-sm font-semibold text-[#12161E] tracking-tight">SOW Workbench</span>
+              <span className="text-sm font-semibold text-[#253530] tracking-tight">SOW Workbench</span>
             </div>
             <div className="flex items-center gap-3">
               {currentView === 'opportunity' && currentOpportunity && (
@@ -4754,13 +4754,13 @@ export default function App() {
               )}
               <button
                 onClick={() => setShowQualification(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#12161E] hover:text-[#12161E] transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#253530] hover:text-[#253530] transition-all"
               >
                 <TableProperties className="w-3.5 h-3.5" />Qualified?
               </button>
               <button
                 onClick={() => setShowPipeline(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#12161E] hover:text-[#12161E] transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-[#253530] hover:text-[#253530] transition-all"
               >
                 <TrendingUp className="w-3.5 h-3.5" />Pipeline
               </button>
