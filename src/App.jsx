@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.2';
+const APP_VERSION = '3.16.3';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -1980,7 +1980,7 @@ TRIGGER ANALYSIS (Internal — Do Not Share)
         </div>
 
         {/* Right: Output */}
-        <div>
+        <div className="pt-[88px]">
           {!opportunity.briefComplete ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-20 px-8">
               <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
@@ -2285,8 +2285,8 @@ function ProposalView({ opportunity, onUpdate }) {
     if (selectedServices.length === 0) return;
     setIsGenerating(true); setError(null);
     try {
-      // Build bundle-grouped investment lines — use bundle name as line item, not individual services
-      const bundleMap = new Map(); // bundleName -> { low, high, term, category }
+      // Build bundle-grouped investment: bundle name + cost, then indented deliverables
+      const bundleMap = new Map(); // bundleName -> { low, high, term, termHigh, services: [] }
       const unbundledLines = [];
       for (const trigger of SERVICE_TRIGGERS) {
         for (const service of trigger.services) {
@@ -2294,38 +2294,40 @@ function ProposalView({ opportunity, onUpdate }) {
           if (!service.pricing) continue;
           const p = service.pricing;
           const bundleName = p.bundle;
+          const svcName = getServiceName(service);
           if (bundleName) {
             if (!bundleMap.has(bundleName)) {
-              // Only grab pricing from the first service in bundle that has budgetLow
-              if (p.budgetLow) {
-                bundleMap.set(bundleName, { low: p.budgetLow, high: p.budgetHigh, term: p.termLow, termHigh: p.termHigh });
-              } else {
-                bundleMap.set(bundleName, null); // placeholder, may be filled by later service
-              }
+              bundleMap.set(bundleName, { low: p.budgetLow || null, high: p.budgetHigh || null, term: p.termLow, termHigh: p.termHigh, services: [] });
+            } else if (!bundleMap.get(bundleName).low && p.budgetLow) {
+              const entry = bundleMap.get(bundleName);
+              entry.low = p.budgetLow; entry.high = p.budgetHigh; entry.term = p.termLow; entry.termHigh = p.termHigh;
             }
+            bundleMap.get(bundleName).services.push(svcName);
           } else if (p.budgetLow) {
-            const fmtC = (n) => n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
-            const budget = `${fmtC(p.budgetLow)}-${fmtC(p.budgetHigh)}`;
+            const fmtCu = (n) => n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
+            const budget = `${fmtCu(p.budgetLow)}-${fmtCu(p.budgetHigh)}`;
             const term = p.termLow === 52 ? 'Annual' : p.termLow ? `${p.termLow}-${p.termHigh} wks` : '';
-            unbundledLines.push({ name: getServiceName(service), budget, term });
+            unbundledLines.push({ name: svcName, budget, term });
           }
         }
       }
       const fmtC = (n) => n >= 1000000 ? `$${(n/1000000).toFixed(1)}M` : n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
       const investmentLines = [];
       for (const [bundleName, pricing] of bundleMap) {
-        if (pricing?.low) {
-          const budget = pricing.low === pricing.high ? fmtC(pricing.low) : `${fmtC(pricing.low)}-${fmtC(pricing.high)}`;
-          const term = pricing.term === 52 ? 'Annual' : pricing.term ? `${pricing.term}-${pricing.termHigh} wks` : '';
-          investmentLines.push(`| ${bundleName} | ${budget}${term ? ` · ${term}` : ''} |`);
-        } else {
-          investmentLines.push(`| ${bundleName} | TBC |`);
+        const budget = pricing.low ? (pricing.low === pricing.high ? fmtC(pricing.low) : `${fmtC(pricing.low)}-${fmtC(pricing.high)}`) : null;
+        const term = pricing.term === 52 ? 'Annual' : pricing.term ? `${pricing.term}-${pricing.termHigh} wks` : '';
+        const costLabel = budget ? `${budget}${term ? ` · ${term}` : ''}` : '';
+        investmentLines.push(`${bundleName}${costLabel ? `  |  ${costLabel}` : ''}`);
+        for (const svc of pricing.services) {
+          investmentLines.push(`  • ${svc}`);
         }
+        investmentLines.push('');
       }
       for (const line of unbundledLines) {
-        investmentLines.push(`| ${line.name} | ${line.budget}${line.term ? ` · ${line.term}` : ''} |`);
+        investmentLines.push(`${line.name}  |  ${line.budget}${line.term ? ` · ${line.term}` : ''}`);
+        investmentLines.push('');
       }
-      const investmentTable = investmentLines.join('\n');
+      const investmentTable = investmentLines.join('\n').trimEnd();
       const totalLine = pricingTotal
         ? '\n**Total Estimated Investment: ' + pricingTotal.lowFormatted + ' - ' + pricingTotal.highFormatted + '**'
         : '\n**Total Estimated Investment: TBC**';
@@ -2382,7 +2384,7 @@ Your proposals are:
 CRITICAL FORMATTING RULES:
 - Never use em dashes (-- or the character) anywhere in the document. Use commas, colons, or plain hyphens (-) instead.
 - Use plain text formatting. No bold except for headers.
-- The Investment section must reproduce EXACTLY the table and total provided below. Do not invent, alter, or omit any numbers.
+- The Investment section must reproduce EXACTLY the investment breakdown provided below — bundle names, costs, and indented deliverables. Do not invent, alter, omit, or add any numbers or services.
 - In "What We're Proposing", write one section per bundle/service group provided. Do not split bundles into sub-services.`,
 
         userMessage: `Write a compelling proposal for this client opportunity.
@@ -2428,10 +2430,8 @@ What you'll get: [Key output in plain language]
 
 ## Investment
 
-REPRODUCE THIS TABLE EXACTLY - do not change any numbers:
+REPRODUCE THIS INVESTMENT SECTION EXACTLY - do not change any numbers, names, or formatting:
 
-| Service | Investment Range |
-|---|---|
 ${investmentTable}
 ${totalLine}
 
