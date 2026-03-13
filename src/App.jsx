@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.15.6';
+const APP_VERSION = '3.16.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -1291,17 +1291,56 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
     return 'upcoming';
   };
   return (
-    <div className="border-b border-gray-200/80" style={{ backgroundColor: '#E8E6E1' }}>
+    <div style={{ backgroundColor: '#12161E' }}>
       <div className="max-w-7xl mx-auto px-8">
-        {/* Company breadcrumb */}
-        <div className="flex items-center gap-2 pt-3 pb-2">
-          <span className="text-xs text-gray-400">Opportunity</span>
-          <ChevronRight className="w-3 h-3 text-gray-300" />
-          <span className="text-xs font-bold text-[#12161E]">{opportunity?.companyName}</span>
-          {opportunity?.proposalStatus && currentStage === 'proposal' && <StatusBadge status={opportunity.proposalStatus} />}
+        {/* Flow strip */}
+        <div className="flex items-stretch">
+          {PIPELINE_STAGES.map((stage, idx) => {
+            const status = getStageStatus(stage.id);
+            const isClickable = (status === 'complete' || status === 'active') && status !== 'locked';
+            const isActive = status === 'active';
+            const isComplete = status === 'complete';
+            const isLast = idx === PIPELINE_STAGES.length - 1;
+            return (
+              <React.Fragment key={stage.id}>
+                <button
+                  onClick={() => isClickable && onStageClick && onStageClick(stage.id)}
+                  disabled={!isClickable}
+                  className="flex items-center gap-2 px-5 py-3.5 text-xs font-semibold tracking-wide transition-all relative flex-1 justify-center"
+                  style={{
+                    backgroundColor: isActive ? '#E8FF00' : 'transparent',
+                    color: isActive ? '#12161E' : isComplete ? '#E8E6E1' : '#4B5563',
+                    cursor: isClickable ? 'pointer' : 'default',
+                  }}
+                >
+                  {isComplete
+                    ? <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#E8FF00' }}><span style={{ color: '#12161E', fontSize: '9px', fontWeight: 900 }}>✓</span></span>
+                    : status === 'locked'
+                    ? <Lock className="w-3 h-3 flex-shrink-0" />
+                    : <span className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: isActive ? '#12161E' : '#2a3040', color: isActive ? '#E8FF00' : '#4B5563' }}>
+                        {idx + 1}
+                      </span>
+                  }
+                  <span className="whitespace-nowrap">{stage.label}</span>
+                </button>
+                {!isLast && (
+                  <div className="flex items-center flex-shrink-0" style={{ color: '#2a3040' }}>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
-        {/* Tab row — exactly like Compass nav */}
-        <div className="flex items-center gap-1">
+        {/* Breadcrumb + back row */}
+        <div className="flex items-center gap-3 pb-2 pt-1 border-t" style={{ borderColor: '#2a3040' }}>
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-xs" style={{ color: '#4B5563' }}>Opportunity</span>
+            <ChevronRight className="w-3 h-3" style={{ color: '#2a3040' }} />
+            <span className="text-xs font-semibold" style={{ color: '#E8E6E1' }}>{opportunity?.companyName}</span>
+            {opportunity?.proposalStatus && currentStage === 'proposal' && <StatusBadge status={opportunity.proposalStatus} />}
+          </div>
           {currentIdx > 0 && (
             <button
               onClick={() => {
@@ -1310,38 +1349,12 @@ function StageProgress({ currentStage, opportunity, onStageClick, allowedStages 
                   onStageClick && onStageClick(prevStage);
                 }
               }}
-              className="flex items-center gap-1.5 px-3 py-2 mr-2 text-xs font-semibold text-gray-500 hover:text-[#12161E] border border-transparent hover:border-gray-300 rounded-lg transition-all"
+              className="flex items-center gap-1 text-xs font-medium transition-all hover:opacity-80"
+              style={{ color: '#9CA3AF' }}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />Back
+              <ChevronLeft className="w-3 h-3" />Back
             </button>
           )}
-          {PIPELINE_STAGES.map((stage, idx) => {
-            const status = getStageStatus(stage.id);
-            const isClickable = status === 'complete' || status === 'active';
-            return (
-              <button
-                key={stage.id}
-                onClick={() => isClickable && onStageClick && onStageClick(stage.id)}
-                disabled={!isClickable}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all -mb-px
-                  ${status === 'active'
-                    ? 'bg-white border-[#12161E] text-[#12161E]'
-                    : status === 'complete'
-                    ? 'border-transparent text-gray-500 hover:text-gray-700 cursor-pointer hover:border-gray-300'
-                    : status === 'locked'
-                    ? 'border-transparent text-gray-300 cursor-not-allowed'
-                    : 'border-transparent text-gray-300 cursor-default'}`}
-              >
-                {status === 'complete'
-                  ? <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center"><span className="text-white text-[9px] font-black">✓</span></span>
-                  : status === 'locked'
-                  ? <Lock className="w-3.5 h-3.5" />
-                  : <span className={`w-5 h-5 rounded-full text-xs font-black flex items-center justify-center ${status === 'active' ? 'bg-[#E8FF00] text-[#12161E]' : 'bg-gray-200 text-gray-400'}`}>{idx + 1}</span>
-                }
-                {stage.label}
-              </button>
-            );
-          })}
         </div>
       </div>
     </div>
@@ -2218,6 +2231,22 @@ function ProposalView({ opportunity, onUpdate }) {
 
   const pricingTotal = calculatePricingTotal(selectedServices);
 
+  // Recommend engagement type from selected services
+  const recommendedEngagementType = React.useMemo(() => {
+    if (selectedServices.length === 0) return null;
+    const counts = {};
+    for (const trigger of SERVICE_TRIGGERS) {
+      for (const service of trigger.services) {
+        if (selectedServices.includes(getServiceName(service)) && service.pricing?.engagementType) {
+          const et = service.pricing.engagementType === 'tm' ? 'time_materials' : service.pricing.engagementType;
+          counts[et] = (counts[et] || 0) + 1;
+        }
+      }
+    }
+    if (Object.keys(counts).length === 0) return null;
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+  }, [selectedServices]);
+
   const detectServices = async () => {
     setIsDetecting(true); setError(null);
     try {
@@ -2250,19 +2279,47 @@ function ProposalView({ opportunity, onUpdate }) {
     if (selectedServices.length === 0) return;
     setIsGenerating(true); setError(null);
     try {
-      // Build service lines with pricing for the proposal
-      const serviceLines = SERVICE_TRIGGERS.flatMap(t =>
-        t.services.filter(s => selectedServices.includes(getServiceName(s))).map(s => {
-          const p = formatPricingForService(s);
-          const name = getServiceName(s);
-          const budget = p?.budget || 'TBC';
-          const term = p?.term ? `, ${p.term}` : '';
-          return { name, budget, term, category: t.category };
-        })
-      );
-
-      // Build the investment table with EXACT calculated numbers — no AI guessing
-      const investmentTable = serviceLines.map(s => '| ' + s.name + ' | ' + s.budget + s.term + ' |').join('\n');
+      // Build bundle-grouped investment lines — use bundle name as line item, not individual services
+      const bundleMap = new Map(); // bundleName -> { low, high, term, category }
+      const unbundledLines = [];
+      for (const trigger of SERVICE_TRIGGERS) {
+        for (const service of trigger.services) {
+          if (!selectedServices.includes(getServiceName(service))) continue;
+          if (!service.pricing) continue;
+          const p = service.pricing;
+          const bundleName = p.bundle;
+          if (bundleName) {
+            if (!bundleMap.has(bundleName)) {
+              // Only grab pricing from the first service in bundle that has budgetLow
+              if (p.budgetLow) {
+                bundleMap.set(bundleName, { low: p.budgetLow, high: p.budgetHigh, term: p.termLow, termHigh: p.termHigh });
+              } else {
+                bundleMap.set(bundleName, null); // placeholder, may be filled by later service
+              }
+            }
+          } else if (p.budgetLow) {
+            const fmtC = (n) => n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
+            const budget = `${fmtC(p.budgetLow)}-${fmtC(p.budgetHigh)}`;
+            const term = p.termLow === 52 ? 'Annual' : p.termLow ? `${p.termLow}-${p.termHigh} wks` : '';
+            unbundledLines.push({ name: getServiceName(service), budget, term });
+          }
+        }
+      }
+      const fmtC = (n) => n >= 1000000 ? `$${(n/1000000).toFixed(1)}M` : n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${n}`;
+      const investmentLines = [];
+      for (const [bundleName, pricing] of bundleMap) {
+        if (pricing?.low) {
+          const budget = pricing.low === pricing.high ? fmtC(pricing.low) : `${fmtC(pricing.low)}-${fmtC(pricing.high)}`;
+          const term = pricing.term === 52 ? 'Annual' : pricing.term ? `${pricing.term}-${pricing.termHigh} wks` : '';
+          investmentLines.push(`| ${bundleName} | ${budget}${term ? ` · ${term}` : ''} |`);
+        } else {
+          investmentLines.push(`| ${bundleName} | TBC |`);
+        }
+      }
+      for (const line of unbundledLines) {
+        investmentLines.push(`| ${line.name} | ${line.budget}${line.term ? ` · ${line.term}` : ''} |`);
+      }
+      const investmentTable = investmentLines.join('\n');
       const totalLine = pricingTotal
         ? '\n**Total Estimated Investment: ' + pricingTotal.lowFormatted + ' - ' + pricingTotal.highFormatted + '**'
         : '\n**Total Estimated Investment: TBC**';
@@ -2288,6 +2345,23 @@ function ProposalView({ opportunity, onUpdate }) {
         ? opportunity.transcript.substring(0, 1500)
         : '';
 
+      // Build readable bundle list for "What We're Proposing" section
+      const proposedBundles = [];
+      const seenBundles = new Set();
+      for (const trigger of SERVICE_TRIGGERS) {
+        const selectedFromTrigger = trigger.services.filter(s => selectedServices.includes(getServiceName(s)));
+        if (selectedFromTrigger.length === 0) continue;
+        const bundleNames = [...new Set(selectedFromTrigger.map(s => s.pricing?.bundle).filter(Boolean))];
+        for (const b of bundleNames) {
+          if (!seenBundles.has(b)) { seenBundles.add(b); proposedBundles.push({ bundle: b, category: trigger.category }); }
+        }
+        const unbundled = selectedFromTrigger.filter(s => !s.pricing?.bundle);
+        for (const s of unbundled) {
+          proposedBundles.push({ bundle: getServiceName(s), category: trigger.category });
+        }
+      }
+      const servicesForPrompt = proposedBundles.map(b => `- ${b.bundle} (${b.category})`).join('\n');
+
       const result = await callClaude({
         maxTokens: 6000,
         system: `You are a senior business development writer at Antenna Group, an integrated marketing and communications agency that works with conscious brands that have the courage to lead.
@@ -2302,7 +2376,8 @@ Your proposals are:
 CRITICAL FORMATTING RULES:
 - Never use em dashes (-- or the character) anywhere in the document. Use commas, colons, or plain hyphens (-) instead.
 - Use plain text formatting. No bold except for headers.
-- The Investment section must use EXACTLY the figures provided -- do not invent or alter any numbers.`,
+- The Investment section must reproduce EXACTLY the table and total provided below. Do not invent, alter, or omit any numbers.
+- In "What We're Proposing", write one section per bundle/service group provided. Do not split bundles into sub-services.`,
 
         userMessage: `Write a compelling proposal for this client opportunity.
 
@@ -2318,8 +2393,8 @@ ${returnBriefExcerpt || 'No return brief available'}
 CALL TRANSCRIPT EXCERPT:
 ${transcriptExcerpt || 'No transcript available'}
 
-SELECTED SERVICES:
-${serviceLines.map(s => '- ' + s.name + ' (' + s.budget + s.term + ')').join('\n')}
+PROPOSED SERVICE BUNDLES (use these names in "What We're Proposing" - one section per bundle):
+${servicesForPrompt}
 
 ADDITIONAL NOTES: ${draftNotes || 'None'}
 
@@ -2338,14 +2413,16 @@ Prepared by Antenna Group | RID: ${opportunity.rid || 'TBC'} | ${new Date().toLo
 
 ## What We're Proposing
 
-[For each service or logical service group:]
+[For each bundle from the list above, write one section:]
 
-### [Service Name or Group]
+### [Bundle Name]
 What we'll do: [1-2 sentences on the work]
 Why this matters for ${opportunity.companyName}: [1-2 sentences connecting to their specific situation]
 What you'll get: [Key output in plain language]
 
 ## Investment
+
+REPRODUCE THIS TABLE EXACTLY - do not change any numbers:
 
 | Service | Investment Range |
 |---|---|
@@ -2405,28 +2482,63 @@ Antenna Group | www.antennagroup.com`
     <div className="max-w-7xl mx-auto px-8 py-10">
 
       {/* Page header */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-4 mb-8 flex-wrap">
         <div className="w-12 h-12 bg-[#12161E] rounded-xl flex items-center justify-center flex-shrink-0">
           <Sparkles className="w-6 h-6 text-white" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold text-gray-900">Proposal</h2>
           <p className="text-sm text-gray-500 mt-0.5">Configure the scope, generate your proposal, then refine and track it.</p>
         </div>
-        {opportunity.proposalDraft && (
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-medium text-gray-500">Status</span>
-            <select
-              value={opportunity.proposalStatus || 'draft'}
-              onChange={e => onUpdate({ proposalStatus: e.target.value })}
-              className={`px-3 py-1.5 rounded-lg border-2 text-sm font-semibold cursor-pointer focus:outline-none ${statusInfo.border} ${statusInfo.bg} ${statusInfo.text}`}>
-              {PROPOSAL_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </div>
-        )}
+        {/* Action buttons — in header row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || '')) && selectedServices.length > 0 && (
+            <span className="text-xs text-amber-600 font-medium flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />Enter RID first</span>
+          )}
+          {opportunity.proposalDraft && (
+            <button
+              onClick={() => setShowServices(s => !s)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-400 transition-all">
+              <Edit3 className="w-3.5 h-3.5" />{showServices ? 'Hide services ↑' : 'Edit services ↓'}
+            </button>
+          )}
+          {selectedServices.length > 0 && (
+            <AntennaButton
+              onClick={wrappedGenerate}
+              loading={isGenerating}
+              loadingText="Generating…"
+              icon={Sparkles}
+              disabled={!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || ''))}>
+              {opportunity.proposalDraft ? 'Regenerate Proposal' : 'Generate Proposal'}
+            </AntennaButton>
+          )}
+          {opportunity.proposalStatus === 'approved' && (
+            <AntennaButton onClick={() => onUpdate({
+              currentStage: 'sow', draftNotes,
+              selectedServices: opportunity.selectedServices,
+              selectedArchetypes: opportunity.selectedArchetypes,
+              draftEngagementType: opportunity.draftEngagementType,
+              proposalDraft: opportunity.proposalDraft,
+              proposalStatus: opportunity.proposalStatus,
+            })} icon={ArrowRight}>
+              Generate SOW →
+            </AntennaButton>
+          )}
+          {opportunity.proposalDraft && (
+            <div className="flex items-center gap-2 pl-1 border-l border-gray-200">
+              <span className="text-xs font-medium text-gray-500">Proposal Status</span>
+              <select
+                value={opportunity.proposalStatus || 'draft'}
+                onChange={e => onUpdate({ proposalStatus: e.target.value })}
+                className={`px-3 py-1.5 rounded-lg border-2 text-sm font-semibold cursor-pointer focus:outline-none ${statusInfo.border} ${statusInfo.bg} ${statusInfo.text}`}>
+                {PROPOSAL_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-4 gap-8">
 
         {/* ── LEFT PANEL: always-visible settings + generate CTA ── */}
         <div className="space-y-5">
@@ -2446,7 +2558,19 @@ Antenna Group | www.antennagroup.com`
 
           {/* Engagement Type */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h3 className="font-bold text-gray-900 mb-3">Engagement Type</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-gray-900">Engagement Type</h3>
+              {recommendedEngagementType && recommendedEngagementType !== draftEngagementType && (
+                <button
+                  onClick={() => setDraftEngagementType(recommendedEngagementType)}
+                  className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#E8FF00] text-[#12161E] hover:opacity-80 transition-opacity">
+                  Suggested: {ENGAGEMENT_TYPES.find(t => t.value === recommendedEngagementType)?.label || recommendedEngagementType}
+                </button>
+              )}
+              {recommendedEngagementType && recommendedEngagementType === draftEngagementType && (
+                <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">✓ Matches services</span>
+              )}
+            </div>
             <div className="space-y-2">
               {ENGAGEMENT_TYPES.map(et => (
                 <label key={et.value} className={`flex items-center gap-3 p-2.5 rounded-lg border-2 cursor-pointer transition-all ${draftEngagementType === et.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
@@ -2509,52 +2633,12 @@ Antenna Group | www.antennagroup.com`
             </div>
           )}
 
-          {/* ── GENERATE CTA ── always visible when services selected */}
-          {selectedServices.length > 0 && (
-            <div className="space-y-2 pt-1">
-              {!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || '')) && (
-                <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-700 text-xs font-medium">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />Enter a valid RID above first
-                </div>
-              )}
-              <AntennaButton
-                onClick={wrappedGenerate}
-                loading={isGenerating}
-                loadingText="Generating…"
-                icon={Sparkles}
-                disabled={!(/^NB[A-Z0-9]{1,4}$/.test(opportunity.rid || ''))}
-                className="w-full"
-                size="large">
-                {opportunity.proposalDraft ? 'Regenerate Proposal' : 'Generate Proposal'}
-              </AntennaButton>
-              {opportunity.proposalDraft && (
-                <button
-                  onClick={() => setShowServices(s => !s)}
-                  className="w-full text-xs text-center py-2 text-gray-500 hover:text-gray-800 transition-colors">
-                  {showServices ? 'Hide service list ↑' : 'Edit services ↓'}
-                </button>
-              )}
-            </div>
-          )}
+          {/* ── GENERATE CTA removed — buttons now in header ── */}
 
-          {/* Proceed to SOW */}
-          {opportunity.proposalStatus === 'approved' && (
-            <AntennaButton onClick={() => onUpdate({
-              currentStage: 'sow',
-              draftNotes,
-              selectedServices: opportunity.selectedServices,
-              selectedArchetypes: opportunity.selectedArchetypes,
-              draftEngagementType: opportunity.draftEngagementType,
-              proposalDraft: opportunity.proposalDraft,
-              proposalStatus: opportunity.proposalStatus,
-            })} icon={ArrowRight} className="w-full">
-              Generate SOW →
-            </AntennaButton>
-          )}
         </div>
 
         {/* ── RIGHT PANEL: services OR proposal ── */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
 
           {/* ── SERVICE SELECTION ── shown until proposal generated, toggleable after */}
           {(showServices || !opportunity.proposalDraft) && (
@@ -4093,8 +4177,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
 
       {/* Hero */}
       <div className="mb-10">
-        <p className="text-xs font-bold tracking-widest text-gray-400 uppercase mb-2">Antenna Group · Internal Tools</p>
-        <h1 className="text-5xl lg:text-6xl font-light text-[#12161E] leading-none mb-4 tracking-tight">SOW Workbench</h1>
+        <h1 className="text-4xl lg:text-5xl font-semibold text-[#12161E] leading-none mb-4 tracking-tight">SOW Workbench</h1>
         <p className="text-base text-gray-500 max-w-2xl leading-relaxed mb-8">
           We diagnose before we prescribe! This tool helps you identify an opportunity and ensure that we can move fast and recommend the right services to solve our clients' problems.
         </p>
@@ -4649,7 +4732,7 @@ export default function App() {
                 <AntennaLogo className="h-7" />
               </button>
               <div className="h-5 w-px bg-gray-300" />
-              <span className="text-sm font-normal text-[#12161E] tracking-tight">SOW Workbench</span>
+              <span className="text-sm font-semibold text-[#12161E] tracking-tight">SOW Workbench</span>
             </div>
             <div className="flex items-center gap-3">
               {currentView === 'opportunity' && currentOpportunity && (
