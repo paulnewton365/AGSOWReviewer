@@ -1,4 +1,4 @@
-# SOW Workbench v3.16.4
+# SOW Workbench v3.16.6
 
 A comprehensive BD pipeline and Statement of Work management tool for Antenna Group. Manage the full new business journey — from research and intake through Return Brief, proposal, SOW generation, and internal sales handover.
 
@@ -10,6 +10,61 @@ Both the Qualification Board and New Business Pipeline modals now include inline
 - **Qualify Opportunity** — A teal "Qualify Opportunity" button in the Qualification Board header opens a layered sub-modal with the Smartsheet qualification form embedded at full width. Submit directly from within the tool; entries appear in the board after the next refresh.
 - **Add Opportunity** — A matching "Add Opportunity" button in the New Business Pipeline header opens the organic opportunity intake form in the same pattern.
 - Both sub-modals use a dark `#253530` header with a subtitle confirming where submissions land, and close independently without dismissing the parent modal.
+
+## What's New in v3.16.6
+
+### SOW Stage — Full redesign, FIT/archetype injection, approval-gated DOCX
+
+**FIT archetype context now flows into the SOW**
+The `sowGuidance` and `waysOfWorking` blocks defined for each archetype (Architect, Visionary, Accelerator, Entrepreneur) are now injected directly into the SOW generation system prompt — not just into the proposal. This means the SOW structure, governance language, revision framing, and delivery cadence all reflect how this specific client works.
+
+**BD team notes now feed the SOW**
+`briefNotes` from the Return Brief stage is now passed into the SOW prompt as internal BD context — informing tone and sensitivities without reproducing verbatim in the document.
+
+**Context panel in the left sidebar**
+A new "Context feeding this SOW" section shows at a glance which inputs are populated before generating: FIT archetype (shown as pills), BD notes (truncated preview), Return Brief, and Proposal — with green checkmarks and prompts to complete missing stages.
+
+**SOW status control**
+A dedicated SOW status selector (Draft / Client Review / Approved ✓) sits in the page header when a draft exists. This is separate from the proposal status, allowing the SOW to move through its own approval lifecycle.
+
+**Approval-gated DOCX export with native Word numbering**
+- The "Download DOCX" button is locked until SOW status is set to "Approved ✓" — a tooltip explains why
+- Once approved, export uses a new `downloadSOWDocx` utility that applies native Word multilevel decimal numbering (1., 1.1, 1.1.1) via proper OOXML numbering definitions — numbers are live in Word and update when content is added or removed
+- SOW section headings render in brand colours (#253530 charcoal, #3A9A82 teal accent for H3s)
+
+**Redesigned document viewer**
+- Replaced `<pre>` raw text render with a structured prose renderer — headings, bullets, and decimal-numbered lines all styled appropriately
+- H1 headings get a charcoal colour and bottom border; H3s render in teal
+- Decimal lines indent and weight by depth (top-level = semibold, sub-levels = normal weight)
+
+**UX improvements**
+- "Refine this SOW" iteration panel is now a collapsible accordion — keeps the left sidebar clean when not in use
+- Footer bar shows contextual messaging ("Mark as Approved to unlock export") and the Proceed to Handover button
+- Edit mode has a Discard button alongside Save to make it easier to back out of changes
+
+## What's New in v3.16.5
+
+### SOW Generation — Absolute Fees & Service-Specific Language
+
+**Absolute fees only**
+SOWs now always state fees as single, committed dollar figures — never ranges. If the proposal carried a range, the generation logic resolves to a specific number before writing the SOW. Ranges are unenforceable in a signed contract and this rule is now enforced at the prompt level.
+
+**Paid Media SOW language**
+When any Paid Media services are selected, the SOW generation prompt now draws from real Antenna Group Paid Media SOW examples:
+- Agency fees and client ad spend stated as separate line items with a spend cap assumption ("Agency will not spend more than $X…")
+- KPIs included in scope; specific metrics explicitly excluded (metrics are outputs of the post-SOW planning process)
+- Reporting structure matches the Prologis-style framework: real-time dashboard access, bi-weekly call insights, Quarterly Strategic Reviews, Semi-Annual Reports, end-of-campaign reports, and up to 1 ad hoc report per quarter with 48-hour notice
+
+**Social Media SOW language**
+When any Social Media services are selected, the SOW generation prompt now draws from real SEPA and Artera SOW examples:
+- Monthly content calendar with cadence, hashtags, CTAs, and creative recommendations
+- Specific post counts per channel per week (not vague "regular posting")
+- Client review/approval within 1 week of calendar delivery
+- Scheduling tool named (e.g. Sprout Social / HeyOrca)
+- Community management scoped to a specific weekly hour cap
+- Escalation process for sensitive inquiries
+- All social scopes now include dedicated creative asset development: "Development of up to X posts per month, including copywriting and creative asset development" (~1 hour of design support per post)
+- Platform setup scoped as a one-time fixed fee per platform when applicable
 
 ## What's New in v3.16.3
 

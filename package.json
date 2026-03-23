@@ -1,7 +1,7 @@
 {
   "name": "sow-reviewer",
   "private": true,
-  "version": "3.16.4",
+  "version": "3.16.6",
   "type": "module",
   "scripts": {
     "dev": "vite",

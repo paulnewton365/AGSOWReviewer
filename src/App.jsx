@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.4';
+const APP_VERSION = '3.16.6';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -582,6 +582,75 @@ CREATIVE/BRANDING: concepts at each stage, revision rounds per phase, file forma
 INTEGRATED: boundaries between service lines, handoff points, who leads strategy vs execution, single vs separate reporting
 `;
 
+// ============================================================================
+// SERVICE-SPECIFIC SOW LANGUAGE REFERENCE
+// Drawn from real Antenna Group SOW examples — use this language as the model
+// when drafting scope language for these service lines.
+// ============================================================================
+const SERVICE_SOW_LANGUAGE = `
+================================================================================
+PAID MEDIA — SOW LANGUAGE REFERENCE (use this as your model)
+================================================================================
+
+BUDGET & BILLING STRUCTURE (required in every Paid Media SOW):
+- Agency fees and client ad spend must be stated as SEPARATE line items
+- Use this assumption language: "Client's billing information will be used as the payment method within all advertising platforms and Agency will not spend more than [AMOUNT], or the final budget within the approved media plan. Total spend inclusive of agency fees will not exceed [AMOUNT]."
+- SOWs should include KPIs (measurable goals) but NOT specific metrics — metrics are outputs of the strategic planning process that happens after the SOW is signed
+- Media spend is NOT included in agency fees and is NOT Antenna's liability
+
+REPORTING & MEASUREMENT LANGUAGE (draw from this for all paid media scopes):
+"Agency will provide real-time dashboard access with creative-level and campaign-level performance data.
+Agency will provide campaign performance insights as part of the bi-weekly Client call.
+Agency will deliver quarterly strategic reviews and semi-annual reports aligned with Client's existing reporting cycles. Reports shall include, at a minimum:
+- Quarterly Strategic Reviews: aggregated performance across all paid channels; results versus goals, benchmarks, and prior periods; pipeline and revenue influence where data is available; key learnings and insights; and strategic recommendations, including budget allocation and testing priorities for the upcoming quarter.
+- Semi-Annual Reports: cumulative performance against defined KPIs and GTM objectives; overall effectiveness of channels and tactics; ROI and business impact assessment; and strategic recommendations for the following period.
+Agency will provide end-of-campaign reports to Client leadership summarizing results, insights, and recommendations.
+Agency will support up to one (1) ad hoc request for campaign reporting per quarter as budget permits. Client agrees to make every effort to provide Agency with 48 business hours' notice on ad hoc reporting requests when possible."
+
+FEE BENCHMARKS (reference only — use the actual fee from the proposal):
+- High-end management (7 channels, awareness + lead gen): ~$40,000/month in agency fees on ~$1,000,000/year in ad spend
+- Mid-range lead gen campaigns: ~$10,000/month in agency fees
+- Measurement & Reporting component: typically ~10% of total annual agency fees
+
+================================================================================
+SOCIAL MEDIA — SOW LANGUAGE REFERENCE (use this as your model)
+================================================================================
+
+ORGANIC SOCIAL MANAGEMENT SCOPE PATTERN:
+"Agency will develop and manage social content across [CLIENT]'s [CHANNELS], including content planning, copy and creative development, publishing, and performance insights."
+
+ASSUMPTIONS SECTION (include these):
+- Agency will create a monthly [platform] content calendar outlining post cadence, hashtags, CTAs, and creative recommendations, informed by: (1) Client-provided direction including messaging priorities and themes, and (2) performance insights and analytics from prior posts.
+- Client will review and approve the calendar within one (1) week of receipt.
+- Agency will schedule and publish all approved content via [tool, e.g. Sprout Social / HeyOrca].
+- Event coverage requiring more than two (2) posts per event, or events identified with less than one week's notice, may require additional scope and budget.
+
+OUTPUTS SECTION (be specific about post counts and channels — use this pattern):
+- 1x monthly editorial content calendar for [CLIENT] lined up with brand, campaigns, and key priorities
+  - Includes up to [X] posts per week for the main [platform] page
+  - Includes up to [X] posts per week for the CEO's/executive's personal [platform] (e.g., speeches, announcements, thought leadership, key milestones) — ONLY if executive channel is in scope
+- 1x monthly analytics and performance report for all managed channels
+
+CREATIVE SUPPORT (Katherine's note — include this in all social scopes):
+- All social scopes must include dedicated creative support for asset development
+- Use language: "Development of up to X social posts per month, including copywriting and creative asset development"
+- Budget approximately 1 hour of design support per post (not evenly spread — some posts will be more intensive static lifts, others more complex)
+
+COMMUNITY MANAGEMENT LANGUAGE (when included):
+"Agency will perform community management for up to [X] hours per week, including actively engaging with key organizations and partners through thoughtful commenting, amplification of relevant posts, and participation in industry conversations with Client approval where needed. Daily monitoring of brand mentions, tags, and comment activity will be maintained, with responses provided where appropriate and with Client approval where needed. Sensitive inquiries will be escalated to Client for review and approval prior to response."
+- Client will identify appropriate team members to handle specific questions around key topic areas
+
+PLATFORM SETUP (when included — one-time fixed fee):
+- Profile setup is a one-time fixed fee per platform (~$5,000/platform)
+- Includes: handle/account setup, profile branding (logo, header, bio, links), audience development list (~50 relevant targets), integration into scheduling platform
+- Assumptions: Client provides access to scheduling platform and brand assets; Client approves setup elements within 1–2 week implementation window
+
+FEE BENCHMARKS (reference only — use actual fee from proposal):
+- Organic social management (corporate LinkedIn + CEO LinkedIn, 6 months): ~$69,000
+- Community management + strategy without content development: ~$10,000/month
+- Platform setup (one-time): ~$5,000 per platform
+`;
+
 
 // ============================================================================
 // API CALL UTILITY
@@ -661,6 +730,105 @@ const downloadDocx = async (text, filename, meta = {}) => {
     saveAs(new Blob([text], { type: 'text/plain' }), filename.replace('.docx', '.txt'));
   }
 };
+
+// SOW-specific DOCX export with native multilevel decimal numbering
+const downloadSOWDocx = async (text, filename, meta = {}) => {
+  try {
+    const lines = text.split('\n');
+    const children = [];
+
+    // Cover block
+    children.push(new Paragraph({ children: [new TextRun({ text: meta.title || 'Statement of Work', bold: true, size: 52, font: 'Arial', color: '253530' })], spacing: { after: 200 } }));
+    if (meta.client) children.push(new Paragraph({ children: [new TextRun({ text: `Prepared for: ${meta.client}`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 80 } }));
+    children.push(new Paragraph({ children: [new TextRun({ text: `Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 80 } }));
+    if (meta.engagementType) children.push(new Paragraph({ children: [new TextRun({ text: `Engagement Type: ${meta.engagementType}`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 400 } }));
+    children.push(new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: '3A9A82' } }, spacing: { after: 500 } }));
+
+    // Decimal number regex: matches "1.", "1.1", "1.1.1", "1.1.1.1"
+    const decimalRe = /^(\d+(?:\.\d+)*)(\.?)\s+/;
+
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t) { children.push(new Paragraph({ spacing: { after: 80 } })); continue; }
+
+      // Headings
+      if (t.startsWith('# ')) {
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: t.replace(/^# /, ''), bold: true, size: 34, font: 'Arial', color: '253530' })], spacing: { before: 500, after: 200 } }));
+        continue;
+      }
+      if (t.startsWith('## ')) {
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: t.replace(/^## /, ''), bold: true, size: 28, font: 'Arial', color: '253530' })], spacing: { before: 400, after: 160 } }));
+        continue;
+      }
+      if (t.startsWith('### ')) {
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun({ text: t.replace(/^### /, ''), bold: true, size: 24, font: 'Arial', color: '3A9A82' })], spacing: { before: 300, after: 120 } }));
+        continue;
+      }
+
+      // Bullet points
+      if (t.startsWith('- ') || t.startsWith('• ')) {
+        children.push(new Paragraph({ numbering: { reference: 'bullet-list', level: 0 }, children: [new TextRun({ text: t.replace(/^[-•] /, ''), size: 22, font: 'Arial' })], spacing: { after: 80 } }));
+        continue;
+      }
+
+      // Native decimal numbering — detect depth from dot count
+      const match = t.match(decimalRe);
+      if (match) {
+        const numStr = match[1]; // e.g. "1", "1.1", "2.3.1"
+        const depth = numStr.split('.').length - 1; // 0=top, 1=second, 2=third
+        const listLevel = Math.min(depth, 2);
+        const restText = t.slice(match[0].length).replace(/\*\*/g, '');
+        children.push(new Paragraph({
+          numbering: { reference: 'decimal-multilevel', level: listLevel },
+          children: [new TextRun({ text: restText, size: 22, font: 'Arial', bold: depth === 0 })],
+          spacing: { after: depth === 0 ? 120 : 80, before: depth === 0 ? 160 : 0 },
+        }));
+        continue;
+      }
+
+      // Bold standalone line
+      if (t.startsWith('**') && t.endsWith('**')) {
+        children.push(new Paragraph({ children: [new TextRun({ text: t.replace(/\*\*/g, ''), bold: true, size: 22, font: 'Arial' })], spacing: { after: 100 } }));
+        continue;
+      }
+
+      // Body text
+      children.push(new Paragraph({ children: [new TextRun({ text: t.replace(/\*\*/g, ''), size: 22, font: 'Arial' })], spacing: { after: 120 } }));
+    }
+
+    const doc = new Document({
+      numbering: {
+        config: [
+          {
+            reference: 'bullet-list',
+            levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.START, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }],
+          },
+          {
+            reference: 'decimal-multilevel',
+            levels: [
+              { level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.START, style: { paragraph: { indent: { left: 0, hanging: 0 } } } },
+              { level: 1, format: LevelFormat.DECIMAL, text: '%1.%2', alignment: AlignmentType.START, style: { paragraph: { indent: { left: 360, hanging: 0 } } } },
+              { level: 2, format: LevelFormat.DECIMAL, text: '%1.%2.%3', alignment: AlignmentType.START, style: { paragraph: { indent: { left: 720, hanging: 0 } } } },
+            ],
+          },
+        ],
+      },
+      sections: [{
+        properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+        headers: { default: createAntennaHeader() },
+        footers: { default: createFooter() },
+        children,
+      }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, filename);
+  } catch (e) {
+    console.error('SOW DOCX error:', e);
+    saveAs(new Blob([text], { type: 'text/plain' }), filename.replace('.docx', '.txt'));
+  }
+};
+
 
 // ============================================================================
 // SHARED UI COMPONENTS
@@ -2765,27 +2933,60 @@ function SOWGenerateView({ opportunity, onUpdate }) {
   const [iterationFeedback, setIterationFeedback] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedSOW, setEditedSOW] = useState(opportunity.sowDraft || '');
-
-  // Use onBlur saves, not unmount cleanup (cleanup is unreliable with React state)
-
+  const [showFeedbackBox, setShowFeedbackBox] = useState(false);
 
   const engagementLabel = ENGAGEMENT_TYPES.find(t => t.value === opportunity.draftEngagementType)?.label || 'Fixed Fee';
+  const fitArchetypes = opportunity.fitArchetypes || [];
+  const sowStatus = opportunity.sowStatus || 'draft';
+
+  const SOW_STATUSES = [
+    { value: 'draft',         label: 'Draft',           bg: 'bg-gray-100',   text: 'text-gray-700',  border: 'border-gray-300'  },
+    { value: 'client_review', label: 'Client Review',   bg: 'bg-blue-100',   text: 'text-blue-700',  border: 'border-blue-300'  },
+    { value: 'approved',      label: 'Approved ✓',      bg: 'bg-green-100',  text: 'text-green-700', border: 'border-green-300' },
+  ];
+  const statusInfo = SOW_STATUSES.find(s => s.value === sowStatus) || SOW_STATUSES[0];
+
+  // Context completeness checks
+  const hasFIT    = fitArchetypes.length > 0;
+  const hasCompass = !!opportunity.compassAssessment?.trim();
+  const hasBriefNotes = !!opportunity.briefNotes?.trim();
+  const hasReturnBrief = !!opportunity.returnBrief?.trim();
+  const hasProposal = !!opportunity.proposalDraft?.trim();
 
   const generateSOW = async () => {
     setIsGenerating(true); setError(null);
     try {
       const servicesText = (opportunity.selectedServices || []).join(', ') || 'Services as outlined in proposal';
+
+      // Service-specific language injection
+      const selectedLower = (opportunity.selectedServices || []).map(s => s.toLowerCase()).join(' ');
+      const hasPaidMedia = selectedLower.includes('paid') || selectedLower.includes('campaign setup') || selectedLower.includes('ad creative') || selectedLower.includes('audience development');
+      const hasSocial = selectedLower.includes('social') || selectedLower.includes('community management') || selectedLower.includes('channel set up') || selectedLower.includes('channel planning');
+      const serviceLanguageBlock = (hasPaidMedia || hasSocial)
+        ? `\n\nSERVICE-SPECIFIC SOW LANGUAGE REFERENCE:\n${SERVICE_SOW_LANGUAGE}`
+        : '';
+
+      // FIT archetype SOW guidance
+      const fitGuidanceBlock = fitArchetypes.length > 0
+        ? fitArchetypes.map(id => {
+            const a = FIT_ARCHETYPES[id];
+            if (!a) return '';
+            return `\n\n${a.sowGuidance}\n\n${a.waysOfWorking}`;
+          }).filter(Boolean).join('\n')
+        : '';
+
       const result = await callClaude({
         maxTokens: 12000,
-        system: `You are a senior contracts and operations specialist at Antenna Group, an integrated marketing and communications agency. You write Statements of Work that are protective, clear, and professional. You apply the SOW best practices to produce documents that prevent scope creep, establish clear client obligations, and protect both parties.
-
-${SOW_BEST_PRACTICES}`,
+        system: `You are a senior contracts and operations specialist at Antenna Group, an integrated marketing and communications agency. You write Statements of Work that are protective, clear, and professional. You apply the SOW best practices to produce documents that prevent scope creep, establish clear client obligations, and protect both parties.\n\n${SOW_BEST_PRACTICES}${serviceLanguageBlock}${fitGuidanceBlock}`,
         userMessage: `Generate a complete, professional Statement of Work based on the approved proposal and brief below.
 
 CLIENT: ${opportunity.companyName}
 ENGAGEMENT TYPE: ${engagementLabel}
 SELECTED SERVICES: ${servicesText}
 PRICING NOTES: ${opportunity.draftNotes || 'None'}
+
+BD TEAM NOTES (internal context — use to inform tone, sensitivities and client priorities, do not reproduce verbatim):
+${opportunity.briefNotes?.trim() || 'None'}
 
 RETURN BRIEF:
 ${(opportunity.returnBrief || '').substring(0, 2000)}
@@ -2802,9 +3003,19 @@ Generate a complete SOW that:
 4. Includes all required sections: Overview, Objectives, Scope, Out of Scope, Deliverables, Acceptance Criteria, Timeline, Roles & Responsibilities, Assumptions, Change Management, Fees & Payment Terms, Termination
 5. Uses controlled language ("up to X revisions", specific timeframes, active voice with clear responsibility)
 6. Includes a strong client obligations section with specific timeframes and consequences
-7. Is ready to be reviewed by both parties
+7. Reflects the client's working style and preferences from the FIT archetype guidance if provided
+8. Is ready to be reviewed by both parties
 
-Use markdown formatting. This is a professional legal/business document — formal but not overly complex.`
+ABSOLUTE FEES — CRITICAL RULE:
+All fees must be stated as single, absolute dollar figures — NEVER as ranges.
+- CORRECT: "$120,000" — WRONG: "$80,000–$140,000"
+- If the proposal shows a range, commit to the midpoint or the figure most consistent with the stated scope
+- For paid media: state agency fees and client ad spend as separate absolute figures
+
+${hasPaidMedia ? 'PAID MEDIA: Apply the Paid Media SOW language reference from your system prompt for reporting structure, billing assumptions, and spend cap language. KPIs only — no specific metrics targets.' : ''}
+${hasSocial ? 'SOCIAL MEDIA: Apply the Social Media SOW language reference from your system prompt. Include dedicated creative asset development language in all social scopes.' : ''}
+
+Use markdown formatting with ## section headers. This is a professional legal/business document.`
       });
       onUpdate({ sowDraft: result, sowNotes, sowStatus: 'draft' });
       setEditedSOW(result);
@@ -2819,115 +3030,340 @@ Use markdown formatting. This is a professional legal/business document — form
       const current = isEditing ? editedSOW : opportunity.sowDraft;
       const result = await callClaude({
         maxTokens: 12000,
-        system: `You are updating a Statement of Work for Antenna Group. Apply the requested changes while maintaining all SOW quality standards.`,
+        system: `You are updating a Statement of Work for Antenna Group. Apply the requested changes while maintaining all SOW quality standards, decimal numbering, and absolute fees.`,
         userMessage: `Update this SOW based on the following feedback:\n\nFEEDBACK: ${iterationFeedback}\n\nCURRENT SOW:\n${current}\n\nReturn the complete updated SOW.`
       });
       onUpdate({ sowDraft: result });
       setEditedSOW(result);
       setIterationFeedback('');
+      setShowFeedbackBox(false);
     } catch (e) { setError(e.message); }
     finally { setIsIterating(false); }
   };
 
+  const currentSOW = isEditing ? editedSOW : opportunity.sowDraft;
+  const isApproved = sowStatus === 'approved';
+
   return (
-    <div className="max-w-7xl mx-auto px-8 py-10">
-      <div className="mb-8">
-        <div className="w-12 h-12 bg-[#253530] rounded-xl flex items-center justify-center mb-4">
-          <PenTool className="w-6 h-6 text-white" />
+    <div className="max-w-7xl mx-auto px-8 py-8">
+
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-8 gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 bg-[#253530] rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+            <PenTool className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Statement of Work</h2>
+            <p className="text-sm text-gray-500 mt-0.5">Generate a complete, protective SOW from the approved proposal and client brief.</p>
+          </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Statement of Work</h2>
-        <p className="text-gray-500">Generate a complete, protective SOW from the approved proposal and return brief.</p>
+        {/* SOW Status pill */}
+        {opportunity.sowDraft && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs text-gray-500 font-medium">SOW Status</span>
+            <select
+              value={sowStatus}
+              onChange={e => onUpdate({ sowStatus: e.target.value })}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border cursor-pointer outline-none ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
+            >
+              {SOW_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
+      {/* Proposal not approved warning */}
       {opportunity.proposalStatus !== 'approved' && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-amber-800">Proposal not yet approved</p>
-            <p className="text-xs text-amber-700 mt-1">The proposal status is currently <strong>{PROPOSAL_STATUSES.find(s => s.value === opportunity.proposalStatus)?.label || 'Draft'}</strong>. You can still generate an SOW, but typically you'd wait for approval. <button onClick={() => onUpdate({ currentStage: 'proposal' })} className="underline">→ Go to Proposal</button></p>
+            <p className="text-xs text-amber-700 mt-1">
+              Currently: <strong>{PROPOSAL_STATUSES.find(s => s.value === opportunity.proposalStatus)?.label || 'Draft'}</strong>. You can still generate a draft SOW, but typically you'd wait for proposal sign-off.{' '}
+              <button onClick={() => onUpdate({ currentStage: 'proposal' })} className="underline font-medium">Go to Proposal →</button>
+            </p>
           </div>
         </div>
       )}
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Left: Controls */}
-        <div className="space-y-5">
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <h3 className="font-bold text-gray-900 mb-3">SOW Parameters</h3>
-            <div className="space-y-3">
-              <div><p className="text-xs text-gray-500 mb-1">Client</p><p className="text-sm font-semibold text-gray-900">{opportunity.companyName}</p></div>
-              <div><p className="text-xs text-gray-500 mb-1">Engagement Type</p><p className="text-sm font-semibold text-gray-900">{engagementLabel}</p></div>
-              <div><p className="text-xs text-gray-500 mb-1">Services</p><p className="text-sm text-gray-700">{(opportunity.selectedServices || []).length} services selected</p></div>
+
+        {/* ── Left panel ── */}
+        <div className="space-y-4">
+
+          {/* Context feeding the SOW */}
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Context feeding this SOW</h3>
+              <p className="text-xs text-gray-400 mt-0.5">The richer the earlier stages, the better the output.</p>
             </div>
-            <div className="mt-4">
-              <label className="block text-xs font-semibold text-gray-900 mb-1.5">Additional SOW Notes</label>
-              <textarea value={sowNotes} onChange={e => setSOWNotes(e.target.value)} onBlur={() => onUpdate({ sowNotes })} placeholder="Payment schedule preferences, specific legal requirements, special terms..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[80px] resize-y" />
+            <div className="px-5 py-4 space-y-3">
+
+              {/* FIT archetypes */}
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${hasFIT ? 'bg-[#3A9A82]' : 'bg-gray-200'}`}>
+                  {hasFIT ? <Check className="w-3 h-3 text-white" /> : <span className="w-2 h-2 rounded-full bg-gray-400" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs font-semibold ${hasFIT ? 'text-gray-900' : 'text-gray-400'}`}>FIT Archetype</p>
+                  {hasFIT ? (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {fitArchetypes.map(id => {
+                        const a = FIT_ARCHETYPES[id];
+                        return a ? (
+                          <span key={id} className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 bg-[#253530] text-white rounded-full font-medium">
+                            {a.emoji} {a.title}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 mt-0.5">Not set — add in Return Brief stage</p>
+                  )}
+                </div>
+              </div>
+
+              {/* BD Notes */}
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${hasBriefNotes ? 'bg-[#3A9A82]' : 'bg-gray-200'}`}>
+                  {hasBriefNotes ? <Check className="w-3 h-3 text-white" /> : <span className="w-2 h-2 rounded-full bg-gray-400" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs font-semibold ${hasBriefNotes ? 'text-gray-900' : 'text-gray-400'}`}>BD Team Notes</p>
+                  {hasBriefNotes ? (
+                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{opportunity.briefNotes.trim().substring(0, 120)}{opportunity.briefNotes.length > 120 ? '…' : ''}</p>
+                  ) : (
+                    <p className="text-xs text-gray-400 mt-0.5">None — add in Return Brief stage</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Return Brief */}
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${hasReturnBrief ? 'bg-[#3A9A82]' : 'bg-gray-200'}`}>
+                  {hasReturnBrief ? <Check className="w-3 h-3 text-white" /> : <span className="w-2 h-2 rounded-full bg-gray-400" />}
+                </div>
+                <div>
+                  <p className={`text-xs font-semibold ${hasReturnBrief ? 'text-gray-900' : 'text-gray-400'}`}>Return Brief</p>
+                  {!hasReturnBrief && <p className="text-xs text-gray-400 mt-0.5">Generate in Brief stage first</p>}
+                </div>
+              </div>
+
+              {/* Proposal */}
+              <div className="flex items-start gap-3">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${hasProposal ? 'bg-[#3A9A82]' : 'bg-gray-200'}`}>
+                  {hasProposal ? <Check className="w-3 h-3 text-white" /> : <span className="w-2 h-2 rounded-full bg-gray-400" />}
+                </div>
+                <div>
+                  <p className={`text-xs font-semibold ${hasProposal ? 'text-gray-900' : 'text-gray-400'}`}>Proposal</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {hasProposal
+                      ? `${(opportunity.selectedServices || []).length} services · ${engagementLabel}`
+                      : 'Generate in Proposal stage first'}
+                  </p>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          {error && <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}</div>}
+          {/* SOW parameters */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4">SOW Parameters</h3>
+            <div className="space-y-3 mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Engagement type</span>
+                <span className="text-xs font-semibold text-gray-900">{engagementLabel}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Services in scope</span>
+                <span className="text-xs font-semibold text-gray-900">{(opportunity.selectedServices || []).length}</span>
+              </div>
+              {opportunity.rid && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">RID</span>
+                  <span className="text-xs font-mono font-bold text-[#3A9A82]">{opportunity.rid}</span>
+                </div>
+              )}
+            </div>
+            <label className="block text-xs font-semibold text-gray-900 mb-1.5">Additional notes</label>
+            <textarea
+              value={sowNotes}
+              onChange={e => setSOWNotes(e.target.value)}
+              onBlur={() => onUpdate({ sowNotes })}
+              placeholder="Payment schedule, legal requirements, special terms, sensitivities…"
+              className="w-full text-xs px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[80px] resize-y placeholder:text-gray-400"
+            />
+          </div>
 
-          <AntennaButton onClick={generateSOW} loading={isGenerating} loadingText="Generating SOW..." icon={PenTool} disabled={false} className="w-full">
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />{error}
+            </div>
+          )}
+
+          {/* Generate / Regenerate */}
+          <AntennaButton
+            onClick={generateSOW}
+            loading={isGenerating}
+            loadingText="Generating SOW…"
+            icon={PenTool}
+            className="w-full"
+          >
             {opportunity.sowDraft ? 'Regenerate SOW' : 'Generate SOW'}
           </AntennaButton>
 
           {/* Iterate */}
           {opportunity.sowDraft && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><RefreshCw className="w-4 h-4" />Iterate</h3>
-              <textarea value={iterationFeedback} onChange={e => setIterationFeedback(e.target.value)} placeholder="'Add stronger revision limits', 'Update payment to net 45', 'Add a stop work clause'..." className="w-full text-sm px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[80px] resize-y" />
-              <button onClick={iterateSOW} disabled={isIterating || !iterationFeedback.trim()} className="mt-3 w-full px-4 py-2.5 bg-[#3A9A82] text-white rounded-xl text-sm font-semibold hover:bg-[#2E8070] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating...</> : <><RefreshCw className="w-4 h-4" />Update SOW</>}
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setShowFeedbackBox(v => !v)}
+                className="w-full px-5 py-3.5 flex items-center justify-between text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <span className="flex items-center gap-2"><RefreshCw className="w-4 h-4 text-gray-400" />Refine this SOW</span>
+                {showFeedbackBox ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
               </button>
+              {showFeedbackBox && (
+                <div className="px-5 pb-5 border-t border-gray-100 pt-4">
+                  <textarea
+                    value={iterationFeedback}
+                    onChange={e => setIterationFeedback(e.target.value)}
+                    placeholder="e.g. 'Strengthen revision limits', 'Change payment to net 30', 'Add a stop work clause'…"
+                    className="w-full text-xs px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 min-h-[80px] resize-y mb-3 placeholder:text-gray-400"
+                  />
+                  <button
+                    onClick={iterateSOW}
+                    disabled={isIterating || !iterationFeedback.trim()}
+                    className="w-full px-4 py-2.5 bg-[#253530] text-white rounded-xl text-sm font-semibold hover:bg-[#1e2b27] disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {isIterating ? <><Loader2 className="w-4 h-4 animate-spin" />Updating…</> : <><RefreshCw className="w-4 h-4" />Apply Changes</>}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Right: SOW Document */}
+        {/* ── Right: Document panel ── */}
         <div className="lg:col-span-2">
           {!opportunity.sowDraft ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20 px-8 bg-white rounded-2xl border border-gray-200">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6"><PenTool className="w-10 h-10 text-gray-300" /></div>
-              <h3 className="text-lg font-semibold text-gray-400 mb-2">SOW will appear here</h3>
-              <p className="text-sm text-gray-400">Generate your Statement of Work from the approved proposal.</p>
+            <div className="flex flex-col items-center justify-center py-28 bg-white rounded-2xl border border-dashed border-gray-200 text-center px-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-5">
+                <PenTool className="w-8 h-8 text-gray-300" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-400 mb-2">SOW will appear here</h3>
+              <p className="text-sm text-gray-400 max-w-xs">Generate your Statement of Work from the approved proposal and brief on the left.</p>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="font-semibold text-gray-900">Statement of Work</span>
-                  <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Generated</span>
+              {/* Toolbar */}
+              <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-2 h-2 rounded-full ${isApproved ? 'bg-green-500' : 'bg-amber-400'}`} />
+                  <span className="text-sm font-semibold text-gray-900">Statement of Work</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${statusInfo.bg} ${statusInfo.text}`}>
+                    {statusInfo.label}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CopyButton text={isEditing ? editedSOW : opportunity.sowDraft} />
-                  <button onClick={() => { setIsEditing(!isEditing); setEditedSOW(opportunity.sowDraft); }} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"><Edit3 className="w-3 h-3" />{isEditing ? 'Cancel' : 'Edit'}</button>
-                  <button onClick={() => downloadDocx(opportunity.sowDraft, `${opportunity.companyName}_SOW.docx`, { title: `Statement of Work: ${opportunity.companyName}`, client: opportunity.companyName })} className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1.5"><Download className="w-3 h-3" />Download</button>
+                  <CopyButton text={currentSOW} />
+                  <button
+                    onClick={() => { setIsEditing(!isEditing); setEditedSOW(opportunity.sowDraft); }}
+                    className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${isEditing ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  >
+                    <Edit3 className="w-3 h-3" />{isEditing ? 'Cancel Edit' : 'Edit'}
+                  </button>
+                  {/* DOCX download — only when approved */}
+                  {isApproved ? (
+                    <button
+                      onClick={() => downloadSOWDocx(
+                        opportunity.sowDraft,
+                        `${opportunity.companyName}_SOW.docx`,
+                        { title: `Statement of Work: ${opportunity.companyName}`, client: opportunity.companyName, engagementType: engagementLabel }
+                      )}
+                      className="text-xs px-3 py-1.5 bg-[#3A9A82] text-white rounded-lg hover:bg-[#2E8070] flex items-center gap-1.5 font-semibold transition-colors"
+                    >
+                      <Download className="w-3 h-3" />Download DOCX
+                    </button>
+                  ) : (
+                    <div className="relative group">
+                      <button
+                        disabled
+                        className="text-xs px-3 py-1.5 bg-gray-100 text-gray-400 rounded-lg flex items-center gap-1.5 cursor-not-allowed"
+                      >
+                        <Lock className="w-3 h-3" />Download DOCX
+                      </button>
+                      <div className="absolute bottom-full right-0 mb-2 w-48 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                        Set SOW status to "Approved ✓" to unlock DOCX export
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Document body */}
               {isEditing ? (
                 <div className="p-5">
-                  <textarea value={editedSOW} onChange={e => setEditedSOW(e.target.value)} className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-3 min-h-[600px] resize-y font-mono focus:ring-2 focus:ring-[#3A9A82] outline-none" />
-                  <button onClick={() => { onUpdate({ sowDraft: editedSOW }); setIsEditing(false); }} className="mt-3 px-4 py-2 bg-[#3A9A82] text-white rounded-lg text-sm font-medium">Save Changes</button>
+                  <textarea
+                    value={editedSOW}
+                    onChange={e => setEditedSOW(e.target.value)}
+                    className="w-full text-sm text-gray-700 border border-gray-200 rounded-lg p-4 min-h-[600px] resize-y font-mono text-xs leading-relaxed focus:ring-2 focus:ring-[#3A9A82] outline-none"
+                  />
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => { onUpdate({ sowDraft: editedSOW }); setIsEditing(false); }}
+                      className="px-4 py-2 bg-[#3A9A82] text-white rounded-lg text-sm font-semibold"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={() => { setIsEditing(false); setEditedSOW(opportunity.sowDraft); }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm"
+                    >
+                      Discard
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="p-5 max-h-[700px] overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-sans">{opportunity.sowDraft}</pre>
+                <div className="p-6 max-h-[720px] overflow-y-auto">
+                  <div className="prose prose-sm max-w-none">
+                    {opportunity.sowDraft.split('\n').map((line, i) => {
+                      const t = line.trim();
+                      if (!t) return <div key={i} className="h-2" />;
+                      if (t.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-[#253530] mt-6 mb-3 pb-2 border-b border-gray-200">{t.replace(/^# /, '')}</h1>;
+                      if (t.startsWith('## ')) return <h2 key={i} className="text-base font-bold text-[#253530] mt-5 mb-2">{t.replace(/^## /, '')}</h2>;
+                      if (t.startsWith('### ')) return <h3 key={i} className="text-sm font-bold text-[#3A9A82] mt-4 mb-1.5">{t.replace(/^### /, '')}</h3>;
+                      if (t.startsWith('- ') || t.startsWith('• ')) return <div key={i} className="flex gap-2 ml-4 mb-1"><span className="text-[#3A9A82] mt-1.5 flex-shrink-0">•</span><p className="text-sm text-gray-700 leading-relaxed">{t.replace(/^[-•] /, '').replace(/\*\*(.*?)\*\*/g, '$1')}</p></div>;
+                      // Decimal numbered lines
+                      if (/^\d+(\.\d+)*\.?\s/.test(t)) {
+                        const depth = (t.match(/\./g) || []).length;
+                        const indent = depth === 0 ? '' : depth === 1 ? 'ml-5' : 'ml-10';
+                        const weight = depth === 0 ? 'font-semibold text-gray-900' : 'text-gray-700';
+                        return <p key={i} className={`text-sm leading-relaxed mb-1.5 ${indent} ${weight}`}>{t.replace(/\*\*(.*?)\*\*/g, '$1')}</p>;
+                      }
+                      if (t.startsWith('**') && t.endsWith('**')) return <p key={i} className="text-sm font-semibold text-gray-900 mb-1">{t.replace(/\*\*/g, '')}</p>;
+                      return <p key={i} className="text-sm text-gray-700 leading-relaxed mb-2">{t.replace(/\*\*(.*?)\*\*/g, '$1')}</p>;
+                    })}
+                  </div>
                 </div>
               )}
-              {/* Proceed to Handover */}
-              {opportunity.sowDraft && (
-                <div className="px-5 pb-5">
-                  <AntennaButton onClick={() => onUpdate({
-                    currentStage: 'handover',
-                    sowNotes,
-                    sowDraft: opportunity.sowDraft,
-                    sowStatus: opportunity.sowStatus,
-                  })} icon={ArrowRight} className="w-full">
-                    Proceed to Sales Handover →
-                  </AntennaButton>
-                </div>
-              )}
+
+              {/* Footer actions */}
+              <div className="px-5 py-4 border-t border-gray-100 flex items-center justify-between gap-3 bg-gray-50/50">
+                <p className="text-xs text-gray-400">
+                  {isApproved
+                    ? 'SOW approved — DOCX export unlocked.'
+                    : 'Mark as Approved ✓ to unlock DOCX export and proceed to handover.'}
+                </p>
+                <AntennaButton
+                  onClick={() => onUpdate({ currentStage: 'handover', sowNotes, sowDraft: opportunity.sowDraft, sowStatus: opportunity.sowStatus })}
+                  icon={ArrowRight}
+                  size="small"
+                >
+                  Proceed to Handover →
+                </AntennaButton>
+              </div>
             </div>
           )}
         </div>
@@ -2935,6 +3371,7 @@ Use markdown formatting. This is a professional legal/business document — form
     </div>
   );
 }
+
 
 // ============================================================================
 // STAGE 5: SOW REVIEW VIEW (standalone, no opportunity required)
