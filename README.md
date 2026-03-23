@@ -1,6 +1,22 @@
-# SOW Workbench v2.4.0
+# SOW Workbench v3.16.4
 
-A comprehensive Statement of Work management tool for Antenna Group. Draft new SOWs from client call transcripts or review existing SOWs against agency quality standards.
+A comprehensive BD pipeline and Statement of Work management tool for Antenna Group. Manage the full new business journey — from research and intake through Return Brief, proposal, SOW generation, and internal sales handover.
+
+## What's New in v3.16.4
+
+### Smartsheet Form Integration — Qualification Board & Pipeline
+Both the Qualification Board and New Business Pipeline modals now include inline form entry via embedded Smartsheet forms:
+
+- **Qualify Opportunity** — A teal "Qualify Opportunity" button in the Qualification Board header opens a layered sub-modal with the Smartsheet qualification form embedded at full width. Submit directly from within the tool; entries appear in the board after the next refresh.
+- **Add Opportunity** — A matching "Add Opportunity" button in the New Business Pipeline header opens the organic opportunity intake form in the same pattern.
+- Both sub-modals use a dark `#253530` header with a subtitle confirming where submissions land, and close independently without dismissing the parent modal.
+
+## What's New in v3.16.3
+
+### Visual & UX Refinements
+- Stage progress bar displays client name as large bold dark text above the dark stage strip
+- Back button sits in the same row as the client name for cleaner layout
+- Return Brief right column uses `pt-[88px]` top padding to align with left column heading
 
 ## What's New in v2.4.0
 

@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.3';
+const APP_VERSION = '3.16.4';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3539,6 +3539,7 @@ function QualificationModal({ onClose }) {
   const [filterStatus, setFilterStatus] = useState('');
   const [sortCol, setSortCol] = useState('QUALIFICATION SCORE (OUT OF 80)');
   const [sortDir, setSortDir] = useState('desc');
+  const [showQualifyForm, setShowQualifyForm] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -3628,12 +3629,47 @@ function QualificationModal({ onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowQualifyForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#4BAE97] text-[#253530] rounded-xl text-sm font-bold hover:bg-[#3d9e88] transition-colors"
+            >
+              <Plus className="w-4 h-4" />Qualify Opportunity
+            </button>
             <button onClick={loadData} disabled={loading} className="p-2 text-gray-400 hover:text-white transition-colors">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
           </div>
         </div>
+
+        {/* Qualification Form Sub-modal */}
+        {showQualifyForm && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ width: 'min(960px, calc(100vw - 48px))', height: 'min(700px, calc(100vh - 80px))' }}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-[#253530] flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#4BAE97] rounded-lg flex items-center justify-center">
+                    <BadgeCheck className="w-4 h-4 text-[#253530]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Qualify a New Opportunity</h3>
+                    <p className="text-xs text-gray-400">Submitted entries will appear in the board after the next refresh</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowQualifyForm(false)} className="p-2 text-gray-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden bg-gray-50">
+                <iframe
+                  src="https://app.smartsheet.com/b/form/57c706aec2104ff29a3aa30d350fa2cd"
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  title="Qualify New Opportunity"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 px-8 py-4 border-b border-gray-100 bg-gray-50 flex-shrink-0">
@@ -3808,6 +3844,7 @@ function PipelineModal({ onClose }) {
   const [filterEco, setFilterEco] = useState('');
   const [sortCol, setSortCol] = useState('__statusOrder');
   const [sortDir, setSortDir] = useState('desc');
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -3936,12 +3973,47 @@ function PipelineModal({ onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#4BAE97] text-[#253530] rounded-xl text-sm font-bold hover:bg-[#3d9e88] transition-colors"
+            >
+              <Plus className="w-4 h-4" />Add Opportunity
+            </button>
             <button onClick={loadData} disabled={loading} className="p-2 text-gray-400 hover:text-white transition-colors">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button onClick={onClose} className="p-2 text-gray-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
           </div>
         </div>
+
+        {/* Add Opportunity Form Sub-modal */}
+        {showAddForm && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ width: 'min(960px, calc(100vw - 48px))', height: 'min(700px, calc(100vh - 80px))' }}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-[#253530] flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-[#4BAE97] rounded-lg flex items-center justify-center">
+                    <Plus className="w-4 h-4 text-[#253530]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Add Organic Opportunity</h3>
+                    <p className="text-xs text-gray-400">Submitted entries will appear in the pipeline after the next refresh</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowAddForm(false)} className="p-2 text-gray-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden bg-gray-50">
+                <iframe
+                  src="https://app.smartsheet.com/b/form/0f4be23cbd714f10931664e7bf9c2229"
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  title="Add Organic Opportunity"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary strip — read-only counts per status + weighted total */}
         {!loading && !error && rows.length > 0 && (
