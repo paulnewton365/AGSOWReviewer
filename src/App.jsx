@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.9';
+const APP_VERSION = '3.17.0';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -27,9 +27,8 @@ const PIPELINE_STAGES = [
   { id: 'research', number: 1, label: 'Research', Icon: Search, description: 'Company discovery & intake questions' },
   { id: 'brief', number: 2, label: 'Return Brief', Icon: FileText, description: 'Transcript analysis & client brief' },
   { id: 'proposal', number: 3, label: 'Proposal', Icon: Sparkles, description: 'Service selection & proposal' },
-  { id: 'budget', number: 4, label: 'Budget', Icon: DollarSign, description: 'Resource planning & cost estimation' },
-  { id: 'sow', number: 5, label: 'SOW', Icon: PenTool, description: 'Statement of Work generation' },
-  { id: 'handover', number: 6, label: 'Handover', Icon: ClipboardList, description: 'Sales to delivery handover doc' },
+  { id: 'sow', number: 4, label: 'SOW', Icon: PenTool, description: 'Statement of Work generation' },
+  { id: 'handover', number: 5, label: 'Handover', Icon: ClipboardList, description: 'Sales to delivery handover doc' },
 ];
 
 const PROPOSAL_STATUSES = [
@@ -59,7 +58,7 @@ const USER_ROLES = {
     description: 'Full pipeline access including SOW generation',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     badgeColor: 'bg-purple-600',
-    allowedStages: ['research', 'brief', 'proposal', 'budget', 'sow', 'handover'],
+    allowedStages: ['research', 'brief', 'proposal', 'sow', 'handover'],
     canAccessSOWReview: true,
     canAccessAdmin: false,
     canCreateOpportunities: true,
@@ -79,7 +78,7 @@ const USER_ROLES = {
     description: 'Full access + user management',
     color: 'bg-gray-900 text-white border-gray-700',
     badgeColor: 'bg-gray-900',
-    allowedStages: ['research', 'brief', 'proposal', 'budget', 'sow', 'handover'],
+    allowedStages: ['research', 'brief', 'proposal', 'sow', 'handover'],
     canAccessSOWReview: true,
     canAccessAdmin: true,
     canCreateOpportunities: true,
@@ -2380,7 +2379,7 @@ const ENGAGEMENT_TYPES = [
   { value: 'tm_cap', label: 'T&M with Cap', description: 'Hourly with maximum (client request only)' },
 ];
 
-function ProposalView({ opportunity, onUpdate }) {
+function ProposalView({ opportunity, onUpdate, onOpenEstimator }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
   const [error, setError] = useState(null);
@@ -2696,16 +2695,26 @@ Antenna Group | www.antennagroup.com`
             </AntennaButton>
           )}
           {opportunity.proposalStatus === 'approved' && (
-            <AntennaButton onClick={() => onUpdate({
-              currentStage: 'budget', draftNotes,
-              selectedServices: opportunity.selectedServices,
-              selectedArchetypes: opportunity.selectedArchetypes,
-              draftEngagementType: opportunity.draftEngagementType,
-              proposalDraft: opportunity.proposalDraft,
-              proposalStatus: opportunity.proposalStatus,
-            })} icon={ArrowRight}>
-              Build Budget →
-            </AntennaButton>
+            <div className="space-y-2">
+              <AntennaButton onClick={() => onUpdate({
+                currentStage: 'sow', draftNotes,
+                selectedServices: opportunity.selectedServices,
+                selectedArchetypes: opportunity.selectedArchetypes,
+                draftEngagementType: opportunity.draftEngagementType,
+                proposalDraft: opportunity.proposalDraft,
+                proposalStatus: opportunity.proposalStatus,
+              })} icon={ArrowRight}>
+                Proceed to SOW →
+              </AntennaButton>
+              {onOpenEstimator && (
+                <button
+                  onClick={() => onOpenEstimator(opportunity)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-dashed border-[#3A9A82] text-[#3A9A82] rounded-xl text-sm font-semibold hover:bg-[#3A9A82]/5 transition-colors"
+                >
+                  <DollarSign className="w-4 h-4" />Build Estimate
+                </button>
+              )}
+            </div>
           )}
           {opportunity.proposalDraft && (
             <div className="flex items-center gap-2 pl-1 border-l border-gray-200">
@@ -3502,18 +3511,10 @@ function BudgetView({ opportunity, onUpdate }) {
             className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:border-[#253530] hover:text-[#253530] transition-colors">
             <Download className="w-4 h-4" />Export DOCX
           </button>
-          {isApproved ? (
-            <AntennaButton onClick={() => onUpdate({ currentStage: 'sow' })} icon={ArrowRight}>
-              Proceed to SOW →
-            </AntennaButton>
-          ) : (
-            <div className="relative group">
-              <button disabled className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed">
-                <Lock className="w-4 h-4" />Proceed to SOW
-              </button>
-              <div className="absolute bottom-full right-0 mb-2 w-52 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 leading-relaxed">
-                Set Budget Status to "Approved ✓" to proceed to SOW
-              </div>
+          {isApproved && (
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl">
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-700">Approved — feeds into SOW</span>
             </div>
           )}
         </div>
@@ -5234,7 +5235,7 @@ function PipelineModal({ onClose }) {
 // ============================================================================
 // HOME / DASHBOARD VIEW
 // ============================================================================
-function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, onOpenQualification, onOpenPipeline, currentUser, roleInfo }) {
+function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onDeleteOpportunity, onOpenReview, onOpenQualification, onOpenPipeline, onOpenEstimator, currentUser, roleInfo }) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newTitle, setNewTitle] = useState('');
@@ -5254,7 +5255,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
     opp.opportunityType = newOppType;
     if (newOppType === 'organic') {
       opp.rid = newRid.trim().toUpperCase();
-      opp.currentStage = 'budget';
+      opp.currentStage = 'sow';
     }
     onCreateOpportunity(opp);
     setShowCreate(false);
@@ -5265,7 +5266,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const getStageLabel = (opp) => PIPELINE_STAGES.find(s => s.id === opp.currentStage)?.label || 'Research';
 
   const getProgress = (opp) => {
-    const stages = ['research', 'brief', 'proposal', 'budget', 'sow', 'handover'];
+    const stages = ['research', 'brief', 'proposal', 'sow', 'handover'];
     const idx = stages.indexOf(opp.currentStage);
     if (opp.currentStage === 'handover' && opp.handoverDraft) return 100;
     if (opp.currentStage === 'sow' && opp.sowDraft) return 85;
@@ -5330,12 +5331,11 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
     research: { bg: '#FFF3E8', color: '#C26B1E', border: '#F5C89A' },
     brief:    { bg: '#FEF9EC', color: '#A08018', border: '#EDD98A' },
     proposal: { bg: '#EEF5E8', color: '#4A7A30', border: '#9DC87A' },
-    budget:   { bg: '#FFF0F5', color: '#A0306A', border: '#F0A8C8' },
     sow:      { bg: '#E8EEF5', color: '#2A5A8A', border: '#7AAAC8' },
     handover: { bg: '#F0EBF8', color: '#6B3FA0', border: '#C3A8E8' },
   }[stageId] || { bg: '#F5F5F5', color: '#666', border: '#DDD' });
 
-  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#C0457A', '#4A7AAC', '#9B59B6'];
+  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC', '#9B59B6'];
 
   return (
     <div className="max-w-7xl mx-auto px-8 pb-16">
@@ -5379,8 +5379,8 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
         </div>
       </div>
 
-      {/* Pipeline stage cards — single row of 6 */}
-      <div className="grid grid-cols-6 gap-2 mb-10">
+      {/* Pipeline stage cards — single row of 5 */}
+      <div className="grid grid-cols-5 gap-2 mb-10">
         {PIPELINE_STAGES.map((stage, idx) => {
           const stageCount = allActive.filter(o => o.currentStage === stage.id).length;
           const isActive = filterStage === stage.id;
@@ -5625,16 +5625,27 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                       <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#253530] transition-colors flex-shrink-0" />
                     </div>
                   </button>
-                  {/* Admin delete button — appears on row hover */}
-                  {roleInfo?.canAccessAdmin && (
+                  {/* Row action buttons — appear on hover */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                    {/* Estimator button — always visible on hover */}
                     <button
-                      onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${opp.companyName} — ${opp.title || ''}"? This cannot be undone.`)) onDeleteOpportunity(opp.id); }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/row:opacity-100 transition-opacity p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600"
-                      title="Delete opportunity"
+                      onClick={(e) => { e.stopPropagation(); onOpenEstimator(opp); }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#253530] hover:bg-[#3A9A82] text-white text-[11px] font-bold transition-colors"
+                      title="Open Budget Estimator"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <DollarSign className="w-3 h-3" />Estimator
                     </button>
-                  )}
+                    {/* Admin delete */}
+                    {roleInfo?.canAccessAdmin && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${opp.companyName} — ${opp.title || ''}"? This cannot be undone.`)) onDeleteOpportunity(opp.id); }}
+                        className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600"
+                        title="Delete opportunity"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 );
               })}
@@ -5690,6 +5701,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [estimatorOpp, setEstimatorOpp] = useState(null); // opportunity being estimated (modal)
   const [showQualification, setShowQualification] = useState(false);
   const [showPipeline, setShowPipeline] = useState(false);
 
@@ -5868,12 +5880,11 @@ export default function App() {
         </div>
       );
     }
-    const props = { opportunity: currentOpportunity, onUpdate: updateOpportunity };
+    const props = { opportunity: currentOpportunity, onUpdate: updateOpportunity, onOpenEstimator: (opp) => setEstimatorOpp(opp) };
     switch (currentStage) {
       case 'research': return <ResearchView {...props} />;
       case 'brief': return <BriefView {...props} />;
       case 'proposal': return <ProposalView {...props} />;
-      case 'budget': return <BudgetView {...props} />;
       case 'sow': return <SOWGenerateView {...props} />;
       case 'handover': return <HandoverView {...props} />;
       default: return <ResearchView {...props} />;
@@ -5922,6 +5933,46 @@ export default function App() {
       {showAdmin && <AdminView currentUser={currentUser} onClose={() => setShowAdmin(false)} />}
       {showQualification && <QualificationModal onClose={() => setShowQualification(false)} />}
       {showPipeline && <PipelineModal onClose={() => setShowPipeline(false)} />}
+
+      {/* ── Budget Estimator Modal ── */}
+      {estimatorOpp && (
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+          <div className="flex-1 flex flex-col bg-[#E8E6E1] mt-16 rounded-t-3xl overflow-hidden shadow-2xl">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-8 py-4 bg-[#253530] flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-[#4BAE97] rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-4 h-4 text-[#253530]" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white">Budget Estimator</h2>
+                  <p className="text-xs text-gray-400">{estimatorOpp.companyName}{estimatorOpp.title ? ` · ${estimatorOpp.title}` : ''}</p>
+                </div>
+              </div>
+              <button onClick={() => setEstimatorOpp(null)} className="p-2 text-gray-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto">
+              <BudgetView
+                opportunity={estimatorOpp}
+                onUpdate={(updates) => {
+                  const updated = { ...estimatorOpp, ...updates };
+                  setEstimatorOpp(updated);
+                  // Persist to the main opportunities list
+                  setOpportunities(prev => prev.map(o => o.id === updated.id ? updated : o));
+                  // If this opp is also currently open in the pipeline, sync it
+                  if (currentOpportunity?.id === updated.id) setCurrentOpportunity(updated);
+                  // Debounced Supabase save
+                  const { id, ...data } = updated;
+                  supabase.from('opportunities').update({ data }).eq('id', id);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <header className="border-b border-gray-200/80 sticky top-0 z-20" style={{ backgroundColor: '#E8E6E1' }}>
@@ -5995,6 +6046,7 @@ export default function App() {
             onOpenReview={roleInfo?.canAccessSOWReview ? () => setCurrentView('sow-review') : null}
             onOpenQualification={() => setShowQualification(true)}
             onOpenPipeline={() => setShowPipeline(true)}
+            onOpenEstimator={(opp) => setEstimatorOpp(opp)}
             currentUser={currentUser}
             roleInfo={roleInfo}
           />

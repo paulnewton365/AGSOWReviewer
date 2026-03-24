@@ -1,4 +1,4 @@
-# SOW Workbench v3.16.9
+# SOW Workbench v3.17.0
 
 A comprehensive BD pipeline and Statement of Work management tool for Antenna Group. Manage the full new business journey — from research and intake through Return Brief, proposal, SOW generation, and internal sales handover.
 
@@ -10,6 +10,27 @@ Both the Qualification Board and New Business Pipeline modals now include inline
 - **Qualify Opportunity** — A teal "Qualify Opportunity" button in the Qualification Board header opens a layered sub-modal with the Smartsheet qualification form embedded at full width. Submit directly from within the tool; entries appear in the board after the next refresh.
 - **Add Opportunity** — A matching "Add Opportunity" button in the New Business Pipeline header opens the organic opportunity intake form in the same pattern.
 - Both sub-modals use a dark `#253530` header with a subtitle confirming where submissions land, and close independently without dismissing the parent modal.
+
+## What's New in v3.17.0
+
+### Budget Estimator — detached from pipeline, on-demand via modal
+
+The Budget stage has been removed from the main pipeline. The estimator is now a standalone tool, accessible on demand from two places:
+
+**Homepage opportunity rows**
+A "💲 Estimator" button appears on hover for every opportunity in the list. Clicking it opens the full Budget Estimator as a slide-up modal overlay without navigating away from the home screen. Data is saved in real time to the opportunity — the same auto-save behaviour as before. If the same opportunity is also open in the pipeline, state stays in sync.
+
+**Proposal stage**
+When a proposal is marked Approved ✓, a dashed "Build Estimate" button appears below the "Proceed to SOW →" CTA. This opens the estimator for that opportunity in the same modal. The main pipeline flow (Proposal → SOW) is unchanged and never requires the estimator.
+
+**SOW generation**
+Unchanged — the SOW prompt uses the budget figures if the estimator has been populated and approved, and falls back to proposal pricing guidance if not. No change needed since the data model is identical.
+
+**Pipeline restored to 5 stages**
+Research → Return Brief → Proposal → SOW → Handover. Stage cards, progress bar, colors, and role access all updated accordingly.
+
+**Organic opportunities**
+Organic opps (existing clients) still skip the BD stages and open at SOW. The estimator is available to them via the homepage row button, as it is for all opportunities.
 
 ## What's New in v3.16.9
 
