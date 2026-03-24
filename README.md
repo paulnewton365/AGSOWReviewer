@@ -1,4 +1,4 @@
-# SOW Workbench v3.16.7
+# SOW Workbench v3.16.9
 
 A comprehensive BD pipeline and Statement of Work management tool for Antenna Group. Manage the full new business journey — from research and intake through Return Brief, proposal, SOW generation, and internal sales handover.
 
@@ -10,6 +10,55 @@ Both the Qualification Board and New Business Pipeline modals now include inline
 - **Qualify Opportunity** — A teal "Qualify Opportunity" button in the Qualification Board header opens a layered sub-modal with the Smartsheet qualification form embedded at full width. Submit directly from within the tool; entries appear in the board after the next refresh.
 - **Add Opportunity** — A matching "Add Opportunity" button in the New Business Pipeline header opens the organic opportunity intake form in the same pattern.
 - Both sub-modals use a dark `#253530` header with a subtitle confirming where submissions land, and close independently without dismissing the parent modal.
+
+## What's New in v3.16.9
+
+### Homepage, opportunity types, and budget validation
+
+**Homepage stage cards — single row**
+All 6 pipeline stages now fit on one row. The grid was bumped to `grid-cols-6` with tighter padding and slightly smaller type to keep the layout compact.
+
+**Net New vs Organic opportunity type**
+The "New Opportunity" modal now requires a type selection as the first step:
+- **Net New** — new client, full pipeline starting at Research. Website URL is required.
+- **Organic** — existing client scope expansion. Skips Research/Brief/Proposal and opens directly at the Budget stage. Requires an **NB Code (RID)** to proceed — this is stored as the opportunity's RID.
+
+Both types show a colour-coded badge on every opportunity row (purple "Organic" / blue "Net New") so they're immediately distinguishable in the list.
+
+**Budget vs proposal range validation**
+The Budget stage now compares your total agency fees against the pricing range surfaced in the proposal (derived from service card pricing). Three states:
+- 🟢 **Within range** — a green confirmation banner shows fees sit inside the proposal range
+- 🟡 **Below range** — amber warning showing how far below the floor you are and by what %; prompts you to confirm it's intentional before approving
+- 🔴 **Above range** — red warning showing how far above the ceiling you are; flags client pushback risk
+
+The banner appears as soon as hours are entered — before approval, so it can inform the iteration process.
+
+**"Add Deliverable" confirmed working**
+The dashed "Add Deliverable" button at the bottom of the Budget stage allows adding new deliverables at any time, including for organic opportunities that have no proposal services to pre-populate from.
+
+## What's New in v3.16.8
+
+### Budget Estimator — project dates, approval workflow, OOP descriptions, simplified DOCX
+
+**Project start & end dates**
+A date range selector sits at the top of the config bar. Every new resource row added — including the initial rows when deliverables are pre-populated — inherits these dates automatically. Users can still override dates per row independently.
+
+**Approval workflow**
+A Budget Status selector (Draft → In Review → Approved ✓) sits in the page header. Proceeding to SOW is gated behind Approved status — the button is locked with a tooltip until the budget is signed off. An approval banner confirms the locked figure when status is set to Approved.
+
+**OOP description per deliverable**
+Each deliverable card now has an OOP Description textarea below the resource table. Free-text notes on what's included (tools, travel, subscriptions, etc.). These descriptions flow through to the DOCX export and into the SOW generation prompt.
+
+**Revised DOCX format**
+The budget export now shows:
+- Cover: client name, rate card, discount, project dates
+- Scope Summary: pulled from the proposal's "What We're Proposing" section
+- Budget Summary: Agency Fees / OOP / Grand Total as a clean totals block
+- Deliverable Breakdown: per deliverable — name, fees, OOP, total, hours, OOP description
+- No per-resource rows in the export (internal detail only)
+
+**SOW prompt improvements**
+The budget block passed to SOW generation now includes: approval status, project dates, per-deliverable fees + OOP description, and a clear instruction not to alter the figures.
 
 ## What's New in v3.16.7
 

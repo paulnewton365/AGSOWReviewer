@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.7';
+const APP_VERSION = '3.16.9';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -108,6 +108,7 @@ const createOpportunity = (companyName, companyUrl = '', industry = '', practice
   rid: '',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  opportunityType: 'net_new', // 'net_new' | 'organic'
   currentStage: 'research',
   // Stage 1
   researchComplete: false,
@@ -132,6 +133,9 @@ const createOpportunity = (companyName, companyUrl = '', industry = '', practice
   budgetDeliverables: [],
   budgetRateCard: 'standard',
   budgetDiscount: 0,
+  budgetProjectStart: '',
+  budgetProjectEnd: '',
+  budgetStatus: 'draft',
   // Stage 5
   sowDraft: '',
   sowStatus: 'draft',
@@ -2973,20 +2977,21 @@ const getHourlyRate = (discipline, seniority, rateCardId) => {
   return Math.round(baseRate * card.multiplier);
 };
 
-const newResourceRow = () => ({
+const newResourceRow = (startDate = '', endDate = '') => ({
   id: Date.now().toString() + Math.random().toString(36).slice(2),
   discipline: 'ACCOUNT',
   seniority: 'SAE',
-  startDate: '',
-  endDate: '',
+  startDate,
+  endDate,
   hours: '',
   oop: '',
 });
 
-const newDeliverable = (name = '') => ({
+const newDeliverable = (name = '', projectStart = '', projectEnd = '') => ({
   id: Date.now().toString() + Math.random().toString(36).slice(2),
   name,
-  resources: [newResourceRow()],
+  oopDescription: '',
+  resources: [newResourceRow(projectStart, projectEnd)],
 });
 
 // ============================================================================
@@ -2997,64 +3002,101 @@ const downloadBudgetDocx = async (opportunity, deliverables, rateCardId, discoun
     const card = RATE_CARDS.find(c => c.id === rateCardId) || RATE_CARDS[0];
     const discMult = 1 - (discountPct || 0) / 100;
     const fmt = (n) => `$${Math.round(n).toLocaleString()}`;
-    const lines = [];
+    const children = [];
 
-    lines.push(`# Budget Estimate: ${opportunity.companyName}`);
-    lines.push(`Prepared by Antenna Group`);
-    lines.push(`Rate Card: ${card.label}${discountPct > 0 ? ` · ${discountPct}% discount applied` : ''}`);
-    lines.push(`Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`);
-    lines.push('');
+    // ── Cover ──
+    children.push(new Paragraph({ children: [new TextRun({ text: `Budget Estimate: ${opportunity.companyName}`, bold: true, size: 52, font: 'Arial', color: '253530' })], spacing: { after: 160 } }));
+    children.push(new Paragraph({ children: [new TextRun({ text: `Prepared by Antenna Group`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 80 } }));
+    children.push(new Paragraph({ children: [new TextRun({ text: `Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 80 } }));
+    children.push(new Paragraph({ children: [new TextRun({ text: `Rate Card: ${card.label}${discountPct > 0 ? ` · ${discountPct}% discount applied` : ''}`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 80 } }));
+    if (opportunity.budgetProjectStart || opportunity.budgetProjectEnd) {
+      const dateRange = [opportunity.budgetProjectStart, opportunity.budgetProjectEnd].filter(Boolean).join(' – ');
+      children.push(new Paragraph({ children: [new TextRun({ text: `Project Dates: ${dateRange}`, size: 22, font: 'Arial', color: '666666' })], spacing: { after: 80 } }));
+    }
+    children.push(new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: '3A9A82' } }, spacing: { after: 500 } }));
 
+    // ── Proposal context ──
+    if (opportunity.proposalDraft) {
+      children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: 'Scope Summary', bold: true, size: 32, font: 'Arial', color: '253530' })], spacing: { before: 200, after: 200 } }));
+      // Extract just the "What We're Proposing" section if present, else first 600 chars
+      const proposal = opportunity.proposalDraft;
+      const propSection = (() => {
+        const idx = proposal.indexOf('What We');
+        if (idx > -1) return proposal.substring(idx, idx + 800).replace(/#{1,3} /g, '').trim();
+        return proposal.substring(0, 600).replace(/#{1,3} /g, '').trim();
+      })();
+      children.push(new Paragraph({ children: [new TextRun({ text: propSection, size: 20, font: 'Arial', color: '444444' })], spacing: { after: 400 } }));
+    }
+
+    // ── Cost summary ──
     let grandFees = 0, grandOop = 0;
     deliverables.forEach(d => {
       d.resources.forEach(r => {
-        const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
-        const hrs = parseFloat(r.hours) || 0;
-        const oop = parseFloat(r.oop) || 0;
-        grandFees += rate * hrs * discMult;
-        grandOop += oop;
+        grandFees += getHourlyRate(r.discipline, r.seniority, rateCardId) * (parseFloat(r.hours) || 0) * discMult;
+        grandOop += parseFloat(r.oop) || 0;
       });
     });
 
-    lines.push(`## Summary`);
-    lines.push(`Total Fees: ${fmt(grandFees)}`);
-    lines.push(`Total OOP: ${fmt(grandOop)}`);
-    lines.push(`Grand Total: ${fmt(grandFees + grandOop)}`);
-    lines.push('');
+    children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: 'Budget Summary', bold: true, size: 32, font: 'Arial', color: '253530' })], spacing: { before: 200, after: 200 } }));
 
-    deliverables.forEach(d => {
+    const summaryRows = [
+      ['Total Agency Fees', fmt(grandFees)],
+      ['Total Out-of-Pocket', fmt(grandOop)],
+      ['Grand Total', fmt(grandFees + grandOop)],
+    ];
+    summaryRows.forEach(([label, val], i) => {
+      const isTotal = i === summaryRows.length - 1;
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: label, bold: isTotal, size: isTotal ? 26 : 22, font: 'Arial' }),
+          new TextRun({ text: '    ' + val, bold: true, size: isTotal ? 28 : 22, font: 'Arial', color: isTotal ? '3A9A82' : '253530' }),
+        ],
+        spacing: { after: isTotal ? 400 : 100 },
+        ...(isTotal ? { border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'DDDDDD' } } } : {}),
+      }));
+    });
+
+    // ── Per-deliverable breakdown ──
+    children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: 'Deliverable Breakdown', bold: true, size: 32, font: 'Arial', color: '253530' })], spacing: { before: 200, after: 240 } }));
+
+    deliverables.forEach((d, idx) => {
       let dFees = 0, dOop = 0;
       d.resources.forEach(r => {
-        const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
-        const hrs = parseFloat(r.hours) || 0;
-        dFees += rate * hrs * discMult;
+        dFees += getHourlyRate(r.discipline, r.seniority, rateCardId) * (parseFloat(r.hours) || 0) * discMult;
         dOop += parseFloat(r.oop) || 0;
       });
+      const totalHours = d.resources.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0);
 
-      lines.push(`## ${d.name || 'Untitled Deliverable'}`);
-      lines.push(`Fees: ${fmt(dFees)} · OOP: ${fmt(dOop)} · Subtotal: ${fmt(dFees + dOop)}`);
-      lines.push('');
+      // Deliverable name
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `${idx + 1}.  ${d.name || 'Untitled Deliverable'}`, bold: true, size: 26, font: 'Arial', color: '253530' })],
+        spacing: { before: 300, after: 120 },
+      }));
 
-      d.resources.forEach(r => {
-        const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
-        const hrs = parseFloat(r.hours) || 0;
-        const fee = rate * hrs * discMult;
-        const oop = parseFloat(r.oop) || 0;
-        const dates = (r.startDate && r.endDate) ? `${r.startDate} – ${r.endDate}` : r.startDate || r.endDate || '—';
-        lines.push(`- ${r.discipline} · ${r.seniority} · ${fmt(rate)}/hr · ${hrs}h · ${dates} → Fees: ${fmt(fee)}${oop > 0 ? ` · OOP: ${fmt(oop)}` : ''}`);
-      });
-      lines.push('');
+      // Cost line
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: `Agency Fees: `, size: 22, font: 'Arial', color: '666666' }),
+          new TextRun({ text: fmt(dFees), bold: true, size: 22, font: 'Arial' }),
+          ...(dOop > 0 ? [
+            new TextRun({ text: `   Out-of-Pocket: `, size: 22, font: 'Arial', color: '666666' }),
+            new TextRun({ text: fmt(dOop), bold: true, size: 22, font: 'Arial' }),
+          ] : []),
+          new TextRun({ text: `   Total: `, size: 22, font: 'Arial', color: '666666' }),
+          new TextRun({ text: fmt(dFees + dOop), bold: true, size: 24, font: 'Arial', color: '3A9A82' }),
+          new TextRun({ text: `   (${totalHours.toFixed(1)} hrs)`, size: 20, font: 'Arial', color: '999999' }),
+        ],
+        spacing: { after: 100 },
+      }));
+
+      // OOP description if present
+      if (d.oopDescription?.trim()) {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: `OOP includes: ${d.oopDescription.trim()}`, size: 20, font: 'Arial', color: '666666', italics: true })],
+          spacing: { after: 160 },
+        }));
+      }
     });
-
-    const children = [];
-    for (const line of lines) {
-      const t = line.trim();
-      if (!t) { children.push(new Paragraph({ spacing: { after: 80 } })); continue; }
-      if (t.startsWith('# ')) { children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: t.replace(/^# /, ''), bold: true, size: 36, font: 'Arial', color: '253530' })], spacing: { before: 400, after: 200 } })); continue; }
-      if (t.startsWith('## ')) { children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: t.replace(/^## /, ''), bold: true, size: 26, font: 'Arial', color: '253530' })], spacing: { before: 360, after: 140 } })); continue; }
-      if (t.startsWith('- ')) { children.push(new Paragraph({ numbering: { reference: 'bullet-list', level: 0 }, children: [new TextRun({ text: t.replace(/^- /, ''), size: 20, font: 'Arial' })], spacing: { after: 60 } })); continue; }
-      children.push(new Paragraph({ children: [new TextRun({ text: t, size: 22, font: 'Arial' })], spacing: { after: 100 } }));
-    }
 
     const doc = new Document({
       numbering: { config: [{ reference: 'bullet-list', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.START, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] }] },
@@ -3070,83 +3112,135 @@ const downloadBudgetDocx = async (opportunity, deliverables, rateCardId, discoun
 // ============================================================================
 // STAGE 4: BUDGET VIEW
 // ============================================================================
-function BudgetView({ opportunity, onUpdate }) {
-  const savedDeliverables = opportunity.budgetDeliverables;
-  const [rateCardId, setRateCardId] = useState(opportunity.budgetRateCard || 'standard');
-  const [discountPct, setDiscountPct] = useState(opportunity.budgetDiscount || 0);
+const BUDGET_STATUSES = [
+  { value: 'draft',    label: 'Draft',       bg: 'bg-gray-100',  text: 'text-gray-700',  border: 'border-gray-300'  },
+  { value: 'review',   label: 'In Review',   bg: 'bg-blue-100',  text: 'text-blue-700',  border: 'border-blue-300'  },
+  { value: 'approved', label: 'Approved ✓',  bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300' },
+];
 
-  // Initialise deliverables from saved state or from selectedServices
+function BudgetView({ opportunity, onUpdate }) {
+  const [rateCardId, setRateCardId]     = useState(opportunity.budgetRateCard    || 'standard');
+  const [discountPct, setDiscountPct]   = useState(opportunity.budgetDiscount    || 0);
+  const [projectStart, setProjectStart] = useState(opportunity.budgetProjectStart || '');
+  const [projectEnd,   setProjectEnd]   = useState(opportunity.budgetProjectEnd  || '');
+  const budgetStatus = opportunity.budgetStatus || 'draft';
+  const isApproved   = budgetStatus === 'approved';
+
+  // Initialise deliverables from saved state or proposal bundles
   const initDeliverables = () => {
-    if (savedDeliverables && savedDeliverables.length > 0) return savedDeliverables;
-    // Build from selected services grouped by bundle (same logic as proposal)
+    const saved = opportunity.budgetDeliverables;
+    if (saved && saved.length > 0) return saved;
     const selectedServices = opportunity.selectedServices || [];
-    const bundles = [];
-    const seen = new Set();
+    const bundles = []; const seen = new Set();
     for (const trigger of SERVICE_TRIGGERS) {
-      const fromTrigger = trigger.services.filter(s => selectedServices.includes(getServiceName(s)));
-      if (!fromTrigger.length) continue;
-      const bundleNames = [...new Set(fromTrigger.map(s => s.pricing?.bundle).filter(Boolean))];
-      for (const b of bundleNames) {
+      const from = trigger.services.filter(s => selectedServices.includes(getServiceName(s)));
+      if (!from.length) continue;
+      [...new Set(from.map(s => s.pricing?.bundle).filter(Boolean))].forEach(b => {
         if (!seen.has(b)) { seen.add(b); bundles.push(b); }
-      }
-      fromTrigger.filter(s => !s.pricing?.bundle).forEach(s => {
+      });
+      from.filter(s => !s.pricing?.bundle).forEach(s => {
         const n = getServiceName(s);
         if (!seen.has(n)) { seen.add(n); bundles.push(n); }
       });
     }
     return bundles.length > 0
-      ? bundles.map(name => newDeliverable(name))
-      : [newDeliverable('')];
+      ? bundles.map(name => newDeliverable(name, opportunity.budgetProjectStart || '', opportunity.budgetProjectEnd || ''))
+      : [newDeliverable('', opportunity.budgetProjectStart || '', opportunity.budgetProjectEnd || '')];
   };
 
   const [deliverables, setDeliverables] = useState(initDeliverables);
 
-  const save = (d, rc, disc) => {
-    onUpdate({ budgetDeliverables: d, budgetRateCard: rc, budgetDiscount: disc });
+  const save = (d, rc, disc, ps, pe, status) => {
+    onUpdate({ budgetDeliverables: d, budgetRateCard: rc, budgetDiscount: disc, budgetProjectStart: ps, budgetProjectEnd: pe, budgetStatus: status !== undefined ? status : budgetStatus });
   };
 
-  const updateDeliverables = (d) => { setDeliverables(d); save(d, rateCardId, discountPct); };
-  const updateRateCard = (v) => { setRateCardId(v); save(deliverables, v, discountPct); };
-  const updateDiscount = (v) => { setDiscountPct(v); save(deliverables, rateCardId, v); };
+  const updateDeliverables = (d) => { setDeliverables(d); save(d, rateCardId, discountPct, projectStart, projectEnd); };
+  const updateRateCard  = (v) => { setRateCardId(v);   save(deliverables, v, discountPct, projectStart, projectEnd); };
+  const updateDiscount  = (v) => { setDiscountPct(v);  save(deliverables, rateCardId, v, projectStart, projectEnd); };
 
-  const addDeliverable = () => updateDeliverables([...deliverables, newDeliverable('')]);
-  const removeDeliverable = (id) => updateDeliverables(deliverables.filter(d => d.id !== id));
+  const updateProjectStart = (v) => {
+    setProjectStart(v);
+    save(deliverables, rateCardId, discountPct, v, projectEnd);
+  };
+  const updateProjectEnd = (v) => {
+    setProjectEnd(v);
+    save(deliverables, rateCardId, discountPct, projectStart, v);
+  };
+  const updateStatus = (v) => save(deliverables, rateCardId, discountPct, projectStart, projectEnd, v);
+
+  const addDeliverable = () => {
+    const d = newDeliverable('', projectStart, projectEnd);
+    updateDeliverables([...deliverables, d]);
+  };
+  const removeDeliverable   = (id)  => updateDeliverables(deliverables.filter(d => d.id !== id));
   const updateDeliverableName = (id, name) => updateDeliverables(deliverables.map(d => d.id === id ? { ...d, name } : d));
+  const updateDeliverableOOP  = (id, oopDescription) => updateDeliverables(deliverables.map(d => d.id === id ? { ...d, oopDescription } : d));
 
-  const addResource = (dId) => updateDeliverables(deliverables.map(d => d.id === dId ? { ...d, resources: [...d.resources, newResourceRow()] } : d));
-  const removeResource = (dId, rId) => updateDeliverables(deliverables.map(d => d.id === dId ? { ...d, resources: d.resources.filter(r => r.id !== rId) } : d));
-  const updateResource = (dId, rId, field, value) => updateDeliverables(
-    deliverables.map(d => d.id === dId
-      ? { ...d, resources: d.resources.map(r => r.id === rId ? { ...r, [field]: value } : r) }
-      : d)
+  const addResource = (dId) => updateDeliverables(
+    deliverables.map(d => d.id === dId ? { ...d, resources: [...d.resources, newResourceRow(projectStart, projectEnd)] } : d)
+  );
+  const removeResource  = (dId, rId) => updateDeliverables(deliverables.map(d => d.id === dId ? { ...d, resources: d.resources.filter(r => r.id !== rId) } : d));
+  const updateResource  = (dId, rId, field, value) => updateDeliverables(
+    deliverables.map(d => d.id === dId ? { ...d, resources: d.resources.map(r => r.id === rId ? { ...r, [field]: value } : r) } : d)
   );
 
-  const discMult = 1 - discountPct / 100;
-  const fmt = (n) => `$${Math.round(n).toLocaleString()}`;
+  const discMult  = 1 - discountPct / 100;
+  const fmt       = (n) => `$${Math.round(n).toLocaleString()}`;
+  const cardInfo  = RATE_CARDS.find(c => c.id === rateCardId) || RATE_CARDS[0];
+  const statusInfo = BUDGET_STATUSES.find(s => s.value === budgetStatus) || BUDGET_STATUSES[0];
 
-  // Grand totals
   const totals = deliverables.reduce((acc, d) => {
     d.resources.forEach(r => {
-      const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
-      acc.fees += rate * (parseFloat(r.hours) || 0) * discMult;
-      acc.oop += parseFloat(r.oop) || 0;
+      acc.fees += getHourlyRate(r.discipline, r.seniority, rateCardId) * (parseFloat(r.hours) || 0) * discMult;
+      acc.oop  += parseFloat(r.oop) || 0;
     });
     return acc;
   }, { fees: 0, oop: 0 });
 
+  // Compare budget total (fees only) against proposal pricing range
+  const proposalRange = (() => {
+    try {
+      const services = opportunity.selectedServices || [];
+      if (!services.length) return null;
+      let low = 0, high = 0;
+      const seenBundles = new Set();
+      services.forEach(name => {
+        for (const cat of SERVICE_TRIGGERS) {
+          const svc = cat.services?.find(s => s.name === name);
+          if (svc?.pricing) {
+            const bundle = svc.pricing.bundle;
+            if (bundle) {
+              if (seenBundles.has(bundle)) break; // count bundle price once
+              seenBundles.add(bundle);
+            }
+            low  += svc.pricing.budgetLow  || 0;
+            high += svc.pricing.budgetHigh || 0;
+            break;
+          }
+        }
+      });
+      return (low || high) ? { low, high } : null;
+    } catch { return null; }
+  })();
+
+  const budgetVariance = (() => {
+    if (!proposalRange || totals.fees === 0) return null;
+    const { low, high } = proposalRange;
+    if (totals.fees < low) return { type: 'under', diff: low - totals.fees, pct: Math.round(((low - totals.fees) / low) * 100) };
+    if (totals.fees > high) return { type: 'over',  diff: totals.fees - high, pct: Math.round(((totals.fees - high) / high) * 100) };
+    return { type: 'within' };
+  })();
+
   const deliverableTotal = (d) => d.resources.reduce((acc, r) => {
-    const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
-    acc.fees += rate * (parseFloat(r.hours) || 0) * discMult;
-    acc.oop += parseFloat(r.oop) || 0;
+    acc.fees += getHourlyRate(r.discipline, r.seniority, rateCardId) * (parseFloat(r.hours) || 0) * discMult;
+    acc.oop  += parseFloat(r.oop) || 0;
     return acc;
   }, { fees: 0, oop: 0 });
-
-  const cardInfo = RATE_CARDS.find(c => c.id === rateCardId) || RATE_CARDS[0];
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-8">
 
-      {/* Page header */}
+      {/* ── Page header ── */}
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div className="flex items-start gap-4">
           <div className="w-11 h-11 bg-[#253530] rounded-xl flex items-center justify-center flex-shrink-0">
@@ -3154,181 +3248,214 @@ function BudgetView({ opportunity, onUpdate }) {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Budget Estimator</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Build a resource plan and cost estimate per deliverable — resolves the proposal range to a final number for the SOW.</p>
+            <p className="text-sm text-gray-500 mt-0.5">Resource-plan each deliverable to reach a firm fee — this number feeds directly into the SOW.</p>
           </div>
         </div>
-
-        {/* Rate card + discount controls */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-500 whitespace-nowrap">Rate Card</label>
-            <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
-              {RATE_CARDS.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => updateRateCard(c.id)}
-                  title={c.description}
-                  className={`text-xs px-3 py-2 font-semibold transition-colors whitespace-nowrap ${rateCardId === c.id ? 'bg-[#253530] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-semibold text-gray-500 whitespace-nowrap">Discount</label>
-            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-2">
-              <input
-                type="number" min="0" max="100" step="1"
-                value={discountPct}
-                onChange={e => updateDiscount(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
-                className="w-12 text-xs font-bold text-gray-900 text-center outline-none bg-transparent"
-              />
-              <span className="text-xs text-gray-500 font-semibold">%</span>
-            </div>
-          </div>
+        {/* Status pill */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs text-gray-500 font-medium">Budget Status</span>
+          <select
+            value={budgetStatus}
+            onChange={e => updateStatus(e.target.value)}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg border cursor-pointer outline-none ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}
+          >
+            {BUDGET_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
         </div>
       </div>
 
-      {/* Summary bar */}
+      {/* ── Config bar: project dates + rate card + discount ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 px-6 py-4 mb-6 flex flex-wrap items-end gap-6">
+        {/* Project dates */}
+        <div className="flex items-end gap-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 mb-1.5">Project Start</label>
+            <input
+              type="date" value={projectStart}
+              onChange={e => updateProjectStart(e.target.value)}
+              className="text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800"
+            />
+          </div>
+          <div className="pb-2 text-gray-300 font-light">→</div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 mb-1.5">Project End</label>
+            <input
+              type="date" value={projectEnd}
+              onChange={e => updateProjectEnd(e.target.value)}
+              className="text-sm bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800"
+            />
+          </div>
+        </div>
+
+        <div className="w-px h-10 bg-gray-200 hidden sm:block" />
+
+        {/* Rate card */}
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1.5">Rate Card</label>
+          <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-gray-50">
+            {RATE_CARDS.map(c => (
+              <button key={c.id} onClick={() => updateRateCard(c.id)} title={c.description}
+                className={`text-xs px-4 py-2 font-semibold transition-colors whitespace-nowrap ${rateCardId === c.id ? 'bg-[#253530] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Discount */}
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1.5">Discount %</label>
+          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 w-24">
+            <input type="number" min="0" max="100" step="1" value={discountPct}
+              onChange={e => updateDiscount(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+              className="w-12 text-sm font-bold text-gray-900 text-center outline-none bg-transparent" />
+            <span className="text-sm text-gray-400 font-semibold">%</span>
+          </div>
+        </div>
+
+        {discountPct > 0 && (
+          <p className="text-xs text-[#3A9A82] font-semibold self-end pb-2">{discountPct}% applied to all fees</p>
+        )}
+      </div>
+
+      {/* ── Summary cards ── */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-[#253530] rounded-2xl px-6 py-4 text-center">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Fees</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Agency Fees</p>
           <p className="text-2xl font-black text-white">{fmt(totals.fees)}</p>
-          {discountPct > 0 && <p className="text-xs text-[#4BAE97] mt-1">{discountPct}% discount applied</p>}
+          <p className="text-xs text-gray-500 mt-1">{cardInfo.label}{discountPct > 0 ? ` · −${discountPct}%` : ''}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 text-center">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total OOP</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Out-of-Pocket</p>
           <p className="text-2xl font-black text-gray-900">{fmt(totals.oop)}</p>
-          <p className="text-xs text-gray-400 mt-1">Out-of-pocket costs</p>
+          <p className="text-xs text-gray-400 mt-1">Tools, travel, other</p>
         </div>
         <div className="bg-[#3A9A82] rounded-2xl px-6 py-4 text-center">
-          <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Grand Total</p>
+          <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-1">Grand Total</p>
           <p className="text-2xl font-black text-white">{fmt(totals.fees + totals.oop)}</p>
-          <p className="text-xs text-white/70 mt-1">{cardInfo.label} rates</p>
+          <p className="text-xs text-white/60 mt-1">Fees + OOP</p>
         </div>
       </div>
 
-      {/* Deliverables */}
+      {/* ── Proposal range comparison ── */}
+      {budgetVariance && budgetVariance.type !== 'within' && (
+        <div className={`mb-5 flex items-start gap-3 px-5 py-4 rounded-xl border ${budgetVariance.type === 'under' ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
+          <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${budgetVariance.type === 'under' ? 'text-amber-500' : 'text-red-500'}`} />
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-bold ${budgetVariance.type === 'under' ? 'text-amber-800' : 'text-red-800'}`}>
+              {budgetVariance.type === 'under'
+                ? `Budget is ${budgetVariance.pct}% below the proposal range`
+                : `Budget is ${budgetVariance.pct}% above the proposal range`}
+            </p>
+            <p className={`text-xs mt-0.5 ${budgetVariance.type === 'under' ? 'text-amber-700' : 'text-red-700'}`}>
+              {budgetVariance.type === 'under'
+                ? `Proposal range: ${fmt(proposalRange.low)}–${fmt(proposalRange.high)}. Current fees: ${fmt(totals.fees)} — ${fmt(budgetVariance.diff)} below the floor. Confirm this is intentional before approving.`
+                : `Proposal range: ${fmt(proposalRange.low)}–${fmt(proposalRange.high)}. Current fees: ${fmt(totals.fees)} — ${fmt(budgetVariance.diff)} above the ceiling. Client may push back on this figure.`}
+            </p>
+          </div>
+        </div>
+      )}
+      {budgetVariance && budgetVariance.type === 'within' && totals.fees > 0 && (
+        <div className="mb-5 flex items-center gap-3 px-5 py-3 rounded-xl border bg-green-50 border-green-200">
+          <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+          <p className="text-sm text-green-700 font-medium">
+            Fees of {fmt(totals.fees)} sit within the proposal range of {fmt(proposalRange.low)}–{fmt(proposalRange.high)} ✓
+          </p>
+        </div>
+      )}
+
+      {/* ── Approval banner ── */}
+      {isApproved && (
+        <div className="mb-6 flex items-center gap-3 px-5 py-3.5 bg-green-50 border border-green-200 rounded-xl">
+          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-green-800">Budget approved — {fmt(totals.fees + totals.oop)} locked in as the SOW fee</p>
+            <p className="text-xs text-green-600 mt-0.5">This figure will be used as the definitive amount when generating the SOW. You can still edit deliverables; change status to re-approve.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Deliverables ── */}
       <div className="space-y-5">
         {deliverables.map((d, dIdx) => {
           const dt = deliverableTotal(d);
+          const totalHours = d.resources.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0);
           return (
             <div key={d.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+
               {/* Deliverable header */}
-              <div className="flex items-center gap-3 px-5 py-3.5 bg-gray-50 border-b border-gray-200">
-                <span className="text-xs font-bold text-gray-400 w-5 text-center flex-shrink-0">{dIdx + 1}</span>
-                <input
-                  type="text"
-                  value={d.name}
-                  onChange={e => updateDeliverableName(d.id, e.target.value)}
+              <div className="flex items-center gap-3 px-5 py-3.5 bg-gray-50/80 border-b border-gray-200">
+                <span className="w-6 h-6 rounded-lg bg-[#253530] text-white text-[11px] font-black flex items-center justify-center flex-shrink-0">{dIdx + 1}</span>
+                <input type="text" value={d.name} onChange={e => updateDeliverableName(d.id, e.target.value)}
                   placeholder="Deliverable name…"
-                  className="flex-1 text-sm font-bold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
-                />
+                  className="flex-1 text-sm font-bold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal min-w-0" />
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs text-gray-500">Fees: <span className="font-bold text-gray-900">{fmt(dt.fees)}</span></span>
-                  {dt.oop > 0 && <span className="text-xs text-gray-500">OOP: <span className="font-bold text-gray-900">{fmt(dt.oop)}</span></span>}
-                  <span className="text-xs px-2 py-0.5 bg-[#253530] text-white rounded-lg font-bold">{fmt(dt.fees + dt.oop)}</span>
-                  <button onClick={() => removeDeliverable(d.id)} disabled={deliverables.length === 1} className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-30 transition-colors">
+                  <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
+                    <span>Fees: <strong className="text-gray-900">{fmt(dt.fees)}</strong></span>
+                    {dt.oop > 0 && <span>OOP: <strong className="text-gray-900">{fmt(dt.oop)}</strong></span>}
+                    <span className="text-[10px] text-gray-400">{totalHours.toFixed(1)}h</span>
+                  </div>
+                  <span className="text-xs px-2.5 py-1 bg-[#253530] text-white rounded-lg font-bold">{fmt(dt.fees + dt.oop)}</span>
+                  <button onClick={() => removeDeliverable(d.id)} disabled={deliverables.length === 1}
+                    className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-30 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Resource rows */}
+              {/* Resource table */}
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[900px]">
+                <table className="w-full min-w-[860px]">
                   <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-2.5 w-[160px]">Discipline</th>
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-2.5 w-[130px]">Seniority</th>
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[80px]">Rate/hr</th>
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[130px]">Start Date</th>
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[130px]">End Date</th>
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[80px]">Hours</th>
-                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[90px]">OOP ($)</th>
-                      <th className="text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-2.5 w-[100px]">Row Fee</th>
-                      <th className="w-8 px-2" />
+                    <tr className="border-b border-gray-100 bg-white">
+                      {['Discipline','Seniority','Rate/hr','Start Date','End Date','Hours','Row Fee',''].map((h, i) => (
+                        <th key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 ${i >= 6 ? 'w-8' : ''} ${i === 6 ? 'text-right px-4' : 'text-left'}`}>{h}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {d.resources.map(r => {
-                      const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
-                      const hrs = parseFloat(r.hours) || 0;
+                      const rate   = getHourlyRate(r.discipline, r.seniority, rateCardId);
+                      const hrs    = parseFloat(r.hours) || 0;
                       const rowFee = rate * hrs * discMult;
                       return (
-                        <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-3 py-2">
-                            <select
-                              value={r.discipline}
-                              onChange={e => updateResource(d.id, r.id, 'discipline', e.target.value)}
-                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 cursor-pointer"
-                            >
-                              {DISCIPLINES.map(disc => <option key={disc} value={disc}>{disc}</option>)}
+                        <tr key={r.id} className="hover:bg-gray-50/40 transition-colors group">
+                          <td className="px-3 py-2 w-[155px]">
+                            <select value={r.discipline} onChange={e => updateResource(d.id, r.id, 'discipline', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800">
+                              {DISCIPLINES.map(disc => <option key={disc}>{disc}</option>)}
                             </select>
                           </td>
-                          <td className="px-3 py-2">
-                            <select
-                              value={r.seniority}
-                              onChange={e => updateResource(d.id, r.id, 'seniority', e.target.value)}
-                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 cursor-pointer"
-                            >
-                              {SENIORITIES.map(s => <option key={s} value={s}>{s}</option>)}
+                          <td className="px-3 py-2 w-[120px]">
+                            <select value={r.seniority} onChange={e => updateResource(d.id, r.id, 'seniority', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800">
+                              {SENIORITIES.map(s => <option key={s}>{s}</option>)}
                             </select>
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="text-sm font-bold text-[#3A9A82] bg-[#3A9A82]/8 rounded-lg px-2.5 py-1.5 text-center">
-                              ${rate}
-                            </div>
+                          <td className="px-3 py-2 w-[72px]">
+                            <div className="text-xs font-bold text-[#3A9A82] bg-emerald-50 rounded-lg px-2 py-1.5 text-center whitespace-nowrap">${rate}</div>
                           </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="date"
-                              value={r.startDate}
-                              onChange={e => updateResource(d.id, r.id, 'startDate', e.target.value)}
-                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700"
-                            />
+                          <td className="px-3 py-2 w-[130px]">
+                            <input type="date" value={r.startDate} onChange={e => updateResource(d.id, r.id, 'startDate', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700" />
                           </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="date"
-                              value={r.endDate}
-                              onChange={e => updateResource(d.id, r.id, 'endDate', e.target.value)}
-                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700"
-                            />
+                          <td className="px-3 py-2 w-[130px]">
+                            <input type="date" value={r.endDate} onChange={e => updateResource(d.id, r.id, 'endDate', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700" />
                           </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="number" min="0" step="0.5"
-                              value={r.hours}
-                              onChange={e => updateResource(d.id, r.id, 'hours', e.target.value)}
+                          <td className="px-3 py-2 w-[72px]">
+                            <input type="number" min="0" step="0.5" value={r.hours} onChange={e => updateResource(d.id, r.id, 'hours', e.target.value)}
                               placeholder="0"
-                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 text-center placeholder:text-gray-300"
-                            />
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 text-center placeholder:text-gray-300" />
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5">
-                              <span className="text-xs text-gray-400">$</span>
-                              <input
-                                type="number" min="0"
-                                value={r.oop}
-                                onChange={e => updateResource(d.id, r.id, 'oop', e.target.value)}
-                                placeholder="0"
-                                className="w-full text-xs outline-none bg-transparent text-gray-800 placeholder:text-gray-300"
-                              />
-                            </div>
-                          </td>
-                          <td className="px-4 py-2 text-right">
+                          <td className="px-4 py-2 text-right w-[90px]">
                             {hrs > 0
                               ? <span className="text-sm font-bold text-gray-900">{fmt(rowFee)}</span>
                               : <span className="text-xs text-gray-300">—</span>}
                           </td>
-                          <td className="px-2 py-2">
-                            <button
-                              onClick={() => removeResource(d.id, r.id)}
-                              disabled={d.resources.length === 1}
-                              className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-20 transition-colors"
-                            >
+                          <td className="px-2 py-2 w-8">
+                            <button onClick={() => removeResource(d.id, r.id)} disabled={d.resources.length === 1}
+                              className="p-1 text-gray-200 group-hover:text-gray-400 hover:!text-red-400 disabled:opacity-20 transition-colors">
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </td>
@@ -3339,16 +3466,24 @@ function BudgetView({ opportunity, onUpdate }) {
                 </table>
               </div>
 
-              {/* Add resource row */}
-              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-                <button
-                  onClick={() => addResource(d.id)}
-                  className="flex items-center gap-1.5 text-xs text-[#3A9A82] font-semibold hover:text-[#2E8070] transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />Add resource
-                </button>
-                <div className="text-xs text-gray-400">
-                  {d.resources.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0).toFixed(1)} total hours
+              {/* Footer: add resource + OOP description */}
+              <div className="px-5 py-3 border-t border-gray-100 grid grid-cols-2 gap-4 items-start">
+                <div className="space-y-1">
+                  <button onClick={() => addResource(d.id)}
+                    className="flex items-center gap-1.5 text-xs text-[#3A9A82] font-semibold hover:text-[#2E8070] transition-colors">
+                    <Plus className="w-3.5 h-3.5" />Add resource
+                  </button>
+                  <p className="text-[10px] text-gray-400">{totalHours.toFixed(1)} total hours across {d.resources.length} resource{d.resources.length !== 1 ? 's' : ''}</p>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">OOP Description</label>
+                  <textarea
+                    value={d.oopDescription || ''}
+                    onChange={e => updateDeliverableOOP(d.id, e.target.value)}
+                    placeholder="Describe out-of-pocket costs (tools, travel, subscriptions…)"
+                    rows={2}
+                    className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700 resize-none placeholder:text-gray-300"
+                  />
                 </div>
               </div>
             </div>
@@ -3356,37 +3491,41 @@ function BudgetView({ opportunity, onUpdate }) {
         })}
       </div>
 
-      {/* Add deliverable + actions */}
-      <div className="mt-5 flex items-center justify-between gap-4 flex-wrap">
-        <button
-          onClick={addDeliverable}
-          className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-500 hover:border-[#3A9A82] hover:text-[#3A9A82] transition-colors"
-        >
+      {/* ── Add deliverable + bottom actions ── */}
+      <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
+        <button onClick={addDeliverable}
+          className="flex items-center gap-2 px-5 py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-500 hover:border-[#3A9A82] hover:text-[#3A9A82] transition-all">
           <Plus className="w-4 h-4" />Add Deliverable
         </button>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => downloadBudgetDocx(opportunity, deliverables, rateCardId, discountPct)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:border-[#253530] hover:text-[#253530] transition-colors"
-          >
+          <button onClick={() => downloadBudgetDocx(opportunity, deliverables, rateCardId, discountPct)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:border-[#253530] hover:text-[#253530] transition-colors">
             <Download className="w-4 h-4" />Export DOCX
           </button>
-          <AntennaButton
-            onClick={() => onUpdate({ currentStage: 'sow' })}
-            icon={ArrowRight}
-          >
-            Proceed to SOW →
-          </AntennaButton>
+          {isApproved ? (
+            <AntennaButton onClick={() => onUpdate({ currentStage: 'sow' })} icon={ArrowRight}>
+              Proceed to SOW →
+            </AntennaButton>
+          ) : (
+            <div className="relative group">
+              <button disabled className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed">
+                <Lock className="w-4 h-4" />Proceed to SOW
+              </button>
+              <div className="absolute bottom-full right-0 mb-2 w-52 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 leading-relaxed">
+                Set Budget Status to "Approved ✓" to proceed to SOW
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Note about SOW */}
-      <p className="text-xs text-gray-400 mt-4 text-right">
-        The grand total of <strong className="text-gray-600">{fmt(totals.fees + totals.oop)}</strong> will be available as the absolute fee figure when generating the SOW.
+      <p className="text-xs text-gray-400 mt-3 text-right">
+        Grand total <strong className="text-gray-600">{fmt(totals.fees + totals.oop)}</strong> · {deliverables.length} deliverable{deliverables.length !== 1 ? 's' : ''} · {deliverables.reduce((s,d) => s + d.resources.reduce((rs,r) => rs + (parseFloat(r.hours)||0), 0), 0).toFixed(1)} total hours
       </p>
     </div>
   );
 }
+
 
 
 // ============================================================================
@@ -3450,9 +3589,10 @@ ENGAGEMENT TYPE: ${engagementLabel}
 SELECTED SERVICES: ${servicesText}
 PRICING NOTES: ${opportunity.draftNotes || 'None'}
 
-BUDGET ESTIMATE (use this as the definitive fee figure — overrides any ranges in the proposal):
+BUDGET ESTIMATE (APPROVED — use as definitive fee; do not invent or change these numbers):
 ${(() => {
   const dels = opportunity.budgetDeliverables;
+  const status = opportunity.budgetStatus || 'draft';
   if (!dels || !dels.length) return 'Not yet completed — use proposal pricing guidance.';
   const rc = opportunity.budgetRateCard || 'standard';
   const disc = opportunity.budgetDiscount || 0;
@@ -3464,11 +3604,23 @@ ${(() => {
     oop += parseFloat(r.oop) || 0;
   }));
   const fmt = n => '$' + Math.round(n).toLocaleString();
-  const lines = ['Rate Card: ' + card.label + (disc > 0 ? ' with ' + disc + '% discount' : ''), 'Total Agency Fees: ' + fmt(fees), 'Total OOP: ' + fmt(oop), 'Grand Total: ' + fmt(fees + oop), '', 'Per deliverable:'];
+  const ps = opportunity.budgetProjectStart || '';
+  const pe = opportunity.budgetProjectEnd || '';
+  const lines = [
+    'Status: ' + status.toUpperCase(),
+    'Rate Card: ' + card.label + (disc > 0 ? ' with ' + disc + '% discount' : ''),
+    ...(ps || pe ? ['Project Dates: ' + [ps, pe].filter(Boolean).join(' to ')] : []),
+    'Total Agency Fees: ' + fmt(fees),
+    'Total OOP: ' + fmt(oop),
+    'Grand Total: ' + fmt(fees + oop),
+    '',
+    'Per deliverable breakdown:',
+  ];
   dels.forEach(d => {
     let df = 0, do2 = 0;
     d.resources.forEach(r => { df += getHourlyRate(r.discipline, r.seniority, rc) * (parseFloat(r.hours) || 0) * discMult; do2 += parseFloat(r.oop) || 0; });
-    lines.push('  ' + (d.name || 'Untitled') + ': ' + fmt(df) + (do2 > 0 ? ' fees + ' + fmt(do2) + ' OOP' : ' fees'));
+    lines.push('  ' + (d.name || 'Untitled') + ': ' + fmt(df) + ' fees' + (do2 > 0 ? ' + ' + fmt(do2) + ' OOP' : '') + ' = ' + fmt(df + do2));
+    if (d.oopDescription?.trim()) lines.push('    OOP includes: ' + d.oopDescription.trim());
   });
   return lines.join('\n');
 })()}
@@ -5089,22 +5241,31 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
   const [newUrl, setNewUrl] = useState('');
   const [newIndustry, setNewIndustry] = useState('');
   const [newPractice, setNewPractice] = useState('');
+  const [newOppType, setNewOppType] = useState('net_new');
+  const [newRid, setNewRid] = useState('');
   const [searchQ, setSearchQ] = useState('');
   const [filterStage, setFilterStage] = useState('');
   const [filterPractice, setFilterPractice] = useState('');
 
   const handleCreate = () => {
-    if (!newName.trim() || !newTitle.trim() || !newUrl.trim() || !newIndustry) return;
+    if (!newName.trim() || !newTitle.trim() || !newIndustry) return;
+    if (newOppType === 'organic' && !newRid.trim()) return;
     const opp = createOpportunity(newName.trim(), newUrl.trim(), newIndustry.trim(), newPractice, newTitle.trim());
+    opp.opportunityType = newOppType;
+    if (newOppType === 'organic') {
+      opp.rid = newRid.trim().toUpperCase();
+      opp.currentStage = 'budget';
+    }
     onCreateOpportunity(opp);
     setShowCreate(false);
     setNewName(''); setNewTitle(''); setNewUrl(''); setNewIndustry(''); setNewPractice('');
+    setNewOppType('net_new'); setNewRid('');
   };
 
   const getStageLabel = (opp) => PIPELINE_STAGES.find(s => s.id === opp.currentStage)?.label || 'Research';
 
   const getProgress = (opp) => {
-    const stages = ['research', 'brief', 'proposal', 'sow', 'handover'];
+    const stages = ['research', 'brief', 'proposal', 'budget', 'sow', 'handover'];
     const idx = stages.indexOf(opp.currentStage);
     if (opp.currentStage === 'handover' && opp.handoverDraft) return 100;
     if (opp.currentStage === 'sow' && opp.sowDraft) return 85;
@@ -5169,11 +5330,12 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
     research: { bg: '#FFF3E8', color: '#C26B1E', border: '#F5C89A' },
     brief:    { bg: '#FEF9EC', color: '#A08018', border: '#EDD98A' },
     proposal: { bg: '#EEF5E8', color: '#4A7A30', border: '#9DC87A' },
+    budget:   { bg: '#FFF0F5', color: '#A0306A', border: '#F0A8C8' },
     sow:      { bg: '#E8EEF5', color: '#2A5A8A', border: '#7AAAC8' },
     handover: { bg: '#F0EBF8', color: '#6B3FA0', border: '#C3A8E8' },
   }[stageId] || { bg: '#F5F5F5', color: '#666', border: '#DDD' });
 
-  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#4A7AAC', '#9B59B6'];
+  const stageColors = ['#E8853D', '#E8C23D', '#6B9E4A', '#C0457A', '#4A7AAC', '#9B59B6'];
 
   return (
     <div className="max-w-7xl mx-auto px-8 pb-16">
@@ -5217,20 +5379,20 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
         </div>
       </div>
 
-      {/* Pipeline stage cards — single row of 5 */}
-      <div className="grid grid-cols-5 gap-3 mb-10">
+      {/* Pipeline stage cards — single row of 6 */}
+      <div className="grid grid-cols-6 gap-2 mb-10">
         {PIPELINE_STAGES.map((stage, idx) => {
           const stageCount = allActive.filter(o => o.currentStage === stage.id).length;
           const isActive = filterStage === stage.id;
           return (
             <button key={stage.id} onClick={() => setFilterStage(isActive ? '' : stage.id)}
-              className={`bg-white rounded-xl border p-5 text-left transition-all ${isActive ? 'border-[#253530] ring-2 ring-[#253530]/10 shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:shadow-sm'}`}>
+              className={`bg-white rounded-xl border p-4 text-left transition-all ${isActive ? 'border-[#253530] ring-2 ring-[#253530]/10 shadow-sm' : 'border-gray-200 hover:border-gray-400 hover:shadow-sm'}`}>
               <div className="flex items-start justify-between mb-3">
                 <span className="text-xs font-bold tracking-widest text-gray-300 uppercase">{String(idx + 1).padStart(2,'0')}</span>
                 {stageCount > 0 && <span className="text-2xl font-black leading-none" style={{ color: stageColors[idx] }}>{stageCount}</span>}
               </div>
-              <h3 className="font-black text-[#253530] text-base leading-tight mb-1">{stage.label}</h3>
-              <p className="text-xs text-gray-400 leading-snug">{stage.description}</p>
+              <h3 className="font-black text-[#253530] text-sm leading-tight mb-1">{stage.label}</h3>
+              <p className="text-[11px] text-gray-400 leading-snug">{stage.description}</p>
             </button>
           );
         })}
@@ -5245,6 +5407,27 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
               <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-4 mb-6">
+
+              {/* Opportunity type selector — FIRST */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Opportunity Type <span className="text-red-400">*</span></label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setNewOppType('net_new')}
+                    className={`px-4 py-3 rounded-xl border-2 text-left transition-all ${newOppType === 'net_new' ? 'border-[#3A9A82] bg-[#3A9A82]/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <p className={`text-sm font-bold ${newOppType === 'net_new' ? 'text-[#253530]' : 'text-gray-700'}`}>🆕 Net New</p>
+                    <p className="text-xs text-gray-400 mt-0.5">New client — full pipeline</p>
+                  </button>
+                  <button type="button" onClick={() => setNewOppType('organic')}
+                    className={`px-4 py-3 rounded-xl border-2 text-left transition-all ${newOppType === 'organic' ? 'border-[#3A9A82] bg-[#3A9A82]/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <p className={`text-sm font-bold ${newOppType === 'organic' ? 'text-[#253530]' : 'text-gray-700'}`}>🔄 Organic</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Existing client — go to Budget</p>
+                  </button>
+                </div>
+                {newOppType === 'organic' && (
+                  <p className="text-xs text-[#3A9A82] mt-2 font-medium">Organic opportunities skip straight to the Budget stage. An NB code is required.</p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Company Name <span className="text-red-400">*</span></label>
                 <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && newName.trim() && handleCreate()} placeholder="e.g. Pacific Fusion" autoFocus className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
@@ -5262,10 +5445,18 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                   {PRACTICES.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website <span className="text-red-400">*</span></label>
-                <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
-              </div>
+              {newOppType === 'organic' ? (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">NB Code (RID) <span className="text-red-400">*</span></label>
+                  <input value={newRid} onChange={e => setNewRid(e.target.value)} placeholder="e.g. NB001A" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm font-mono" />
+                  <p className="text-xs text-gray-400 mt-1">Required for organic opportunities — this becomes the opportunity's RID.</p>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-1.5">Website <span className="text-red-400">*</span></label>
+                  <input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-1.5">Industry <span className="text-red-400">*</span></label>
                 <select value={newIndustry} onChange={e => setNewIndustry(e.target.value)} className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3A9A82] outline-none text-gray-900 bg-white text-sm">
@@ -5291,7 +5482,7 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowCreate(false)} className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">Cancel</button>
-              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim() || !newUrl.trim() || !newIndustry} className="flex-1 px-4 py-2.5 bg-[#3A9A82] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2E8070] transition-colors flex items-center justify-center gap-2">
+              <button onClick={handleCreate} disabled={!newName.trim() || !newTitle.trim() || !newIndustry || (newOppType === 'net_new' && !newUrl.trim()) || (newOppType === 'organic' && !newRid.trim())} className="flex-1 px-4 py-2.5 bg-[#3A9A82] text-white rounded-xl font-semibold text-sm disabled:opacity-40 hover:bg-[#2E8070] transition-colors flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" />Create Opportunity
               </button>
             </div>
@@ -5382,7 +5573,12 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                         <span className="text-xs font-black text-white group-hover:text-[#253530] transition-colors">{initials}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-[#253530] leading-tight truncate text-sm">{opp.companyName}</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <p className="font-bold text-[#253530] leading-tight truncate text-sm">{opp.companyName}</p>
+                          {opp.opportunityType === 'organic'
+                            ? <span className="flex-shrink-0 text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded uppercase tracking-wider">Organic</span>
+                            : <span className="flex-shrink-0 text-[9px] font-black px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded uppercase tracking-wider">Net New</span>}
+                        </div>
                         {opp.title
                           ? <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.title}</p>
                           : <p className="text-xs text-gray-300 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
