@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.17.0';
+const APP_VERSION = '3.17.1';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -3132,6 +3132,7 @@ function BudgetView({ opportunity, onUpdate }) {
   const [discountPct, setDiscountPct]   = useState(opportunity.budgetDiscount    || 0);
   const [projectStart, setProjectStart] = useState(opportunity.budgetProjectStart || '');
   const [projectEnd,   setProjectEnd]   = useState(opportunity.budgetProjectEnd  || '');
+  const [saveIndicator, setSaveIndicator] = useState('idle'); // 'idle' | 'saving' | 'saved'
   const budgetStatus = opportunity.budgetStatus || 'draft';
   const isApproved   = budgetStatus === 'approved';
 
@@ -3159,8 +3160,12 @@ function BudgetView({ opportunity, onUpdate }) {
 
   const [deliverables, setDeliverables] = useState(initDeliverables);
 
+  const saveTimerRef = React.useRef(null);
   const save = (d, rc, disc, ps, pe, status) => {
+    setSaveIndicator('saving');
     onUpdate({ budgetDeliverables: d, budgetRateCard: rc, budgetDiscount: disc, budgetProjectStart: ps, budgetProjectEnd: pe, budgetStatus: status !== undefined ? status : budgetStatus });
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => setSaveIndicator('saved'), 800);
   };
 
   const updateDeliverables = (d) => { setDeliverables(d); save(d, rateCardId, discountPct, projectStart, projectEnd); };
@@ -3168,12 +3173,30 @@ function BudgetView({ opportunity, onUpdate }) {
   const updateDiscount  = (v) => { setDiscountPct(v);  save(deliverables, rateCardId, v, projectStart, projectEnd); };
 
   const updateProjectStart = (v) => {
+    // Push new start date to any resource rows that are still using the old project start (or are empty)
+    const updatedDels = deliverables.map(d => ({
+      ...d,
+      resources: d.resources.map(r => ({
+        ...r,
+        startDate: (!r.startDate || r.startDate === projectStart) ? v : r.startDate,
+      })),
+    }));
     setProjectStart(v);
-    save(deliverables, rateCardId, discountPct, v, projectEnd);
+    setDeliverables(updatedDels);
+    save(updatedDels, rateCardId, discountPct, v, projectEnd);
   };
   const updateProjectEnd = (v) => {
+    // Push new end date to any resource rows that are still using the old project end (or are empty)
+    const updatedDels = deliverables.map(d => ({
+      ...d,
+      resources: d.resources.map(r => ({
+        ...r,
+        endDate: (!r.endDate || r.endDate === projectEnd) ? v : r.endDate,
+      })),
+    }));
     setProjectEnd(v);
-    save(deliverables, rateCardId, discountPct, projectStart, v);
+    setDeliverables(updatedDels);
+    save(updatedDels, rateCardId, discountPct, projectStart, v);
   };
   const updateStatus = (v) => save(deliverables, rateCardId, discountPct, projectStart, projectEnd, v);
 
@@ -3260,9 +3283,18 @@ function BudgetView({ opportunity, onUpdate }) {
             <p className="text-sm text-gray-500 mt-0.5">Resource-plan each deliverable to reach a firm fee — this number feeds directly into the SOW.</p>
           </div>
         </div>
-        {/* Status pill */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs text-gray-500 font-medium">Budget Status</span>
+        {/* Status + save indicator */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Save indicator */}
+          <div className="flex items-center gap-1.5 min-w-[80px]">
+            {saveIndicator === 'saving' && (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" /><span className="text-xs text-gray-400">Saving…</span></>
+            )}
+            {saveIndicator === 'saved' && (
+              <><CheckCircle className="w-3.5 h-3.5 text-[#3A9A82]" /><span className="text-xs font-semibold text-[#3A9A82]">Saved</span></>
+            )}
+          </div>
+          <span className="text-xs text-gray-500 font-medium">Status</span>
           <select
             value={budgetStatus}
             onChange={e => updateStatus(e.target.value)}
@@ -5538,14 +5570,19 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
           </div>
 
           {/* Column headers */}
-          <div className="grid grid-cols-12 gap-3 px-4 mb-2">
-            <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Opp #</span>
-            <span className="col-span-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company & Title</span>
-            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Practice / RID</span>
-            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
-            <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Progress</span>
-            <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Budget</span>
-            <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Modified By</span>
+          <div className="flex items-center mb-2">
+            <div className="flex-1 grid grid-cols-11 gap-3 px-4">
+              <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Opp #</span>
+              <span className="col-span-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Company & Title</span>
+              <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Practice</span>
+              <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Stage</span>
+              <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Progress</span>
+              <span className="col-span-2 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Budget Range</span>
+              <span className="col-span-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hidden sm:block">Modified By</span>
+            </div>
+            <div className="w-[130px] flex-shrink-0 px-3">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Estimator</span>
+            </div>
           </div>
 
           {filtered.length === 0 ? (
@@ -5560,93 +5597,91 @@ function HomeView({ opportunities, onSelectOpportunity, onCreateOpportunity, onD
                 const initials = opp.companyName.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
                 const pill = stagePill(opp.currentStage);
                 return (
-                  <div key={opp.id} className="relative group/row">
-                    <button onClick={() => onSelectOpportunity(opp)}
-                      className="w-full bg-white rounded-xl border border-gray-200 hover:border-[#253530] hover:shadow-sm transition-all p-4 text-left group grid grid-cols-12 gap-3 items-center">
-                    {/* Opp # */}
-                    <div className="col-span-1">
-                      <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-600 transition-colors">{opp.oppNumber || '—'}</span>
-                    </div>
-                    {/* Company + Title */}
-                    <div className="col-span-3 flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 bg-[#253530] group-hover:bg-[#4BAE97] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
-                        <span className="text-xs font-black text-white group-hover:text-[#253530] transition-colors">{initials}</span>
+                  <div key={opp.id} className="flex items-stretch bg-white rounded-xl border border-gray-200 hover:border-[#253530] hover:shadow-sm transition-all group/row overflow-hidden">
+                    {/* Clickable main area */}
+                    <button onClick={() => onSelectOpportunity(opp)} className="flex-1 p-4 text-left grid grid-cols-11 gap-3 items-center min-w-0 group">
+                      {/* Opp # */}
+                      <div className="col-span-1">
+                        <span className="text-[10px] font-mono text-gray-400 group-hover:text-gray-600 transition-colors">{opp.oppNumber || '—'}</span>
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <p className="font-bold text-[#253530] leading-tight truncate text-sm">{opp.companyName}</p>
-                          {opp.opportunityType === 'organic'
-                            ? <span className="flex-shrink-0 text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded uppercase tracking-wider">Organic</span>
-                            : <span className="flex-shrink-0 text-[9px] font-black px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded uppercase tracking-wider">Net New</span>}
+                      {/* Company + Title */}
+                      <div className="col-span-3 flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 bg-[#253530] group-hover:bg-[#4BAE97] rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
+                          <span className="text-xs font-black text-white group-hover:text-[#253530] transition-colors">{initials}</span>
                         </div>
-                        {opp.title
-                          ? <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.title}</p>
-                          : <p className="text-xs text-gray-300 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
-                        }
-                      </div>
-                    </div>
-                    {/* Practice + RID */}
-                    <div className="col-span-2 hidden sm:flex flex-col gap-0.5 min-w-0">
-                      {opp.practice && <span className="text-xs font-semibold text-gray-700 truncate">{opp.practice}</span>}
-                      {opp.rid && <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded w-fit">{opp.rid}</span>}
-                      {!opp.practice && !opp.rid && <span className="text-xs text-gray-300">—</span>}
-                    </div>
-                    {/* Stage */}
-                    <div className="col-span-2 hidden sm:block">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border"
-                        style={{ backgroundColor: pill.bg, color: pill.color, borderColor: pill.border }}>
-                        {getStageLabel(opp)}
-                      </span>
-                    </div>
-                    {/* Progress */}
-                    <div className="col-span-2 hidden sm:block">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#e5e5e5' }}>
-                          <div className="h-full rounded-full transition-all" style={{
-                            width: `${progress}%`,
-                            background: progress < 40 ? 'linear-gradient(90deg,#888,#E8853D)' :
-                                        progress < 70 ? 'linear-gradient(90deg,#E8853D,#6B9E4A)' :
-                                                        'linear-gradient(90deg,#6B9E4A,#4A7AAC)'
-                          }} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="font-bold text-[#253530] leading-tight truncate text-sm">{opp.companyName}</p>
+                            {opp.opportunityType === 'organic'
+                              ? <span className="flex-shrink-0 text-[9px] font-black px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded uppercase tracking-wider">Organic</span>
+                              : <span className="flex-shrink-0 text-[9px] font-black px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded uppercase tracking-wider">Net New</span>}
+                          </div>
+                          {opp.title
+                            ? <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.title}</p>
+                            : <p className="text-xs text-gray-300 mt-0.5 truncate">{opp.industry || opp.companyUrl || '—'}</p>
+                          }
                         </div>
-                        <span className="text-xs font-bold text-gray-400 w-8 text-right">{progress}%</span>
                       </div>
-                    </div>
-                    {/* Budget + Modified By + arrow */}
-                    <div className="col-span-1 hidden sm:block">
-                      {budget
-                        ? <span className="text-xs font-semibold text-gray-700">{budget}</span>
-                        : <span className="text-xs text-gray-300">—</span>}
-                    </div>
-                    <div className="col-span-1 hidden sm:flex items-center justify-between gap-1">
-                      <span className="text-[10px] text-gray-400 truncate" title={opp.lastModifiedBy || ''}>
-                        {opp.lastModifiedBy ? opp.lastModifiedBy.split('@')[0] : '—'}
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#253530] transition-colors flex-shrink-0" />
-                    </div>
-                  </button>
-                  {/* Row action buttons — appear on hover */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                    {/* Estimator button — always visible on hover */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onOpenEstimator(opp); }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#253530] hover:bg-[#3A9A82] text-white text-[11px] font-bold transition-colors"
-                      title="Open Budget Estimator"
-                    >
-                      <DollarSign className="w-3 h-3" />Estimator
+                      {/* Practice + RID */}
+                      <div className="col-span-1 hidden sm:flex flex-col gap-0.5 min-w-0">
+                        {opp.practice && <span className="text-xs font-semibold text-gray-700 truncate">{opp.practice}</span>}
+                        {opp.rid && <span className="text-[10px] font-mono bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded w-fit">{opp.rid}</span>}
+                        {!opp.practice && !opp.rid && <span className="text-xs text-gray-300">—</span>}
+                      </div>
+                      {/* Stage */}
+                      <div className="col-span-1 hidden sm:block">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border"
+                          style={{ backgroundColor: pill.bg, color: pill.color, borderColor: pill.border }}>
+                          {getStageLabel(opp)}
+                        </span>
+                      </div>
+                      {/* Progress */}
+                      <div className="col-span-2 hidden sm:block">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: '#e5e5e5' }}>
+                            <div className="h-full rounded-full transition-all" style={{
+                              width: `${progress}%`,
+                              background: progress < 40 ? 'linear-gradient(90deg,#888,#E8853D)' :
+                                          progress < 70 ? 'linear-gradient(90deg,#E8853D,#6B9E4A)' :
+                                                          'linear-gradient(90deg,#6B9E4A,#4A7AAC)'
+                            }} />
+                          </div>
+                          <span className="text-xs font-bold text-gray-400 w-8 text-right">{progress}%</span>
+                        </div>
+                      </div>
+                      {/* Budget range */}
+                      <div className="col-span-2 hidden sm:block">
+                        {budget
+                          ? <span className="text-xs font-semibold text-gray-700">{budget}</span>
+                          : <span className="text-xs text-gray-300">—</span>}
+                      </div>
+                      {/* Modified by + chevron */}
+                      <div className="col-span-1 hidden sm:flex items-center justify-between gap-1">
+                        <span className="text-[10px] text-gray-400 truncate" title={opp.lastModifiedBy || ''}>
+                          {opp.lastModifiedBy ? opp.lastModifiedBy.split('@')[0] : '—'}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#253530] transition-colors flex-shrink-0" />
+                      </div>
                     </button>
-                    {/* Admin delete */}
-                    {roleInfo?.canAccessAdmin && (
+
+                    {/* Always-visible action column */}
+                    <div className="flex items-center gap-1.5 px-3 border-l border-gray-100 bg-gray-50/40 flex-shrink-0">
                       <button
-                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${opp.companyName} — ${opp.title || ''}"? This cannot be undone.`)) onDeleteOpportunity(opp.id); }}
-                        className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600"
-                        title="Delete opportunity"
+                        onClick={(e) => { e.stopPropagation(); onOpenEstimator(opp); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#253530] hover:bg-[#3A9A82] text-white text-[11px] font-bold transition-colors whitespace-nowrap"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <DollarSign className="w-3 h-3" />Estimator
                       </button>
-                    )}
+                      {roleInfo?.canAccessAdmin && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${opp.companyName} — ${opp.title || ''}"? This cannot be undone.`)) onDeleteOpportunity(opp.id); }}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
                 );
               })}
             </div>
