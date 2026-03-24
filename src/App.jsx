@@ -17,7 +17,7 @@ import {
 import { saveAs } from 'file-saver';
 import { supabase } from './lib/supabase.js';
 
-const APP_VERSION = '3.16.6';
+const APP_VERSION = '3.16.7';
 const MODEL = 'claude-sonnet-4-5-20250929';
 
 // ============================================================================
@@ -27,8 +27,9 @@ const PIPELINE_STAGES = [
   { id: 'research', number: 1, label: 'Research', Icon: Search, description: 'Company discovery & intake questions' },
   { id: 'brief', number: 2, label: 'Return Brief', Icon: FileText, description: 'Transcript analysis & client brief' },
   { id: 'proposal', number: 3, label: 'Proposal', Icon: Sparkles, description: 'Service selection & proposal' },
-  { id: 'sow', number: 4, label: 'SOW', Icon: PenTool, description: 'Statement of Work generation' },
-  { id: 'handover', number: 5, label: 'Handover', Icon: ClipboardList, description: 'Sales to delivery handover doc' },
+  { id: 'budget', number: 4, label: 'Budget', Icon: DollarSign, description: 'Resource planning & cost estimation' },
+  { id: 'sow', number: 5, label: 'SOW', Icon: PenTool, description: 'Statement of Work generation' },
+  { id: 'handover', number: 6, label: 'Handover', Icon: ClipboardList, description: 'Sales to delivery handover doc' },
 ];
 
 const PROPOSAL_STATUSES = [
@@ -58,7 +59,7 @@ const USER_ROLES = {
     description: 'Full pipeline access including SOW generation',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     badgeColor: 'bg-purple-600',
-    allowedStages: ['research', 'brief', 'proposal', 'sow', 'handover'],
+    allowedStages: ['research', 'brief', 'proposal', 'budget', 'sow', 'handover'],
     canAccessSOWReview: true,
     canAccessAdmin: false,
     canCreateOpportunities: true,
@@ -78,7 +79,7 @@ const USER_ROLES = {
     description: 'Full access + user management',
     color: 'bg-gray-900 text-white border-gray-700',
     badgeColor: 'bg-gray-900',
-    allowedStages: ['research', 'brief', 'proposal', 'sow', 'handover'],
+    allowedStages: ['research', 'brief', 'proposal', 'budget', 'sow', 'handover'],
     canAccessSOWReview: true,
     canAccessAdmin: true,
     canCreateOpportunities: true,
@@ -127,7 +128,11 @@ const createOpportunity = (companyName, companyUrl = '', industry = '', practice
   draftNotes: '',
   proposalDraft: '',
   proposalStatus: 'draft',
-  // Stage 4
+  // Stage 4 — Budget
+  budgetDeliverables: [],
+  budgetRateCard: 'standard',
+  budgetDiscount: 0,
+  // Stage 5
   sowDraft: '',
   sowStatus: 'draft',
   sowNotes: '',
@@ -2688,14 +2693,14 @@ Antenna Group | www.antennagroup.com`
           )}
           {opportunity.proposalStatus === 'approved' && (
             <AntennaButton onClick={() => onUpdate({
-              currentStage: 'sow', draftNotes,
+              currentStage: 'budget', draftNotes,
               selectedServices: opportunity.selectedServices,
               selectedArchetypes: opportunity.selectedArchetypes,
               draftEngagementType: opportunity.draftEngagementType,
               proposalDraft: opportunity.proposalDraft,
               proposalStatus: opportunity.proposalStatus,
             })} icon={ArrowRight}>
-              Generate SOW →
+              Build Budget →
             </AntennaButton>
           )}
           {opportunity.proposalDraft && (
@@ -2924,6 +2929,466 @@ Antenna Group | www.antennagroup.com`
 
 // ============================================================================
 // STAGE 4: SOW GENERATION VIEW
+
+// ============================================================================
+// RATE CARDS & BUDGET CALCULATOR CONFIG
+// ============================================================================
+
+const DISCIPLINES = [
+  'ACCOUNT', 'EARNED', 'PM', 'CREATIVE STUDIO', 'CREATIVE STRATEGY',
+  'INTEGRATED STRATEGY', 'DEV', 'SOCIAL STRATEGY', 'PAID MEDIA',
+  'MEASUREMENT', 'RESEARCH', 'SEO/GEO',
+];
+
+const SENIORITIES = [
+  'AAE', 'AE', 'SAE', 'AS', 'DIRECTOR', 'SNR DIRECTOR', 'VP', 'SVP', 'EVP', 'C', 'SOUTH',
+];
+
+// Base rates (Standard rate card)
+const BASE_RATES = {
+  AAE: 160, AE: 180, SAE: 200, AS: 225,
+  DIRECTOR: 235, 'SNR DIRECTOR': 260,
+  VP: 285, SVP: 300, EVP: 330, C: 340, SOUTH: 100,
+};
+
+// Overrides when discipline is Creative Strategy or Integrated Strategy
+const STRATEGY_RATE_OVERRIDES = {
+  'SNR DIRECTOR': 280, VP: 295, SVP: 315, EVP: 330,
+};
+const STRATEGY_DISCIPLINES = ['CREATIVE STRATEGY', 'INTEGRATED STRATEGY'];
+
+// Rate card definitions — add new entries here to extend
+const RATE_CARDS = [
+  { id: 'standard', label: 'Standard', multiplier: 1.00,  description: 'Standard agency rates' },
+  { id: 'crisis',   label: 'Crisis',   multiplier: 1.33,  description: '+33% crisis premium' },
+  { id: 'internal', label: 'Internal', multiplier: 0.60,  description: '−40% internal rates' },
+];
+
+const getHourlyRate = (discipline, seniority, rateCardId) => {
+  const isStrategy = STRATEGY_DISCIPLINES.includes(discipline);
+  const baseRate = (isStrategy && STRATEGY_RATE_OVERRIDES[seniority])
+    ? STRATEGY_RATE_OVERRIDES[seniority]
+    : (BASE_RATES[seniority] || 0);
+  const card = RATE_CARDS.find(c => c.id === rateCardId) || RATE_CARDS[0];
+  return Math.round(baseRate * card.multiplier);
+};
+
+const newResourceRow = () => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  discipline: 'ACCOUNT',
+  seniority: 'SAE',
+  startDate: '',
+  endDate: '',
+  hours: '',
+  oop: '',
+});
+
+const newDeliverable = (name = '') => ({
+  id: Date.now().toString() + Math.random().toString(36).slice(2),
+  name,
+  resources: [newResourceRow()],
+});
+
+// ============================================================================
+// BUDGET DOCX EXPORT
+// ============================================================================
+const downloadBudgetDocx = async (opportunity, deliverables, rateCardId, discountPct) => {
+  try {
+    const card = RATE_CARDS.find(c => c.id === rateCardId) || RATE_CARDS[0];
+    const discMult = 1 - (discountPct || 0) / 100;
+    const fmt = (n) => `$${Math.round(n).toLocaleString()}`;
+    const lines = [];
+
+    lines.push(`# Budget Estimate: ${opportunity.companyName}`);
+    lines.push(`Prepared by Antenna Group`);
+    lines.push(`Rate Card: ${card.label}${discountPct > 0 ? ` · ${discountPct}% discount applied` : ''}`);
+    lines.push(`Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`);
+    lines.push('');
+
+    let grandFees = 0, grandOop = 0;
+    deliverables.forEach(d => {
+      d.resources.forEach(r => {
+        const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
+        const hrs = parseFloat(r.hours) || 0;
+        const oop = parseFloat(r.oop) || 0;
+        grandFees += rate * hrs * discMult;
+        grandOop += oop;
+      });
+    });
+
+    lines.push(`## Summary`);
+    lines.push(`Total Fees: ${fmt(grandFees)}`);
+    lines.push(`Total OOP: ${fmt(grandOop)}`);
+    lines.push(`Grand Total: ${fmt(grandFees + grandOop)}`);
+    lines.push('');
+
+    deliverables.forEach(d => {
+      let dFees = 0, dOop = 0;
+      d.resources.forEach(r => {
+        const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
+        const hrs = parseFloat(r.hours) || 0;
+        dFees += rate * hrs * discMult;
+        dOop += parseFloat(r.oop) || 0;
+      });
+
+      lines.push(`## ${d.name || 'Untitled Deliverable'}`);
+      lines.push(`Fees: ${fmt(dFees)} · OOP: ${fmt(dOop)} · Subtotal: ${fmt(dFees + dOop)}`);
+      lines.push('');
+
+      d.resources.forEach(r => {
+        const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
+        const hrs = parseFloat(r.hours) || 0;
+        const fee = rate * hrs * discMult;
+        const oop = parseFloat(r.oop) || 0;
+        const dates = (r.startDate && r.endDate) ? `${r.startDate} – ${r.endDate}` : r.startDate || r.endDate || '—';
+        lines.push(`- ${r.discipline} · ${r.seniority} · ${fmt(rate)}/hr · ${hrs}h · ${dates} → Fees: ${fmt(fee)}${oop > 0 ? ` · OOP: ${fmt(oop)}` : ''}`);
+      });
+      lines.push('');
+    });
+
+    const children = [];
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t) { children.push(new Paragraph({ spacing: { after: 80 } })); continue; }
+      if (t.startsWith('# ')) { children.push(new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun({ text: t.replace(/^# /, ''), bold: true, size: 36, font: 'Arial', color: '253530' })], spacing: { before: 400, after: 200 } })); continue; }
+      if (t.startsWith('## ')) { children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: t.replace(/^## /, ''), bold: true, size: 26, font: 'Arial', color: '253530' })], spacing: { before: 360, after: 140 } })); continue; }
+      if (t.startsWith('- ')) { children.push(new Paragraph({ numbering: { reference: 'bullet-list', level: 0 }, children: [new TextRun({ text: t.replace(/^- /, ''), size: 20, font: 'Arial' })], spacing: { after: 60 } })); continue; }
+      children.push(new Paragraph({ children: [new TextRun({ text: t, size: 22, font: 'Arial' })], spacing: { after: 100 } }));
+    }
+
+    const doc = new Document({
+      numbering: { config: [{ reference: 'bullet-list', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.START, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] }] },
+      sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, headers: { default: createAntennaHeader() }, footers: { default: createFooter() }, children }],
+    });
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `${opportunity.companyName}_Budget.docx`);
+  } catch (e) {
+    console.error('Budget DOCX error:', e);
+  }
+};
+
+// ============================================================================
+// STAGE 4: BUDGET VIEW
+// ============================================================================
+function BudgetView({ opportunity, onUpdate }) {
+  const savedDeliverables = opportunity.budgetDeliverables;
+  const [rateCardId, setRateCardId] = useState(opportunity.budgetRateCard || 'standard');
+  const [discountPct, setDiscountPct] = useState(opportunity.budgetDiscount || 0);
+
+  // Initialise deliverables from saved state or from selectedServices
+  const initDeliverables = () => {
+    if (savedDeliverables && savedDeliverables.length > 0) return savedDeliverables;
+    // Build from selected services grouped by bundle (same logic as proposal)
+    const selectedServices = opportunity.selectedServices || [];
+    const bundles = [];
+    const seen = new Set();
+    for (const trigger of SERVICE_TRIGGERS) {
+      const fromTrigger = trigger.services.filter(s => selectedServices.includes(getServiceName(s)));
+      if (!fromTrigger.length) continue;
+      const bundleNames = [...new Set(fromTrigger.map(s => s.pricing?.bundle).filter(Boolean))];
+      for (const b of bundleNames) {
+        if (!seen.has(b)) { seen.add(b); bundles.push(b); }
+      }
+      fromTrigger.filter(s => !s.pricing?.bundle).forEach(s => {
+        const n = getServiceName(s);
+        if (!seen.has(n)) { seen.add(n); bundles.push(n); }
+      });
+    }
+    return bundles.length > 0
+      ? bundles.map(name => newDeliverable(name))
+      : [newDeliverable('')];
+  };
+
+  const [deliverables, setDeliverables] = useState(initDeliverables);
+
+  const save = (d, rc, disc) => {
+    onUpdate({ budgetDeliverables: d, budgetRateCard: rc, budgetDiscount: disc });
+  };
+
+  const updateDeliverables = (d) => { setDeliverables(d); save(d, rateCardId, discountPct); };
+  const updateRateCard = (v) => { setRateCardId(v); save(deliverables, v, discountPct); };
+  const updateDiscount = (v) => { setDiscountPct(v); save(deliverables, rateCardId, v); };
+
+  const addDeliverable = () => updateDeliverables([...deliverables, newDeliverable('')]);
+  const removeDeliverable = (id) => updateDeliverables(deliverables.filter(d => d.id !== id));
+  const updateDeliverableName = (id, name) => updateDeliverables(deliverables.map(d => d.id === id ? { ...d, name } : d));
+
+  const addResource = (dId) => updateDeliverables(deliverables.map(d => d.id === dId ? { ...d, resources: [...d.resources, newResourceRow()] } : d));
+  const removeResource = (dId, rId) => updateDeliverables(deliverables.map(d => d.id === dId ? { ...d, resources: d.resources.filter(r => r.id !== rId) } : d));
+  const updateResource = (dId, rId, field, value) => updateDeliverables(
+    deliverables.map(d => d.id === dId
+      ? { ...d, resources: d.resources.map(r => r.id === rId ? { ...r, [field]: value } : r) }
+      : d)
+  );
+
+  const discMult = 1 - discountPct / 100;
+  const fmt = (n) => `$${Math.round(n).toLocaleString()}`;
+
+  // Grand totals
+  const totals = deliverables.reduce((acc, d) => {
+    d.resources.forEach(r => {
+      const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
+      acc.fees += rate * (parseFloat(r.hours) || 0) * discMult;
+      acc.oop += parseFloat(r.oop) || 0;
+    });
+    return acc;
+  }, { fees: 0, oop: 0 });
+
+  const deliverableTotal = (d) => d.resources.reduce((acc, r) => {
+    const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
+    acc.fees += rate * (parseFloat(r.hours) || 0) * discMult;
+    acc.oop += parseFloat(r.oop) || 0;
+    return acc;
+  }, { fees: 0, oop: 0 });
+
+  const cardInfo = RATE_CARDS.find(c => c.id === rateCardId) || RATE_CARDS[0];
+
+  return (
+    <div className="max-w-7xl mx-auto px-8 py-8">
+
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+        <div className="flex items-start gap-4">
+          <div className="w-11 h-11 bg-[#253530] rounded-xl flex items-center justify-center flex-shrink-0">
+            <DollarSign className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Budget Estimator</h2>
+            <p className="text-sm text-gray-500 mt-0.5">Build a resource plan and cost estimate per deliverable — resolves the proposal range to a final number for the SOW.</p>
+          </div>
+        </div>
+
+        {/* Rate card + discount controls */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-500 whitespace-nowrap">Rate Card</label>
+            <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-white">
+              {RATE_CARDS.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => updateRateCard(c.id)}
+                  title={c.description}
+                  className={`text-xs px-3 py-2 font-semibold transition-colors whitespace-nowrap ${rateCardId === c.id ? 'bg-[#253530] text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-semibold text-gray-500 whitespace-nowrap">Discount</label>
+            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-2">
+              <input
+                type="number" min="0" max="100" step="1"
+                value={discountPct}
+                onChange={e => updateDiscount(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                className="w-12 text-xs font-bold text-gray-900 text-center outline-none bg-transparent"
+              />
+              <span className="text-xs text-gray-500 font-semibold">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary bar */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="bg-[#253530] rounded-2xl px-6 py-4 text-center">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Fees</p>
+          <p className="text-2xl font-black text-white">{fmt(totals.fees)}</p>
+          {discountPct > 0 && <p className="text-xs text-[#4BAE97] mt-1">{discountPct}% discount applied</p>}
+        </div>
+        <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 text-center">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total OOP</p>
+          <p className="text-2xl font-black text-gray-900">{fmt(totals.oop)}</p>
+          <p className="text-xs text-gray-400 mt-1">Out-of-pocket costs</p>
+        </div>
+        <div className="bg-[#3A9A82] rounded-2xl px-6 py-4 text-center">
+          <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">Grand Total</p>
+          <p className="text-2xl font-black text-white">{fmt(totals.fees + totals.oop)}</p>
+          <p className="text-xs text-white/70 mt-1">{cardInfo.label} rates</p>
+        </div>
+      </div>
+
+      {/* Deliverables */}
+      <div className="space-y-5">
+        {deliverables.map((d, dIdx) => {
+          const dt = deliverableTotal(d);
+          return (
+            <div key={d.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              {/* Deliverable header */}
+              <div className="flex items-center gap-3 px-5 py-3.5 bg-gray-50 border-b border-gray-200">
+                <span className="text-xs font-bold text-gray-400 w-5 text-center flex-shrink-0">{dIdx + 1}</span>
+                <input
+                  type="text"
+                  value={d.name}
+                  onChange={e => updateDeliverableName(d.id, e.target.value)}
+                  placeholder="Deliverable name…"
+                  className="flex-1 text-sm font-bold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
+                />
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-xs text-gray-500">Fees: <span className="font-bold text-gray-900">{fmt(dt.fees)}</span></span>
+                  {dt.oop > 0 && <span className="text-xs text-gray-500">OOP: <span className="font-bold text-gray-900">{fmt(dt.oop)}</span></span>}
+                  <span className="text-xs px-2 py-0.5 bg-[#253530] text-white rounded-lg font-bold">{fmt(dt.fees + dt.oop)}</span>
+                  <button onClick={() => removeDeliverable(d.id)} disabled={deliverables.length === 1} className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-30 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Resource rows */}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px]">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-2.5 w-[160px]">Discipline</th>
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-2.5 w-[130px]">Seniority</th>
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[80px]">Rate/hr</th>
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[130px]">Start Date</th>
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[130px]">End Date</th>
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[80px]">Hours</th>
+                      <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2.5 w-[90px]">OOP ($)</th>
+                      <th className="text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider px-4 py-2.5 w-[100px]">Row Fee</th>
+                      <th className="w-8 px-2" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {d.resources.map(r => {
+                      const rate = getHourlyRate(r.discipline, r.seniority, rateCardId);
+                      const hrs = parseFloat(r.hours) || 0;
+                      const rowFee = rate * hrs * discMult;
+                      return (
+                        <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-3 py-2">
+                            <select
+                              value={r.discipline}
+                              onChange={e => updateResource(d.id, r.id, 'discipline', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 cursor-pointer"
+                            >
+                              {DISCIPLINES.map(disc => <option key={disc} value={disc}>{disc}</option>)}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={r.seniority}
+                              onChange={e => updateResource(d.id, r.id, 'seniority', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 cursor-pointer"
+                            >
+                              {SENIORITIES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="text-sm font-bold text-[#3A9A82] bg-[#3A9A82]/8 rounded-lg px-2.5 py-1.5 text-center">
+                              ${rate}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="date"
+                              value={r.startDate}
+                              onChange={e => updateResource(d.id, r.id, 'startDate', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="date"
+                              value={r.endDate}
+                              onChange={e => updateResource(d.id, r.id, 'endDate', e.target.value)}
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-700"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="number" min="0" step="0.5"
+                              value={r.hours}
+                              onChange={e => updateResource(d.id, r.id, 'hours', e.target.value)}
+                              placeholder="0"
+                              className="w-full text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-[#3A9A82] text-gray-800 text-center placeholder:text-gray-300"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5">
+                              <span className="text-xs text-gray-400">$</span>
+                              <input
+                                type="number" min="0"
+                                value={r.oop}
+                                onChange={e => updateResource(d.id, r.id, 'oop', e.target.value)}
+                                placeholder="0"
+                                className="w-full text-xs outline-none bg-transparent text-gray-800 placeholder:text-gray-300"
+                              />
+                            </div>
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            {hrs > 0
+                              ? <span className="text-sm font-bold text-gray-900">{fmt(rowFee)}</span>
+                              : <span className="text-xs text-gray-300">—</span>}
+                          </td>
+                          <td className="px-2 py-2">
+                            <button
+                              onClick={() => removeResource(d.id, r.id)}
+                              disabled={d.resources.length === 1}
+                              className="p-1 text-gray-300 hover:text-red-400 disabled:opacity-20 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Add resource row */}
+              <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  onClick={() => addResource(d.id)}
+                  className="flex items-center gap-1.5 text-xs text-[#3A9A82] font-semibold hover:text-[#2E8070] transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />Add resource
+                </button>
+                <div className="text-xs text-gray-400">
+                  {d.resources.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0).toFixed(1)} total hours
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add deliverable + actions */}
+      <div className="mt-5 flex items-center justify-between gap-4 flex-wrap">
+        <button
+          onClick={addDeliverable}
+          className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm font-semibold text-gray-500 hover:border-[#3A9A82] hover:text-[#3A9A82] transition-colors"
+        >
+          <Plus className="w-4 h-4" />Add Deliverable
+        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => downloadBudgetDocx(opportunity, deliverables, rateCardId, discountPct)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:border-[#253530] hover:text-[#253530] transition-colors"
+          >
+            <Download className="w-4 h-4" />Export DOCX
+          </button>
+          <AntennaButton
+            onClick={() => onUpdate({ currentStage: 'sow' })}
+            icon={ArrowRight}
+          >
+            Proceed to SOW →
+          </AntennaButton>
+        </div>
+      </div>
+
+      {/* Note about SOW */}
+      <p className="text-xs text-gray-400 mt-4 text-right">
+        The grand total of <strong className="text-gray-600">{fmt(totals.fees + totals.oop)}</strong> will be available as the absolute fee figure when generating the SOW.
+      </p>
+    </div>
+  );
+}
+
+
 // ============================================================================
 function SOWGenerateView({ opportunity, onUpdate }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -2984,6 +3449,29 @@ CLIENT: ${opportunity.companyName}
 ENGAGEMENT TYPE: ${engagementLabel}
 SELECTED SERVICES: ${servicesText}
 PRICING NOTES: ${opportunity.draftNotes || 'None'}
+
+BUDGET ESTIMATE (use this as the definitive fee figure — overrides any ranges in the proposal):
+${(() => {
+  const dels = opportunity.budgetDeliverables;
+  if (!dels || !dels.length) return 'Not yet completed — use proposal pricing guidance.';
+  const rc = opportunity.budgetRateCard || 'standard';
+  const disc = opportunity.budgetDiscount || 0;
+  const discMult = 1 - disc / 100;
+  const card = RATE_CARDS.find(c => c.id === rc) || RATE_CARDS[0];
+  let fees = 0, oop = 0;
+  dels.forEach(d => d.resources.forEach(r => {
+    fees += getHourlyRate(r.discipline, r.seniority, rc) * (parseFloat(r.hours) || 0) * discMult;
+    oop += parseFloat(r.oop) || 0;
+  }));
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  const lines = ['Rate Card: ' + card.label + (disc > 0 ? ' with ' + disc + '% discount' : ''), 'Total Agency Fees: ' + fmt(fees), 'Total OOP: ' + fmt(oop), 'Grand Total: ' + fmt(fees + oop), '', 'Per deliverable:'];
+  dels.forEach(d => {
+    let df = 0, do2 = 0;
+    d.resources.forEach(r => { df += getHourlyRate(r.discipline, r.seniority, rc) * (parseFloat(r.hours) || 0) * discMult; do2 += parseFloat(r.oop) || 0; });
+    lines.push('  ' + (d.name || 'Untitled') + ': ' + fmt(df) + (do2 > 0 ? ' fees + ' + fmt(do2) + ' OOP' : ' fees'));
+  });
+  return lines.join('\n');
+})()}
 
 BD TEAM NOTES (internal context — use to inform tone, sensitivities and client priorities, do not reproduce verbatim):
 ${opportunity.briefNotes?.trim() || 'None'}
@@ -5189,6 +5677,7 @@ export default function App() {
       case 'research': return <ResearchView {...props} />;
       case 'brief': return <BriefView {...props} />;
       case 'proposal': return <ProposalView {...props} />;
+      case 'budget': return <BudgetView {...props} />;
       case 'sow': return <SOWGenerateView {...props} />;
       case 'handover': return <HandoverView {...props} />;
       default: return <ResearchView {...props} />;

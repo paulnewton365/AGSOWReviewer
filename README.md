@@ -1,4 +1,4 @@
-# SOW Workbench v3.16.6
+# SOW Workbench v3.16.7
 
 A comprehensive BD pipeline and Statement of Work management tool for Antenna Group. Manage the full new business journey — from research and intake through Return Brief, proposal, SOW generation, and internal sales handover.
 
@@ -10,6 +10,44 @@ Both the Qualification Board and New Business Pipeline modals now include inline
 - **Qualify Opportunity** — A teal "Qualify Opportunity" button in the Qualification Board header opens a layered sub-modal with the Smartsheet qualification form embedded at full width. Submit directly from within the tool; entries appear in the board after the next refresh.
 - **Add Opportunity** — A matching "Add Opportunity" button in the New Business Pipeline header opens the organic opportunity intake form in the same pattern.
 - Both sub-modals use a dark `#253530` header with a subtitle confirming where submissions land, and close independently without dismissing the parent modal.
+
+## What's New in v3.16.7
+
+### New Stage 4: Budget Estimator
+
+A new **Budget** stage sits between Proposal and SOW, resolving the proposal's fee range into a single, committed dollar figure before the SOW is generated.
+
+**How it works**
+- Deliverables are pre-populated from the selected services in the proposal (grouped by bundle), ready to edit
+- Under each deliverable, add resource rows with: Discipline, Seniority, auto-calculated Rate, Start Date, End Date, Hours, and OOP (out-of-pocket tools/travel/costs as a dollar sum)
+- Rows can be added or removed freely; a total hours counter sits at the bottom of each deliverable section
+- A running summary at the top shows Total Fees, Total OOP, and Grand Total — live-updating as you type
+
+**Rate cards**
+Three rate cards ship by default; the data structure is extensible for future additions:
+- **Standard** — base rates
+- **Crisis** — +33% on all rates
+- **Internal** — −40% on all rates
+
+**Rates by seniority (Standard)**
+AAE $160 · AE $180 · SAE $200 · AS $225 · Director $235 · Snr Director $260 · VP $285 · SVP $300 · EVP $330 · C $340 · South $100
+
+Special overrides when Discipline is Creative Strategy or Integrated Strategy:
+Snr Director $280 · VP $295 · SVP $315 · EVP $330
+
+**Discount**
+A global discount % field applies to all fees (not OOP). Rate display updates live.
+
+**SOW integration**
+The computed grand total (fees + OOP, per deliverable) is injected into the SOW generation prompt as the definitive fee figure — overriding any ranges from the proposal. The SOW is therefore always generated from a real, calculated number rather than an estimate range.
+
+**DOCX export**
+Export a formatted budget breakdown as a Word document — cover page with rate card and discount noted, summary section, then a per-deliverable breakdown with each resource row, rate, hours, dates, and calculated fee.
+
+**Pipeline changes**
+- Pipeline is now 6 stages: Research → Return Brief → Proposal → Budget → SOW → Handover
+- Proposal "Build Budget →" CTA routes to Budget stage (replaces old "Generate SOW →")
+- Growth role remains capped at Proposal; PM and Admin have full 6-stage access
 
 ## What's New in v3.16.6
 
